@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block content %}
+<div class="panel">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h4 mb-0">{% trans "مجوزها" %}</h1>
+    <a class="btn secondary" data-ajax="true" href="{% url 'accounts:permissions-create' %}">{% trans "افزودن مجوز" %}</a>
+  </div>
+  <div class="table-responsive">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>{% trans "کد" %}</th>
+          <th>{% trans "توضیح" %}</th>
+          <th>{% trans "عملیات" %}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for perm in object_list %}
+        <tr>
+          <td>{{ perm.code }}</td>
+          <td>{{ perm.description|default:'-' }}</td>
+          <td class="d-flex gap-2">
+            <a class="btn secondary" data-ajax="true" href="{% url 'accounts:permissions-edit' perm.id %}">{% trans "ویرایش" %}</a>
+            <a class="btn secondary" data-ajax="true" href="{% url 'accounts:permissions-delete' perm.id %}">{% trans "حذف" %}</a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="3">{% trans "مجوزی یافت نشد." %}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

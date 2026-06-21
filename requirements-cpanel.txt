@@ -1,0 +1,42 @@
+# Dependencies for a cPanel / Passenger (WSGI) deployment.
+#
+# Differences from requirements.txt (which targets Docker/ASGI with Postgres):
+#   - dropped: gunicorn, uvicorn, channels-redis, celery, redis, psycopg2-binary
+#     (Passenger serves WSGI; no Redis/Celery worker on shared hosting; SQLite by
+#      default — for MySQL add a driver, see the note at the bottom).
+#   - 'channels' is kept because it is in INSTALLED_APPS, but the live WebSocket
+#     telemetry is inactive under WSGI (the dashboards use AJAX polling instead).
+#   - compiled packages are left unpinned so pip picks wheels matching the Python
+#     version your cPanel app uses (tested with Python 3.11–3.13).
+
+Django==5.0.8
+djangorestframework==3.15.2
+drf-spectacular==0.27.2
+django-cors-headers==4.4.0
+django-environ==0.11.2
+django-filter==24.3
+django-otp==1.5.4
+qrcode==8.0
+channels==4.1.0
+whitenoise==6.7.0
+openpyxl==3.1.5
+joblib==1.4.2
+plotly==5.24.1
+python-dateutil==2.9.0.post0
+jdatetime==5.3.0
+polib==1.2.0
+
+# Compiled (installed from manylinux wheels on cPanel — no build step needed)
+Pillow
+reportlab
+numpy
+scipy
+scikit-learn
+pandas
+
+# --- MySQL (optional) ---------------------------------------------------------
+# SQLite is the default and needs no driver. To use the cPanel MySQL database,
+# set DATABASE_URL in .env (mysql://user:pass@localhost/dbname) and install ONE:
+#   mysqlclient            # fastest; needs MySQL dev headers (often present)
+# or, if mysqlclient won't build on your plan, the pure-python alternative:
+#   PyMySQL                # then see the PyMySQL note in docs/CPANEL_DEPLOY.md

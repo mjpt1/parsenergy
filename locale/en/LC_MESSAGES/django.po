@@ -1,0 +1,1732 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: SolarOps 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-06-13 00:00+0000\n"
+"PO-Revision-Date: 2026-06-13 00:00+0000\n"
+"Last-Translator: SolarOps\n"
+"Language-Team: English\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "پارس انرژی"
+msgstr "Pars Energy"
+
+msgid "سامانه پایش نیروگاه"
+msgstr "Plant Monitoring System"
+
+msgid "سامانه مدیریت و پایش نیروگاه"
+msgstr "Plant Management & Monitoring"
+
+msgid "داشبورد"
+msgstr "Dashboard"
+
+msgid "نیروگاه‌ها"
+msgstr "Power Plants"
+
+msgid "تجهیزات"
+msgstr "Equipment"
+
+msgid "ترانسفورمرها"
+msgstr "Transformers"
+
+msgid "گیت‌وی‌ها"
+msgstr "Gateways"
+
+msgid "اینورترها"
+msgstr "Inverters"
+
+msgid "سنسورها و کنتورها"
+msgstr "Sensors & Meters"
+
+msgid "VPPها"
+msgstr "VPPs"
+
+msgid "هشدارها"
+msgstr "Alerts"
+
+msgid "گزارش‌ها"
+msgstr "Reports"
+
+msgid "تحلیل هوشمند"
+msgstr "Smart Analytics"
+
+msgid "سلامت سرورها"
+msgstr "Server Health"
+
+msgid "کاربران و دسترسی‌ها"
+msgstr "Users & Access"
+
+msgid "نقش‌ها"
+msgstr "Roles"
+
+msgid "مجوزها"
+msgstr "Permissions"
+
+msgid "API اینورترها"
+msgstr "Inverter API"
+
+msgid "تنظیمات هوش مصنوعی"
+msgstr "AI Settings"
+
+msgid "امنیت و بکاپ"
+msgstr "Security & Backup"
+
+msgid "تنظیمات"
+msgstr "Settings"
+
+msgid "مدیریت درخواست‌ها"
+msgstr "Request Management"
+
+msgid "پیشنهادهای قیمت"
+msgstr "Price Offers"
+
+msgid "پرداخت‌ها"
+msgstr "Payments"
+
+msgid "قراردادها"
+msgstr "Contracts"
+
+msgid "لاگ پیامک‌ها"
+msgstr "SMS Logs"
+
+msgid "نیروگاه های من"
+msgstr "My Plants"
+
+msgid "تحلیل اقتصادی"
+msgstr "Economic Analysis"
+
+msgid "درخواست‌های من"
+msgstr "My Requests"
+
+msgid "تنظیمات حساب"
+msgstr "Account Settings"
+
+msgid "زبان"
+msgstr "Language"
+
+msgid "تقویم"
+msgstr "Calendar"
+
+msgid "شمسی"
+msgstr "Jalali"
+
+msgid "میلادی"
+msgstr "Gregorian"
+
+msgid "حالت شب"
+msgstr "Night Mode"
+
+msgid "حالت روز"
+msgstr "Day Mode"
+
+msgid "پروفایل"
+msgstr "Profile"
+
+msgid "خروج"
+msgstr "Logout"
+
+msgid "ورود"
+msgstr "Login"
+
+msgid "ثبت درخواست جدید"
+msgstr "New request"
+
+msgid "ورود با کد پیامک"
+msgstr "Login with SMS code"
+
+msgid "تأیید شماره موبایل"
+msgstr "Verify mobile number"
+
+msgid "کد تأیید ارسال‌شده به شماره زیر را وارد کنید:"
+msgstr "Enter the verification code sent to:"
+
+msgid "کد تأیید"
+msgstr "Verification code"
+
+msgid "تأیید و ورود"
+msgstr "Verify and login"
+
+msgid "ارسال مجدد کد"
+msgstr "Resend code"
+
+msgid "شماره موبایل"
+msgstr "Mobile number"
+
+msgid "ارسال کد"
+msgstr "Send code"
+
+msgid "ثبت درخواست"
+msgstr "Submit request"
+
+msgid ""
+"اطلاعات اولیه را وارد کنید. پس از ثبت، کد تأیید به موبایل شما ارسال می‌شود."
+msgstr ""
+"Enter the basic information. After submitting, a verification code will be "
+"sent to your mobile."
+
+msgid "ثبت و دریافت کد تأیید"
+msgstr "Submit and receive verification code"
+
+msgid "تکمیل پروفایل"
+msgstr "Complete profile"
+
+msgid "عنوان"
+msgstr "Title"
+
+msgid "استان"
+msgstr "Province"
+
+msgid "وضعیت"
+msgstr "Status"
+
+msgid "تاریخ"
+msgstr "Date"
+
+msgid "عملیات"
+msgstr "Actions"
+
+msgid "مشاهده"
+msgstr "View"
+
+msgid "هنوز درخواستی ثبت نکرده‌اید."
+msgstr "You haven't submitted any requests yet."
+
+msgid "درخواست"
+msgstr "Request"
+
+msgid "بازگشت"
+msgstr "Back"
+
+msgid "نام"
+msgstr "Name"
+
+msgid "موبایل"
+msgstr "Mobile"
+
+msgid "توضیحات"
+msgstr "Description"
+
+msgid "پیشنهادها"
+msgstr "Offers"
+
+msgid "مبلغ"
+msgstr "Amount"
+
+msgid "اعتبار تا"
+msgstr "Valid until"
+
+msgid "انتخاب"
+msgstr "Select"
+
+msgid "تأیید و دریافت قرارداد"
+msgstr "Approve and get contract"
+
+msgid "منقضی"
+msgstr "Expired"
+
+msgid "هنوز پیشنهادی ثبت نشده است."
+msgstr "No offers yet."
+
+msgid "مشاهده / تأیید قرارداد"
+msgstr "View / approve contract"
+
+msgid "پرداخت"
+msgstr "Pay"
+
+msgid "تاریخچه پیام‌ها"
+msgstr "Message history"
+
+msgid "قرارداد درخواست"
+msgstr "Contract for request"
+
+msgid "شماره قرارداد"
+msgstr "Contract number"
+
+msgid "تأیید قرارداد با کد پیامک"
+msgstr "Approve contract with SMS code"
+
+msgid "ارسال کد تأیید"
+msgstr "Send verification code"
+
+msgid "تأیید قرارداد"
+msgstr "Approve contract"
+
+msgid "این قرارداد تأیید شده است."
+msgstr "This contract has been approved."
+
+msgid "ادامه و پرداخت"
+msgstr "Continue to payment"
+
+msgid "پرداخت این درخواست انجام شده است."
+msgstr "Payment for this request is complete."
+
+msgid ""
+"قراردادی برای این درخواست تولید نشده است. ابتدا یک پیشنهاد را انتخاب کنید."
+msgstr ""
+"No contract has been generated for this request. Select an offer first."
+
+msgid "تاریخچه پیام‌های درخواست"
+msgstr "Message history for request"
+
+msgid "نوع"
+msgstr "Type"
+
+msgid "متن"
+msgstr "Text"
+
+msgid "پیامی ثبت نشده است."
+msgstr "No messages."
+
+msgid "ذخیره اطلاعات"
+msgstr "Save information"
+
+msgid "درگاه پرداخت (داخلی)"
+msgstr "Payment gateway (internal)"
+
+msgid "مبلغ قابل پرداخت:"
+msgstr "Amount payable:"
+
+msgid "پرداخت موفق"
+msgstr "Successful payment"
+
+msgid "انصراف"
+msgstr "Cancel"
+
+msgid "همه وضعیت‌ها"
+msgstr "All statuses"
+
+msgid "همه استان‌ها"
+msgstr "All provinces"
+
+msgid "فیلتر"
+msgstr "Filter"
+
+msgid "پاک‌سازی"
+msgstr "Clear"
+
+msgid "جزئیات"
+msgstr "Details"
+
+msgid "درخواستی یافت نشد."
+msgstr "No requests found."
+
+msgid "بازگشت به لیست"
+msgstr "Back to list"
+
+msgid "شهر"
+msgstr "City"
+
+msgid "کاربر"
+msgstr "User"
+
+msgid "تاریخ ثبت"
+msgstr "Registered at"
+
+msgid "— (هنوز ثبت‌نام نشده)"
+msgstr "— (not registered yet)"
+
+msgid "لغو درخواست"
+msgstr "Cancel request"
+
+msgid "فعال"
+msgstr "Active"
+
+msgid "بله"
+msgstr "Yes"
+
+msgid "خیر"
+msgstr "No"
+
+msgid "غیرفعال‌سازی"
+msgstr "Deactivate"
+
+msgid "فعال‌سازی"
+msgstr "Activate"
+
+msgid "صدور قرارداد"
+msgstr "Issue contract"
+
+msgid "پیشنهادی ثبت نشده است."
+msgstr "No offers."
+
+msgid "ثبت پیشنهاد جدید"
+msgstr "Register new offer"
+
+msgid "مبلغ (ریال)"
+msgstr "Amount (IRR)"
+
+msgid "افزودن پیشنهاد"
+msgstr "Add offer"
+
+msgid "شماره"
+msgstr "Number"
+
+msgid "پیشنهاد"
+msgstr "Offer"
+
+msgid "تأیید شده در"
+msgstr "Approved at"
+
+msgid "قراردادی تولید نشده است."
+msgstr "No contract generated."
+
+msgid "تاریخ پرداخت"
+msgstr "Payment date"
+
+msgid "پرداختی ثبت نشده است."
+msgstr "No payments."
+
+msgid "پیامکی ثبت نشده است."
+msgstr "No SMS logs."
+
+msgid "ثبت‌کننده"
+msgstr "Created by"
+
+msgid "پیشنهادی یافت نشد."
+msgstr "No offers found."
+
+msgid "پرداختی یافت نشد."
+msgstr "No payments found."
+
+msgid "قراردادی یافت نشد."
+msgstr "No contracts found."
+
+msgid "پیامکی یافت نشد."
+msgstr "No SMS logs found."
+
+msgid "قرارداد"
+msgstr "Contract"
+
+msgid "قالب قرارداد"
+msgstr "Contract template"
+
+msgid "متن قالب"
+msgstr "Template body"
+
+msgid "بارگذاری فایل متنی (.txt)"
+msgstr "Upload text file (.txt)"
+
+msgid "متغیرهای قابل استفاده در متن (هنگام تولید قرارداد جایگزین می‌شوند):"
+msgstr ""
+"Placeholders available in the text (substituted when the contract is "
+"generated):"
+
+msgid "اگر فایلی بارگذاری شود، متن قالب از روی آن خوانده می‌شود."
+msgstr "If a file is uploaded, the template body is read from it."
+
+msgid "قالب قرارداد ذخیره شد."
+msgstr "Contract template saved."
+
+msgid "خواندن فایل ناموفق بود."
+msgstr "Failed to read the file."
+
+msgid "همهٔ درخواست‌ها"
+msgstr "All requests"
+
+msgid "قالب‌های قرارداد"
+msgstr "Contract templates"
+
+msgid "تنظیمات قرارداد"
+msgstr "Contract settings"
+
+msgid "تیکت‌ها"
+msgstr "Tickets"
+
+msgid "تیکت‌های من"
+msgstr "My tickets"
+
+msgid "باز و بستن منو"
+msgstr "Toggle menu"
+
+msgid "قالب جدید"
+msgstr "New template"
+
+msgid "به‌روزرسانی"
+msgstr "Updated"
+
+msgid "غیرفعال"
+msgstr "Inactive"
+
+msgid "این قالب حذف شود؟"
+msgstr "Delete this template?"
+
+msgid "قالبی ثبت نشده است."
+msgstr "No templates yet."
+
+msgid "اگر هیچ قالب فعالی نباشد، از قالب پیش‌فرض داخلی استفاده می‌شود."
+msgstr "If no template is active, the built-in default is used."
+
+msgid "نام قالب"
+msgstr "Template name"
+
+msgid "بارگذاری فایل (.txt یا .docx)"
+msgstr "Upload file (.txt or .docx)"
+
+msgid "قالب فعال"
+msgstr "Active template"
+
+msgid "قالب جدید قرارداد"
+msgstr "New contract template"
+
+msgid "ویرایش قالب قرارداد"
+msgstr "Edit contract template"
+
+msgid "قالب فعال شد."
+msgstr "Template activated."
+
+msgid "قالب حذف شد."
+msgstr "Template deleted."
+
+msgid "سربرگ و اطلاعات شرکت"
+msgstr "Header & company info"
+
+msgid "نام شرکت"
+msgstr "Company name"
+
+msgid "آدرس شرکت"
+msgstr "Company address"
+
+msgid "تلفن شرکت"
+msgstr "Company phone"
+
+msgid "لوگو"
+msgstr "Logo"
+
+msgid "لوگوی فعلی"
+msgstr "Current logo"
+
+msgid "متن سربرگ"
+msgstr "Header text"
+
+msgid "متن پاورقی"
+msgstr "Footer text"
+
+msgid "متن امضا"
+msgstr "Signature text"
+
+msgid "حاشیهٔ صفحه (چاپ/PDF) — میلی‌متر"
+msgstr "Page margins (print/PDF) — mm"
+
+msgid "بالا"
+msgstr "Top"
+
+msgid "راست"
+msgstr "Right"
+
+msgid "پایین"
+msgstr "Bottom"
+
+msgid "چپ"
+msgstr "Left"
+
+msgid "حاشیه بالا (میلی‌متر)"
+msgstr "Top margin (mm)"
+
+msgid "حاشیه راست (میلی‌متر)"
+msgstr "Right margin (mm)"
+
+msgid "حاشیه پایین (میلی‌متر)"
+msgstr "Bottom margin (mm)"
+
+msgid "حاشیه چپ (میلی‌متر)"
+msgstr "Left margin (mm)"
+
+msgid "صفحهٔ نمایش به مشتری"
+msgstr "Customer-facing page"
+
+msgid "عنوان صفحهٔ مشتری"
+msgstr "Customer page title"
+
+msgid "توضیح صفحهٔ مشتری"
+msgstr "Customer page description"
+
+msgid "تنظیمات قرارداد ذخیره شد."
+msgstr "Contract settings saved."
+
+msgid "چاپ / ذخیره PDF"
+msgstr "Print / Save PDF"
+
+msgid "دانلود Word"
+msgstr "Download Word"
+
+msgid "همهٔ وضعیت‌ها"
+msgstr "All statuses"
+
+msgid "موضوع"
+msgstr "Subject"
+
+msgid "اولویت"
+msgstr "Priority"
+
+msgid "تیکتی یافت نشد."
+msgstr "No tickets found."
+
+msgid "تیکت جدید"
+msgstr "New ticket"
+
+msgid "هنوز تیکتی ثبت نکرده‌اید."
+msgstr "You haven't created any tickets yet."
+
+msgid "تیکت"
+msgstr "Ticket"
+
+msgid "پشتیبانی"
+msgstr "Support"
+
+msgid "مشتری"
+msgstr "Customer"
+
+msgid "پیوست"
+msgstr "Attachment"
+
+msgid "پیامی وجود ندارد."
+msgstr "No messages."
+
+msgid "ارسال پاسخ"
+msgstr "Send reply"
+
+msgid "تغییر وضعیت"
+msgstr "Status change"
+
+msgid "اعمال"
+msgstr "Apply"
+
+msgid "شما"
+msgstr "You"
+
+msgid "این تیکت بسته شده است."
+msgstr "This ticket is closed."
+
+msgid "ثبت تیکت"
+msgstr "Submit ticket"
+
+msgid "پاسخ"
+msgstr "Reply"
+
+msgid "پاسخ ثبت شد."
+msgstr "Reply posted."
+
+msgid "متن پاسخ را وارد کنید."
+msgstr "Please enter a reply."
+
+msgid "وضعیت تیکت به‌روزرسانی شد."
+msgstr "Ticket status updated."
+
+msgid "تیکت ثبت شد."
+msgstr "Ticket created."
+
+msgid "باز"
+msgstr "Open"
+
+msgid "پاسخ داده‌شده"
+msgstr "Answered"
+
+msgid "بسته‌شده"
+msgstr "Closed"
+
+msgid "کم"
+msgstr "Low"
+
+msgid "عادی"
+msgstr "Normal"
+
+msgid "زیاد"
+msgstr "High"
+
+msgid "احراز هویت"
+msgstr "Identity verification"
+
+msgid "انجام‌شده"
+msgstr "Done"
+
+msgid "انجام‌نشده"
+msgstr "Not done"
+
+msgid "ارزش افزوده"
+msgstr "VAT"
+
+msgid "مبلغ کل"
+msgstr "Total"
+
+msgid "مبلغ کل قابل پرداخت"
+msgstr "Total payable"
+
+msgid "ارزش افزوده (٪)"
+msgstr "VAT (%)"
+
+msgid "شامل ارزش افزوده"
+msgstr "Includes VAT"
+
+msgid "کد ملی (۱۰ رقم)"
+msgstr "National ID (10 digits)"
+
+msgid ""
+"برای ادامه، کد ملی خود را وارد کنید تا با شمارهٔ موبایل شما تطبیق داده شود."
+msgstr ""
+"To continue, enter your national ID so it can be matched against your mobile"
+" number."
+
+msgid "احراز هویت و ارسال کد"
+msgstr "Verify identity & send code"
+
+msgid "کد ملی باید ۱۰ رقم باشد."
+msgstr "National ID must be 10 digits."
+
+msgid "احراز هویت ناموفق بود: کد ملی با شمارهٔ موبایل مطابقت ندارد."
+msgstr ""
+"Identity verification failed: the national ID does not match the mobile "
+"number."
+
+msgid "احراز هویت موفق بود. کد تأیید برای شما ارسال شد."
+msgstr "Identity verified. A confirmation code has been sent to you."
+
+msgid "ابتدا باید احراز هویت انجام شود."
+msgstr "Identity must be verified first."
+
+msgid "بدون احراز هویت امکان پرداخت وجود ندارد."
+msgstr "Payment is not possible without identity verification."
+
+msgid "پیکربندی سرویس احراز هویت کامل نیست."
+msgstr "The identity verification service is not fully configured."
+
+msgid "ارتباط با سرویس احراز هویت برقرار نشد."
+msgstr "Could not reach the identity verification service."
+
+msgid "پاسخ سرویس احراز هویت نامعتبر است."
+msgstr "Invalid response from the identity verification service."
+
+msgid "سرویس احراز هویت خطا داد (کد %(code)s)."
+msgstr "The identity service returned an error (code %(code)s)."
+
+msgid "فرم ارزیابی نیروگاه خورشیدی"
+msgstr "Solar plant evaluation form"
+
+msgid "فرم ارزیابی"
+msgstr "Evaluation form"
+
+msgid "لطفاً خطاهای مشخص‌شده را برطرف کنید."
+msgstr "Please fix the highlighted errors."
+
+msgid "مرحلهٔ ۱ از ۳ — مشخصات عمومی"
+msgstr "Step 1 of 3 — General details"
+
+msgid "مرحلهٔ ۲ از ۳ — مشخصات پروژه"
+msgstr "Step 2 of 3 — Project details"
+
+msgid "مرحلهٔ ۳ از ۳ — تأیید و ارسال"
+msgstr "Step 3 of 3 — Confirm & submit"
+
+msgid "انتخاب کنید"
+msgstr "Select"
+
+msgid "قبلی"
+msgstr "Previous"
+
+msgid "بعدی"
+msgstr "Next"
+
+msgid "ارسال"
+msgstr "Submit"
+
+msgid "قوانین و مقررات را مطالعه کرده و می‌پذیرم."
+msgstr "I have read and accept the terms & conditions."
+
+msgid "پس از ارسال، کد تأیید به شمارهٔ موبایل شما ارسال می‌شود."
+msgstr "After submitting, a verification code will be sent to your mobile."
+
+msgid "نوع کاربر"
+msgstr "User type"
+
+msgid "نام شخصیت حقیقی / حقوقی"
+msgstr "Name (individual / legal entity)"
+
+msgid "نوع پروژه"
+msgstr "Project type"
+
+msgid "آیا نیازی به مشاورهٔ مالی دارید؟"
+msgstr "Do you need financial consultation?"
+
+msgid "آیا در محل سایه یا مانعی وجود دارد؟"
+msgstr "Is there shading or an obstacle at the site?"
+
+msgid "آدرس محل نصب"
+msgstr "Installation address"
+
+msgid "مساحت تقریبی فضای نصب (متر مربع)"
+msgstr "Approximate installation area (m²)"
+
+msgid "مشخصات محل نصب"
+msgstr "Installation site"
+
+msgid "نوع ساختمان"
+msgstr "Building type"
+
+msgid "نوع مالکیت محل نصب"
+msgstr "Site ownership type"
+
+msgid "فاصله تا شبکهٔ سراسری (متر)"
+msgstr "Distance to the national grid (m)"
+
+msgid "تمایل به سیستم ذخیره‌سازی؟"
+msgstr "Interested in a storage system?"
+
+msgid "شناسهٔ قبض برق (۱۳ رقمی)"
+msgstr "Electricity bill ID (13 digits)"
+
+msgid "شناسهٔ قبض باید ۱۳ رقم باشد."
+msgstr "The bill ID must be 13 digits."
+
+msgid "حقیقی"
+msgstr "Individual"
+
+msgid "حقوقی"
+msgstr "Legal entity"
+
+msgid "مسکونی و تجاری"
+msgstr "Residential & commercial"
+
+msgid "ادارات و سازمان‌های دولتی"
+msgstr "Government offices & organizations"
+
+msgid "صنایع"
+msgstr "Industry"
+
+msgid "کشاورزی"
+msgstr "Agriculture"
+
+msgid "پشت بام"
+msgstr "Rooftop"
+
+msgid "زمین باز"
+msgstr "Open ground"
+
+msgid "سقف سولهٔ صنعتی"
+msgstr "Industrial shed roof"
+
+msgid "ویلایی"
+msgstr "Villa"
+
+msgid "آپارتمانی"
+msgstr "Apartment"
+
+msgid "اختصاصی"
+msgstr "Dedicated"
+
+msgid "مشارکتی"
+msgstr "Shared"
+
+msgid "نیاز به مشاوره"
+msgstr "Need consultation"
+
+msgid "مشخصات ارزیابی"
+msgstr "Evaluation details"
+
+msgid "نیاز به مشاورهٔ مالی؟"
+msgstr "Financial consultation?"
+
+msgid "سایه یا مانع؟"
+msgstr "Shading/obstacle?"
+
+msgid "شناسهٔ قبض برق"
+msgstr "Electricity bill ID"
+
+msgid "مرحلهٔ ۳ از ۳ — احراز هویت و تأیید"
+msgstr "Step 3 of 3 — Identity verification & confirmation"
+
+msgid "کد ملی"
+msgstr "National ID"
+
+msgid ""
+"شماره موبایل و کد ملی باید متعلق به یک نفر باشند؛ به‌صورت خودکار با سامانهٔ "
+"شاهکار بررسی می‌شود."
+msgstr ""
+"The mobile number and national ID must belong to the same person; this is "
+"checked automatically via Shahkar."
+
+msgid "درخواست شما ثبت و احراز هویت شد."
+msgstr "Your request has been submitted and your identity verified."
+
+msgid "تنظیمات سرویس‌ها"
+msgstr "Service settings"
+
+msgid "تنظیمات سرویس‌ها (پیامک و شاهکار)"
+msgstr "Service settings (SMS & Shahkar)"
+
+msgid "تنظیمات سرویس‌ها ذخیره شد."
+msgstr "Service settings saved."
+
+msgid "پیامک (SMS)"
+msgstr "SMS"
+
+msgid ""
+"تا زمانی که سرویس «HTTP» با آدرس و کلید معتبر تنظیم نشود، پیامک فقط در لاگ "
+"ثبت می‌شود و واقعاً ارسال نمی‌گردد."
+msgstr ""
+"Until the 'HTTP' provider is configured with a valid URL and key, SMS is "
+"only logged and not actually sent."
+
+msgid "سرویس پیامک"
+msgstr "SMS provider"
+
+msgid "آدرس سرویس پیامک (URL)"
+msgstr "SMS service URL"
+
+msgid "کلید API پیامک"
+msgstr "SMS API key"
+
+msgid "شمارهٔ فرستنده"
+msgstr "Sender number"
+
+msgid "فعال‌سازی ارسال پیامک"
+msgstr "Enable SMS sending"
+
+msgid "احراز هویت شاهکار"
+msgstr "Shahkar identity verification"
+
+msgid ""
+"آدرس و کلید API را از داشبورد شبانیک دریافت کنید. در حالت «آزمایشی»، بدون "
+"تماس واقعی نتیجهٔ تنظیم‌شده برگردانده می‌شود."
+msgstr ""
+"Get the URL and API key from the Shabanic dashboard. In 'test' mode the "
+"configured result is returned without a real call."
+
+msgid "سرویس احراز هویت"
+msgstr "Identity provider"
+
+msgid "آدرس API شاهکار (URL)"
+msgstr "Shahkar API URL"
+
+msgid "کلید API شاهکار"
+msgstr "Shahkar API key"
+
+msgid "توکن شاهکار"
+msgstr "Shahkar token"
+
+msgid ""
+"همان توکنی که شبانیک به شما داده؛ به‌صورت هدر SHABANIC-API-KEY ارسال می‌شود."
+msgstr "The token Shabanic gave you; sent as the SHABANIC-API-KEY header."
+
+msgid "به‌صورت هدر SHABANIC-API-KEY ارسال می‌شود."
+msgstr "Sent as the SHABANIC-API-KEY header."
+
+msgid "فعال‌سازی احراز هویت شاهکار"
+msgstr "Enable Shahkar verification"
+
+msgid "حالت آزمایشی"
+msgstr "Test mode"
+
+msgid "در حالت آزمایشی، نتیجه موفق باشد"
+msgstr "In test mode, return a successful result"
+
+msgid "کنسول (فقط لاگ – تست)"
+msgstr "Console (log only – test)"
+
+msgid "HTTP (سرویس واقعی)"
+msgstr "HTTP (real service)"
+
+msgid "آزمایشی (بدون تماس واقعی)"
+msgstr "Test (no real call)"
+
+msgid "شبانیک (شاهکار)"
+msgstr "Shabanic (Shahkar)"
+
+msgid "ثبت‌شده"
+msgstr "Registered"
+
+msgid "پیشنهاد ثبت شد"
+msgstr "Offered"
+
+msgid "قرارداد تولید شد"
+msgstr "Contract generated"
+
+msgid "قرارداد تأیید شد"
+msgstr "Contract approved"
+
+msgid "در انتظار پرداخت"
+msgstr "Awaiting payment"
+
+msgid "پرداخت‌شده"
+msgstr "Paid"
+
+msgid "لغو شده"
+msgstr "Cancelled"
+
+msgid "پیش‌نویس"
+msgstr "Draft"
+
+msgid "تولیدشده"
+msgstr "Generated"
+
+msgid "تأییدشده"
+msgstr "Approved"
+
+msgid "در انتظار"
+msgstr "Pending"
+
+msgid "ناموفق"
+msgstr "Failed"
+
+msgid "ثبت‌نام"
+msgstr "Registration"
+
+msgid "کد یک‌بارمصرف"
+msgstr "OTP code"
+
+msgid "در صف"
+msgstr "Queued"
+
+msgid "ارسال‌شده"
+msgstr "Sent"
+
+msgid "فرم"
+msgstr "Form"
+
+msgid "ذخیره"
+msgstr "Save"
+
+msgid "حذف"
+msgstr "Delete"
+
+msgid "آیا از حذف این مورد مطمئن هستید؟"
+msgstr "Are you sure you want to delete this item?"
+
+msgid "افزودن نیروگاه"
+msgstr "Add plant"
+
+msgid "مدیریت گروه‌ها"
+msgstr "Manage groups"
+
+msgid "کد"
+msgstr "Code"
+
+msgid "مالک"
+msgstr "Owner"
+
+msgid "ظرفیت"
+msgstr "Capacity"
+
+msgid "ویرایش"
+msgstr "Edit"
+
+msgid "موردی یافت نشد."
+msgstr "No items found."
+
+msgid "افزودن اینورتر"
+msgstr "Add inverter"
+
+msgid "نیروگاه"
+msgstr "Plant"
+
+msgid "سریال"
+msgstr "Serial"
+
+msgid "مدل"
+msgstr "Model"
+
+msgid "آنلاین"
+msgstr "Online"
+
+msgid "توان نامی"
+msgstr "Rated power"
+
+msgid "بله,خیر"
+msgstr "Yes,No"
+
+msgid "افزودن تجهیز"
+msgstr "Add equipment"
+
+msgid "ترانسفورماتورها"
+msgstr "Transformers"
+
+msgid "دسته"
+msgstr "Category"
+
+msgid "سلامت"
+msgstr "Health"
+
+msgid "سنسورها"
+msgstr "Sensors"
+
+msgid "افزودن سنسور"
+msgstr "Add sensor"
+
+msgid "واحد"
+msgstr "Unit"
+
+msgid "کنتورها"
+msgstr "Meters"
+
+msgid "افزودن کنتور"
+msgstr "Add meter"
+
+msgid "پروتکل"
+msgstr "Protocol"
+
+msgid "افزودن ترانسفورمر"
+msgstr "Add transformer"
+
+msgid "بازگشت به تجهیزات"
+msgstr "Back to equipment"
+
+msgid "ظرفیت (kVA)"
+msgstr "Capacity (kVA)"
+
+msgid "سازنده"
+msgstr "Manufacturer"
+
+msgid "آخرین اتصال"
+msgstr "Last seen"
+
+msgid "افزودن گیت‌وی"
+msgstr "Add gateway"
+
+msgid "نسخه Firmware"
+msgstr "Firmware version"
+
+msgid "قوانین هشدار"
+msgstr "Alert rules"
+
+msgid "افزودن قانون"
+msgstr "Add rule"
+
+msgid "آستانه"
+msgstr "Threshold"
+
+msgid "کانال‌ها"
+msgstr "Channels"
+
+msgid "رویدادهای هشدار"
+msgstr "Alert events"
+
+msgid "بازگشت به قوانین"
+msgstr "Back to rules"
+
+msgid "قانون"
+msgstr "Rule"
+
+msgid "پیام"
+msgstr "Message"
+
+msgid "رویدادی ثبت نشده است."
+msgstr "No events recorded."
+
+msgid "اعلان‌ها"
+msgstr "Notifications"
+
+msgid "کانال"
+msgstr "Channel"
+
+msgid "ارسال شد"
+msgstr "Sent"
+
+msgid "اعلانی ثبت نشده است."
+msgstr "No notifications."
+
+msgid "مرکز گزارش‌ها"
+msgstr "Reports Center"
+
+msgid "خروجی‌های PDF و Excel برای گزارش‌های مدیریتی و بهره‌برداری"
+msgstr "PDF and Excel exports for management and operational reports"
+
+msgid "تعداد نیروگاه"
+msgstr "Plant count"
+
+msgid "گزارش PDF"
+msgstr "PDF report"
+
+msgid "گزارش Excel"
+msgstr "Excel report"
+
+msgid "نام کاربری"
+msgstr "Username"
+
+msgid "نقش"
+msgstr "Role"
+
+msgid "ایمیل"
+msgstr "Email"
+
+msgid "آخرین ورود"
+msgstr "Last login"
+
+msgid "مدیریت"
+msgstr "Manage"
+
+msgid "کاربری یافت نشد."
+msgstr "No users found."
+
+msgid "افزودن نقش"
+msgstr "Add role"
+
+msgid "توضیح"
+msgstr "Description"
+
+msgid "سیستمی"
+msgstr "System"
+
+msgid "نقشی یافت نشد."
+msgstr "No roles found."
+
+msgid "افزودن مجوز"
+msgstr "Add permission"
+
+msgid "مجوزی یافت نشد."
+msgstr "No permissions found."
+
+msgid "ایجاد حساب"
+msgstr "Create account"
+
+msgid "افزودن"
+msgstr "Add"
+
+msgid "ردیف"
+msgstr "Row"
+
+msgid "لیست"
+msgstr "List"
+
+msgid "زمان"
+msgstr "Time"
+
+msgid "اکشن"
+msgstr "Action"
+
+msgid "هدف"
+msgstr "Target"
+
+msgid "لاگی ثبت نشده است."
+msgstr "No logs."
+
+msgid "موردی ثبت نشده است."
+msgstr "No records."
+
+msgid "لاگ‌های امنیتی"
+msgstr "Security logs"
+
+msgid "پارامترهای سیستم"
+msgstr "System parameters"
+
+msgid "تنظیمات امنیتی"
+msgstr "Security settings"
+
+msgid "اتصالات API"
+msgstr "API connections"
+
+msgid "پروتکل‌ها"
+msgstr "Protocols"
+
+msgid "بکاپ دیتابیس"
+msgstr "Database backups"
+
+msgid "ثبت API اینورترها"
+msgstr "Register inverter API"
+
+msgid "مدیریت مجموعه نیروگاه‌های مجازی و برنامه‌های dispatch"
+msgstr "Manage virtual power plants and dispatch schedules"
+
+msgid "اعضای VPP"
+msgstr "VPP members"
+
+msgid "برنامه‌های Dispatch"
+msgstr "Dispatch schedules"
+
+msgid "ایجاد VPP"
+msgstr "Create VPP"
+
+msgid "VPPیی یافت نشد."
+msgstr "No VPPs found."
+
+msgid "افزودن عضو"
+msgstr "Add member"
+
+msgid "بازگشت به VPP"
+msgstr "Back to VPPs"
+
+msgid "سهم (kW)"
+msgstr "Share (kW)"
+
+msgid "عضوی یافت نشد."
+msgstr "No members found."
+
+msgid "افزودن برنامه"
+msgstr "Add schedule"
+
+msgid "شروع"
+msgstr "Start"
+
+msgid "پایان"
+msgstr "End"
+
+msgid "هدف (kW)"
+msgstr "Target (kW)"
+
+msgid "برنامه‌ای یافت نشد."
+msgstr "No schedules found."
+
+msgid "داشبورد مدیریت سامانه پایش نیروگاه"
+msgstr "Plant Monitoring System — Admin Dashboard"
+
+msgid "نمایش لحظه‌ای وضعیت سیستم، نیروگاه‌ها، تجهیزات و سلامت سرویس‌ها"
+msgstr ""
+"Real-time view of system status, plants, equipment, and service health"
+
+msgid "خروجی Excel"
+msgstr "Excel export"
+
+msgid "تعریف نیروگاه جدید"
+msgstr "Define new plant"
+
+msgid "تعداد نیروگاه‌ها"
+msgstr "Number of plants"
+
+msgid "فعال و تحت پایش"
+msgstr "Active and monitored"
+
+msgid "تجهیزات آنلاین"
+msgstr "Online equipment"
+
+msgid "وضعیت پایدار"
+msgstr "Stable"
+
+msgid "هشدارهای فعال"
+msgstr "Active alerts"
+
+msgid "نیازمند بررسی"
+msgstr "Needs review"
+
+msgid "عملکرد مطلوب"
+msgstr "Good performance"
+
+msgid "نمودار پایش لحظه‌ای تولید و عملکرد"
+msgstr "Real-time production & performance chart"
+
+msgid "وضعیت سریع سامانه"
+msgstr "System quick status"
+
+msgid "داده‌های Real-Time"
+msgstr "Real-Time data"
+
+msgid "تاخیر کمتر از 1 ثانیه"
+msgstr "Latency under 1 second"
+
+msgid "سیستم هشدار"
+msgstr "Alert system"
+
+msgid "بررسی"
+msgstr "Review"
+
+msgid "پشتیبان‌گیری"
+msgstr "Backup"
+
+msgid "بکاپ خودکار روزانه"
+msgstr "Daily automatic backup"
+
+msgid "مطمئن"
+msgstr "Reliable"
+
+msgid "API و اتصالات"
+msgstr "API & connections"
+
+msgid "اتصال فعال به تجهیزات"
+msgstr "Active device connection"
+
+msgid "متصل"
+msgstr "Connected"
+
+msgid "لیست هشدارها و رویدادهای اخیر"
+msgstr "Recent alerts & events"
+
+msgid "در حال بررسی"
+msgstr "Under review"
+
+msgid "سلامت سرورها و منابع"
+msgstr "Server health & resources"
+
+msgid ""
+"مانیتورینگ سلامت سرورها، وضعیت دیتابیس و ارتباطات API در این بخش نمایش داده "
+"می‌شود."
+msgstr "Server health, database status, and API connections are shown here."
+
+msgid "گزارش‌های مدیریتی و خروجی‌ها"
+msgstr "Management reports & exports"
+
+msgid "گزارش"
+msgstr "Report"
+
+msgid "فرمت"
+msgstr "Format"
+
+msgid "دوره"
+msgstr "Period"
+
+msgid "گزارش عملکرد نیروگاه‌ها"
+msgstr "Plant performance report"
+
+msgid "ماهانه"
+msgstr "Monthly"
+
+msgid "دانلود"
+msgstr "Download"
+
+msgid "گزارش تولید انرژی"
+msgstr "Energy production report"
+
+msgid "روزانه"
+msgstr "Daily"
+
+msgid "گزارش هشدارها"
+msgstr "Alerts report"
+
+msgid "هفتگی"
+msgstr "Weekly"
+
+msgid "ماژول‌های مدیریتی"
+msgstr "Management modules"
+
+msgid "مدیریت کاربران و نقش‌ها"
+msgstr "Users & roles management"
+
+msgid "مدیریت API و اتصالات"
+msgstr "API & connections management"
+
+msgid "پشتیبان‌گیری خودکار"
+msgstr "Automatic backup"
+
+msgid "برنامه‌ریزی شده"
+msgstr "Scheduled"
+
+msgid "رمزنگاری و امنیت"
+msgstr "Encryption & security"
+
+msgid "ایمن"
+msgstr "Secure"
+
+msgid "وضعیت نیروگاه"
+msgstr "Plant status"
+
+msgid "پایش لحظه ای تولید انرژی"
+msgstr "Real-time energy production monitoring"
+
+msgid "تولید لحظه ای"
+msgstr "Instant production"
+
+msgid "تولید امروز"
+msgstr "Today's production"
+
+msgid "راندمان نیروگاه"
+msgstr "Plant efficiency"
+
+msgid "درآمد امروز"
+msgstr "Today's revenue"
+
+msgid "نمودار تولید انرژی"
+msgstr "Energy production chart"
+
+msgid "وضعیت تجهیزات"
+msgstr "Equipment status"
+
+msgid "تجهیز"
+msgstr "Device"
+
+msgid "توان"
+msgstr "Power"
+
+msgid "قطع ارتباط"
+msgstr "Disconnected"
+
+msgid "تجهیز ثبت نشده است."
+msgstr "No equipment."
+
+msgid "هشدارهای اخیر"
+msgstr "Recent alerts"
+
+msgid "نوع هشدار"
+msgstr "Alert type"
+
+msgid "هشداری ثبت نشده است."
+msgstr "No alerts."
+
+msgid "نقشه نیروگاه"
+msgstr "Plant map"
+
+msgid "نمایش موقعیت نیروگاه روی نقشه"
+msgstr "Plant location shown on the map"
+
+msgid "گزارش ها"
+msgstr "Reports"
+
+msgid "بازه زمانی"
+msgstr "Time range"
+
+msgid "گزارش تولید"
+msgstr "Production report"
+
+msgid "سالانه"
+msgstr "Yearly"
+
+msgid "تحلیل عملکرد"
+msgstr "Performance analysis"
+
+msgid "گزارش درآمد"
+msgstr "Revenue report"
+
+msgid "تولید انرژی"
+msgstr "Energy production"
+
+msgid "راندمان سیستم"
+msgstr "System efficiency"
+
+msgid "نمودار (آفلاین)"
+msgstr "Chart (offline)"
+
+msgid "در حال تحلیل..."
+msgstr "Analyzing..."
+
+msgid "خطا در دریافت تحلیل."
+msgstr "Error fetching analysis."
+
+msgid "پاسخی دریافت نشد."
+msgstr "No response received."
+
+msgid "خطا در ارتباط با سرویس تحلیل."
+msgstr "Error connecting to the analysis service."
+
+msgid "تحلیل با هوش مصنوعی"
+msgstr "Analyze with AI"
+
+msgid "توان کل"
+msgstr "Total power"
+
+msgid "میانگین ولتاژ"
+msgstr "Average voltage"
+
+msgid "پیش‌بینی فردا"
+msgstr "Tomorrow's forecast"
+
+msgid "درآمد / سود"
+msgstr "Revenue / Profit"
+
+msgid "مقایسه نیروگاهی"
+msgstr "Plant comparison"
+
+msgid "نیروگاهی برای نمایش تحلیل یافت نشد."
+msgstr "No plant found to analyze."
+
+msgid "خروجی AI"
+msgstr "AI output"
+
+msgid "برای شروع تحلیل، دکمه بالا را بزن."
+msgstr "Press the button above to start the analysis."
+
+msgid "نقش‌های کاربر"
+msgstr "User roles"
+
+msgid "مجوزهای نقش"
+msgstr "Role permissions"
+
+msgid "فرم نقش"
+msgstr "Role form"
+
+msgid "نام نقش"
+msgstr "Role name"
+
+msgid "فرم مجوز"
+msgstr "Permission form"
+
+msgid "کد مجوز"
+msgstr "Permission code"
+
+msgid "حذف نقش"
+msgstr "Delete role"
+
+msgid "آیا از حذف این نقش مطمئن هستید؟"
+msgstr "Are you sure you want to delete this role?"
+
+msgid "حذف مجوز"
+msgstr "Delete permission"
+
+msgid "آیا از حذف این مجوز مطمئن هستید؟"
+msgstr "Are you sure you want to delete this permission?"
+
+msgid "مثال: https://api.openai.com/v1 یا آدرس سرویس سازگار."
+msgstr "Example: https://api.openai.com/v1 or a compatible service URL."
+
+msgid "برای Bearer مقدار پیش‌فرض کافی است."
+msgstr "For Bearer, the default value is enough."
+
+msgid "فعال باشد"
+msgstr "Enabled"
+
+msgid "اختیاری: راهنمای کلی برای مدل."
+msgstr "Optional: general guidance for the model."
+
+msgid "فرم ثبت اتصال"
+msgstr "Connection form"
+
+msgid "نام اتصال"
+msgstr "Connection name"
+
+msgid "آدرس پایه API"
+msgstr "API base URL"
+
+msgid "نوع احراز هویت"
+msgstr "Auth type"
+
+msgid "توکن / کلید"
+msgstr "Token / key"
+
+msgid "مشاهده همه اتصالات"
+msgstr "View all connections"
+
+msgid "آخرین اتصالات"
+msgstr "Recent connections"
+
+msgid "اتصالی ثبت نشده است."
+msgstr "No connections."
+
+msgid "گروه‌های نیروگاه"
+msgstr "Plant groups"
+
+msgid "افزودن گروه"
+msgstr "Add group"
+
+msgid "افزودن نیروگاه به گروه"
+msgstr "Add plant to group"
+
+msgid "نام گروه"
+msgstr "Group name"
+
+msgid "گروهی یافت نشد."
+msgstr "No groups found."
+
+msgid "گروه"
+msgstr "Group"
+
+msgid "ثبت"
+msgstr "Submit"
+
+msgid "حالت آفلاین"
+msgstr "Offline mode"
+
+msgid ""
+"اتصال به اینترنت در دسترس نیست. لطفاً پس از بازگشت اتصال دوباره تلاش کنید."
+msgstr "No internet connection. Please try again once you're back online."
+
+msgid "بازگشت به داشبورد"
+msgstr "Back to dashboard"
+
+msgid "VPP با موفقیت ایجاد شد."
+msgstr "VPP created successfully."
+
+msgid "نیروگاه با موفقیت ایجاد شد."
+msgstr "Plant created successfully."
+
+msgid "گروه نیروگاه با موفقیت ایجاد شد."
+msgstr "Plant group created successfully."
+
+msgid "قانون هشدار با موفقیت ایجاد شد."
+msgstr "Alert rule created successfully."
+
+msgid "اتصال API اینورتر با موفقیت ذخیره شد."
+msgstr "Inverter API connection saved successfully."
+
+msgid "تنظیمات هوش مصنوعی ذخیره شد."
+msgstr "AI settings saved."
+
+msgid "درخواست شما ثبت شد."
+msgstr "Your request has been submitted."
+
+msgid "کاربری با این شماره یافت نشد. لطفاً ابتدا درخواست ثبت کنید."
+msgstr "No user found with this number. Please submit a request first."
+
+msgid "ورود با موفقیت انجام شد."
+msgstr "Logged in successfully."
+
+msgid "کد دوباره ارسال شد."
+msgstr "The code was resent."
+
+msgid "پیشنهاد انتخاب شد و قرارداد تولید گردید."
+msgstr "Offer selected and contract generated."
+
+msgid "قراردادی برای این درخواست موجود نیست."
+msgstr "No contract exists for this request."
+
+msgid "کد تأیید قرارداد ارسال شد."
+msgstr "Contract verification code sent."
+
+msgid "قرارداد با موفقیت تأیید شد."
+msgstr "Contract approved successfully."
+
+msgid "اطلاعات پروفایل تکمیل شد."
+msgstr "Profile information completed."
+
+msgid "ابتدا باید قرارداد تأیید شود."
+msgstr "The contract must be approved first."
+
+msgid "دسترسی مجاز نیست."
+msgstr "Access denied."
+
+msgid "پرداخت با موفقیت انجام شد."
+msgstr "Payment completed successfully."
+
+msgid "پرداخت انجام نشد."
+msgstr "Payment failed."
+
+msgid "مبلغ نامعتبر است."
+msgstr "Invalid amount."
+
+msgid "پیشنهاد ثبت شد."
+msgstr "Offer registered."
+
+msgid "وضعیت پیشنهاد تغییر کرد."
+msgstr "Offer status changed."
+
+msgid "قرارداد به‌صورت خودکار صادر شد."
+msgstr "Contract issued automatically."
+
+msgid "از این بخش تنها امکان لغو درخواست وجود دارد."
+msgstr "Only cancellation is possible here."
+
+msgid "درخواست لغو شد."
+msgstr "Request cancelled."
+
+msgid "حداکثر %(n)d پیشنهاد برای هر درخواست مجاز است."
+msgstr "A maximum of %(n)d offers is allowed per request."
+
+msgid "این پیشنهاد متعلق به این درخواست نیست."
+msgstr "This offer does not belong to this request."
+
+msgid "این پیشنهاد قابل انتخاب نیست (غیرفعال یا منقضی)."
+msgstr "This offer cannot be selected (inactive or expired)."
+
+msgid "بدون تأیید قرارداد امکان پرداخت وجود ندارد."
+msgstr "Payment is not possible without contract approval."
+
+msgid "این پیشنهاد قابل پرداخت نیست (غیرفعال یا منقضی)."
+msgstr "This offer is not payable (inactive or expired)."
+
+msgid "پرداخت یافت نشد."
+msgstr "Payment not found."
+
+msgid "قرارداد قبلاً تأیید شده و قابل تغییر نیست."
+msgstr "The contract has already been approved and cannot be changed."
+
+msgid "این قرارداد قبلاً تأیید شده است."
+msgstr "This contract has already been approved."
+
+msgid "کد معتبری یافت نشد. دوباره درخواست کد دهید."
+msgstr "No valid code found. Please request a new code."
+
+msgid "کد منقضی شده است. دوباره درخواست کد دهید."
+msgstr "The code has expired. Please request a new code."
+
+msgid "تعداد تلاش بیش از حد مجاز است. دوباره درخواست کد دهید."
+msgstr "Too many attempts. Please request a new code."
+
+msgid "کد واردشده نادرست است."
+msgstr "The entered code is incorrect."

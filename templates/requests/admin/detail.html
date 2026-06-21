@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+{% load i18n calendar_tags %}
+{% block content %}
+<div class="panel">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h4 mb-0">{% trans "درخواست" %} #{{ req.id }} — {{ req.full_name }}</h1>
+    <a class="btn secondary" data-ajax="true" href="{% url 'requests:admin-list' %}">{% trans "بازگشت به لیست" %}</a>
+  </div>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %}">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="table-responsive mb-4">
+    <table class="table">
+      <tbody>
+        <tr><th style="width:180px">{% trans "نام" %}</th><td>{{ req.full_name }}</td></tr>
+        <tr><th>{% trans "موبایل" %}</th><td>{{ req.mobile }}</td></tr>
+        <tr><th>{% trans "استان" %}</th><td>{{ req.province }}</td></tr>
+        <tr><th>{% trans "شهر" %}</th><td>{{ req.city|default:'—' }}</td></tr>
+        <tr><th>{% trans "توضیحات" %}</th><td>{{ req.description|default:'—'|linebreaksbr }}</td></tr>
+        <tr><th>{% trans "وضعیت" %}</th><td>{{ req.get_status_display }}</td></tr>
+        <tr><th>{% trans "کاربر" %}</th><td>{% if req.user %}{{ req.user }}{% else %}{% trans "— (هنوز ثبت‌نام نشده)" %}{% endif %}</td></tr>
+        <tr><th>{% trans "احراز هویت" %}</th><td>{% if req.identity_verified %}<span class="badge">{% trans "انجام‌شده" %}</span> — {{ req.national_id }}{% else %}<span class="badge warning">{% trans "انجام‌نشده" %}</span>{% endif %}</td></tr>
+        <tr><th>{% trans "تاریخ ثبت" %}</th><td>{{ req.created_at|smartdatetime:CALENDAR }}</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 class="h6">{% trans "مشخصات ارزیابی" %}</h2>
+  <div class="table-responsive mb-4">
+    <table class="table">
+      <tbody>
+        <tr><th style="width:220px">{% trans "نوع کاربر" %}</th><td>{{ req.get_user_type_display }}</td></tr>
+        <tr><th>{% trans "نوع پروژه" %}</th><td>{{ req.get_project_type_display|default:'—' }}</td></tr>
+        <tr><th>{% trans "نیاز به مشاورهٔ مالی؟" %}</th><td>{% if req.needs_financial_consult %}{% trans "بله" %}{% else %}{% trans "خیر" %}{% endif %}</td></tr>
+        <tr><th>{% trans "آدرس محل نصب" %}</th><td>{{ req.install_address|default:'—' }}</td></tr>
+        <tr><th>{% trans "مساحت تقریبی فضای نصب (متر مربع)" %}</th><td>{{ req.area_m2|default:'—' }}</td></tr>
+        <tr><th>{% trans "مشخصات محل نصب" %}</th><td>{{ req.get_install_location_display|default:'—' }}</td></tr>
+        <tr><th>{% trans "نوع ساختمان" %}</th><td>{{ req.get_building_type_display|default:'—' }}</td></tr>
+        <tr><th>{% trans "سایه یا مانع؟" %}</th><td>{% if req.has_shading %}{% trans "بله" %}{% else %}{% trans "خیر" %}{% endif %}</td></tr>
+        <tr><th>{% trans "نوع مالکیت محل نصب" %}</th><td>{{ req.get_ownership_type_display|default:'—' }}</td></tr>
+        <tr><th>{% trans "فاصله تا شبکهٔ سراسری (متر)" %}</th><td>{{ req.grid_distance_m|default:'—' }}</td></tr>
+        <tr><th>{% trans "تمایل به سیستم ذخیره‌سازی؟" %}</th><td>{{ req.get_storage_interest_display|default:'—' }}</td></tr>
+        <tr><th>{% trans "شناسهٔ قبض برق" %}</th><td>{{ req.bill_id|default:'—' }}</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  {% if can_cancel %}
+  <div class="mb-4">
+    <h2 class="h6">{% trans "عملیات" %}</h2>
+    <form method="post" action="{% url 'requests:admin-status' req.id %}">{% csrf_token %}
+      <input type="hidden" name="status" value="cancelled">
+      <button type="submit" class="btn secondary">{% trans "لغو درخواست" %}</button>
+    </form>
+  </div>
+  {% endif %}
+
+  <h2 class="h6">{% trans "پیشنهادها" %} ({{ offer_count }}/{{ max_offers }})</h2>
+  <div class="table-responsive mb-3">
+    <table class="table">
+      <thead><tr><th>{% trans "عنوان" %}</th><th>{% trans "مبلغ" %}</th><th>{% trans "ارزش افزوده" %}</th><th>{% trans "مبلغ کل" %}</th><th>{% trans "اعتبار تا" %}</th><th>{% trans "فعال" %}</th><th>{% trans "عملیات" %}</th></tr></thead>
+      <tbody>
+        {% for offer in offers %}
+        <tr>
+          <td>{{ offer.title }}</td>
+          <td>{{ offer.amount }} {{ offer.currency }}</td>
+          <td>{{ offer.vat_percent }}٪</td>
+          <td>{{ offer.total_amount }} {{ offer.currency }}</td>
+          <td>{{ offer.valid_until|smartdatetime:CALENDAR|default:'—' }}</td>
+          <td>{% if offer.is_active %}{% trans "بله" %}{% else %}{% trans "خیر" %}{% endif %}{% if offer.is_expired %} ({% trans "منقضی" %}){% endif %}</td>
+          <td class="d-flex gap-2 flex-wrap">
+            <form method="post" action="{% url 'requests:admin-offer-toggle' offer.id %}" style="display:inline">{% csrf_token %}
+              <button type="submit" class="btn secondary">{% if offer.is_active %}{% trans "غیرفعال‌سازی" %}{% else %}{% trans "فعال‌سازی" %}{% endif %}</button>
+            </form>
+            {% if can_issue_contract and offer.is_payable %}
+            <form method="post" action="{% url 'requests:admin-offer-issue-contract' offer.id %}" style="display:inline">{% csrf_token %}
+              <button type="submit" class="btn">{% trans "صدور قرارداد" %}</button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7">{% trans "پیشنهادی ثبت نشده است." %}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if can_add_offer %}
+  <div class="mb-4">
+    <h2 class="h6">{% trans "ثبت پیشنهاد جدید" %}</h2>
+    <form method="post" action="{% url 'requests:admin-offer-add' req.id %}" class="d-flex gap-2 flex-wrap">{% csrf_token %}
+      <input type="text" name="title" placeholder="{% trans 'عنوان' %}" class="form-control" style="max-width:200px" required>
+      <input type="number" name="amount" placeholder="{% trans 'مبلغ (ریال)' %}" class="form-control" style="max-width:200px" required>
+      <input type="number" name="vat_percent" value="10" min="0" max="100" placeholder="{% trans 'ارزش افزوده (٪)' %}" class="form-control" style="max-width:160px">
+      <input type="datetime-local" name="valid_until" class="form-control" style="max-width:220px">
+      <input type="text" name="description" placeholder="{% trans 'توضیحات' %}" class="form-control" style="max-width:260px">
+      <button type="submit" class="btn">{% trans "افزودن پیشنهاد" %}</button>
+    </form>
+  </div>
+  {% endif %}
+
+  <h2 class="h6">{% trans "قرارداد" %}</h2>
+  <div class="table-responsive mb-4">
+    <table class="table">
+      {% if contract %}
+      <tbody>
+        <tr><th style="width:180px">{% trans "شماره" %}</th><td>{{ contract.contract_number }}</td></tr>
+        <tr><th>{% trans "وضعیت" %}</th><td>{{ contract.get_status_display }}</td></tr>
+        <tr><th>{% trans "پیشنهاد" %}</th><td>{{ contract.offer.title }} — {{ contract.offer.amount }} {{ contract.offer.currency }}</td></tr>
+        <tr><th>{% trans "ارزش افزوده" %}</th><td>{{ contract.offer.vat_percent }}٪ ({{ contract.offer.vat_amount }} {{ contract.offer.currency }})</td></tr>
+        <tr><th>{% trans "مبلغ کل قابل پرداخت" %}</th><td>{{ contract.offer.total_amount }} {{ contract.offer.currency }}</td></tr>
+        <tr><th>{% trans "تأیید شده در" %}</th><td>{{ contract.approved_at|smartdatetime:CALENDAR|default:'—' }}</td></tr>
+        <tr><th>{% trans "متن" %}</th><td>{{ contract.body|linebreaksbr }}</td></tr>
+      </tbody>
+      {% else %}
+      <tbody><tr><td>{% trans "قراردادی تولید نشده است." %}</td></tr></tbody>
+      {% endif %}
+    </table>
+  </div>
+
+  <h2 class="h6">{% trans "پرداخت‌ها" %}</h2>
+  <div class="table-responsive mb-4">
+    <table class="table">
+      <thead><tr><th>#</th><th>{% trans "پیشنهاد" %}</th><th>{% trans "مبلغ" %}</th><th>{% trans "وضعیت" %}</th><th>{% trans "تاریخ پرداخت" %}</th></tr></thead>
+      <tbody>
+        {% for p in payments %}
+        <tr>
+          <td>{{ p.id }}</td>
+          <td>{{ p.offer.title }}</td>
+          <td>{{ p.amount }}</td>
+          <td>{{ p.get_status_display }}</td>
+          <td>{{ p.paid_at|smartdatetime:CALENDAR|default:'—' }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5">{% trans "پرداختی ثبت نشده است." %}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <h2 class="h6">{% trans "لاگ پیامک‌ها" %}</h2>
+  <div class="table-responsive">
+    <table class="table">
+      <thead><tr><th>{% trans "نوع" %}</th><th>{% trans "وضعیت" %}</th><th>{% trans "متن" %}</th><th>{% trans "تاریخ" %}</th></tr></thead>
+      <tbody>
+        {% for log in sms_logs %}
+        <tr>
+          <td>{{ log.get_message_type_display }}</td>
+          <td>{{ log.get_status_display }}</td>
+          <td>{{ log.body }}</td>
+          <td>{{ log.created_at|smartdatetime:CALENDAR }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4">{% trans "پیامکی ثبت نشده است." %}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

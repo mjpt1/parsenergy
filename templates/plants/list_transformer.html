@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% load i18n calendar_tags %}
+{% block content %}
+{% trans "بله,خیر" as yesno_str %}
+<div class="panel">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h4 mb-0">{% trans "ترانسفورماتورها" %}</h1>
+    <div class="d-flex gap-2 flex-wrap">
+      <a class="btn secondary" data-ajax="true" href="{% url 'plants:transformer-create' %}">{% trans "افزودن ترانسفورمر" %}</a>
+      <a class="btn secondary" data-ajax="true" href="{% url 'plants:equipment' %}">{% trans "بازگشت به تجهیزات" %}</a>
+    </div>
+  </div>
+  <div class="table-responsive">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>{% trans "نیروگاه" %}</th>
+          <th>{% trans "نام" %}</th>
+          <th>{% trans "ظرفیت (kVA)" %}</th>
+          <th>{% trans "وضعیت" %}</th>
+          <th>{% trans "آنلاین" %}</th>
+          <th>{% trans "سازنده" %}</th>
+          <th>{% trans "آخرین اتصال" %}</th>
+          <th>{% trans "عملیات" %}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for transformer in object_list %}
+        <tr>
+          <td>{{ transformer.plant.name }}</td>
+          <td>{{ transformer.name }}</td>
+          <td>{{ transformer.capacity_kva }}</td>
+          <td>{{ transformer.status }}</td>
+          <td>{{ transformer.online|yesno:yesno_str }}</td>
+          <td>{{ transformer.manufacturer|default:'-' }}</td>
+          <td>{{ transformer.last_seen_at|smartdatetime:CALENDAR|default:'-' }}</td>
+          <td class="d-flex gap-2">
+            <a class="btn secondary" data-ajax="true" href="{% url 'plants:transformer-edit' transformer.id %}">{% trans "ویرایش" %}</a>
+            <a class="btn secondary" data-ajax="true" href="{% url 'plants:transformer-delete' transformer.id %}">{% trans "حذف" %}</a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="8">{% trans "موردی یافت نشد." %}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

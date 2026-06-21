@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block content %}
+<div class="panel">
+  <h1 class="h4 mb-3">{% trans "مجوزهای نقش" %}: {{ target_role.name }}</h1>
+  <form method="post">
+    {% csrf_token %}
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label class="form-label">{% trans "مجوزها" %}</label>
+        {{ form.permissions }}
+      </div>
+    </div>
+    <div class="d-flex gap-2 mt-3">
+      <button type="submit" class="btn">{% trans "ذخیره" %}</button>
+      <a class="btn secondary" data-ajax="true" href="{% url 'accounts:roles' %}">{% trans "بازگشت" %}</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

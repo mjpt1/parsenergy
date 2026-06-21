@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block content %}
+<div class="panel" style="max-width:880px">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h4 mb-0">{% trans "تنظیمات سرویس‌ها" %}</h1>
+  </div>
+
+  {% if messages %}{% for message in messages %}
+    <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %}">{{ message }}</div>
+  {% endfor %}{% endif %}
+
+  <form method="post">{% csrf_token %}
+    <div class="panel mb-3">
+      <h2 class="h6 mb-3">{% trans "پیامک (SMS)" %}</h2>
+      <p class="form-text mb-3">{% trans "تا زمانی که سرویس «HTTP» با آدرس و کلید معتبر تنظیم نشود، پیامک فقط در لاگ ثبت می‌شود و واقعاً ارسال نمی‌گردد." %}</p>
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label">{% trans "سرویس پیامک" %}</label>
+          {{ form.sms_provider }}
+        </div>
+        <div class="col-md-8">
+          <label class="form-label">{% trans "آدرس سرویس پیامک (URL)" %}</label>
+          {{ form.sms_base_url }}
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">{% trans "کلید API پیامک" %}</label>
+          {{ form.sms_api_key }}
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">{% trans "شمارهٔ فرستنده" %}</label>
+          {{ form.sms_sender }}
+        </div>
+        <div class="col-md-3">
+          <label class="form-label d-block">{% trans "وضعیت" %}</label>
+          <div class="form-check">
+            {{ form.sms_enabled }}
+            <label class="form-check-label" for="{{ form.sms_enabled.id_for_label }}">{% trans "فعال‌سازی ارسال پیامک" %}</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel mb-3">
+      <h2 class="h6 mb-3">{% trans "احراز هویت شاهکار" %}</h2>
+      <p class="form-text mb-3">{% trans "آدرس و کلید API را از داشبورد شبانیک دریافت کنید. در حالت «آزمایشی»، بدون تماس واقعی نتیجهٔ تنظیم‌شده برگردانده می‌شود." %}</p>
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label">{% trans "سرویس احراز هویت" %}</label>
+          {{ form.shahkar_provider }}
+        </div>
+        <div class="col-md-8">
+          <label class="form-label">{% trans "آدرس API شاهکار (URL)" %}</label>
+          {{ form.shahkar_base_url }}
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">{% trans "توکن شاهکار" %}</label>
+          {{ form.shahkar_api_key }}
+          <div class="form-text">{% trans "همان توکنی که شبانیک به شما داده؛ به‌صورت هدر SHABANIC-API-KEY ارسال می‌شود." %}</div>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label d-block">{% trans "وضعیت" %}</label>
+          <div class="form-check">
+            {{ form.shahkar_enabled }}
+            <label class="form-check-label" for="{{ form.shahkar_enabled.id_for_label }}">{% trans "فعال‌سازی احراز هویت شاهکار" %}</label>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label d-block">{% trans "حالت آزمایشی" %}</label>
+          <div class="form-check">
+            {{ form.shahkar_mock_result }}
+            <label class="form-check-label" for="{{ form.shahkar_mock_result.id_for_label }}">{% trans "در حالت آزمایشی، نتیجه موفق باشد" %}</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="d-flex gap-2">
+      <button type="submit" class="btn">{% trans "ذخیره" %}</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

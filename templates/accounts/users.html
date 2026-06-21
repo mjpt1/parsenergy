@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% load i18n calendar_tags %}
+{% block content %}
+<div class="panel">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h4 mb-0">{% trans "کاربران و دسترسی‌ها" %}</h1>
+  </div>
+  <div class="table-responsive">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>{% trans "نام کاربری" %}</th>
+          <th>{% trans "نام" %}</th>
+          <th>{% trans "نقش" %}</th>
+          <th>{% trans "ایمیل" %}</th>
+          <th>{% trans "وضعیت" %}</th>
+          <th>{% trans "آخرین ورود" %}</th>
+          <th>{% trans "مدیریت" %}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for user in object_list %}
+        <tr>
+          <td>{{ user.username }}</td>
+          <td>{{ user.get_full_name|default:'-' }}</td>
+          <td>{{ user.role }}</td>
+          <td>{{ user.email|default:'-' }}</td>
+          <td>{% if user.is_active %}{% trans "فعال" %}{% else %}{% trans "غیرفعال" %}{% endif %}</td>
+          <td>{{ user.last_login|smartdatetime:CALENDAR|default:'-' }}</td>
+          <td><a class="btn secondary" data-ajax="true" href="{% url 'accounts:user-roles' user.id %}">{% trans "نقش‌ها" %}</a></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7">{% trans "کاربری یافت نشد." %}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

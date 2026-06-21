@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block content %}
+<div class="panel" style="max-width:480px;margin:0 auto;text-align:center">
+  <h1 class="h4 mb-3">{% trans "درگاه پرداخت (داخلی)" %}</h1>
+  <p class="mb-1">{% trans "مبلغ قابل پرداخت:" %}</p>
+  <p style="font-size:1.5rem;font-weight:700">{{ payment.amount }} {{ payment.offer.currency }}</p>
+  <p class="footer-note mb-2">{% trans "شامل ارزش افزوده" %} {{ payment.offer.vat_percent }}٪</p>
+  <p class="mb-3">{% trans "درخواست" %} #{{ payment.request_id }} — {{ payment.offer.title }}</p>
+  <form method="post" action="{% url 'requests:pay-callback' payment.token %}">{% csrf_token %}
+    <input type="hidden" name="result" value="success">
+    <button type="submit" class="btn w-100">{% trans "پرداخت موفق" %}</button>
+  </form>
+  <form method="post" action="{% url 'requests:pay-callback' payment.token %}" class="mt-2">{% csrf_token %}
+    <input type="hidden" name="result" value="cancel">
+    <button type="submit" class="btn secondary w-100">{% trans "انصراف" %}</button>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-5">
+    <div class="card shadow-lg bg-black border-secondary">
+      <div class="card-body p-4">
+        <h1 class="h4 mb-3">{% trans "ورود" %}</h1>
+        <form method="post">{% csrf_token %}
+          {{ form.as_p }}
+          <button class="btn btn-primary w-100" type="submit">{% trans "ورود" %}</button>
+        </form>
+        <hr>
+        <div class="d-flex gap-2 flex-wrap">
+          <a class="btn secondary" href="{% url 'requests:submit' %}">{% trans "ثبت درخواست جدید" %}</a>
+          <a class="btn secondary" href="{% url 'requests:otp-login' %}">{% trans "ورود با کد پیامک" %}</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

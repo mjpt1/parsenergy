@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% load i18n calendar_tags %}
+{% block content %}
+<div class="panel">
+  <h1 class="h4 mb-3">{% trans "تیکت‌ها" %}</h1>
+  {% if messages %}{% for message in messages %}
+    <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %}">{{ message }}</div>
+  {% endfor %}{% endif %}
+
+  <form method="get" class="d-flex gap-2 flex-wrap mb-3">
+    <select name="status" class="form-select" style="max-width:220px" onchange="this.form.submit()">
+      <option value="">{% trans "همهٔ وضعیت‌ها" %}</option>
+      {% for value, label in status_choices %}
+      <option value="{{ value }}" {% if current_status == value %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+  </form>
+
+  <div class="table-responsive">
+    <table class="table">
+      <thead><tr><th>#</th><th>{% trans "موضوع" %}</th><th>{% trans "کاربر" %}</th><th>{% trans "وضعیت" %}</th><th>{% trans "اولویت" %}</th><th>{% trans "به‌روزرسانی" %}</th></tr></thead>
+      <tbody>
+        {% for t in tickets %}
+        <tr>
+          <td>{{ t.id }}</td>
+          <td><a data-ajax="true" href="{% url 'requests:admin-ticket-detail' t.id %}">{{ t.subject }}</a></td>
+          <td>{{ t.user }}</td>
+          <td>{{ t.get_status_display }}</td>
+          <td>{{ t.get_priority_display }}</td>
+          <td>{{ t.updated_at|smartdatetime:CALENDAR }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6">{% trans "تیکتی یافت نشد." %}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

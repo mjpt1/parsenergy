@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% load i18n calendar_tags %}
+{% block content %}
+<div class="card bg-black border-secondary">
+  <div class="card-body">
+    <h1 class="h4 mb-3">{% trans "لاگ‌های امنیتی" %}</h1>
+    <div class="table-responsive">
+      <table class="table table-dark table-striped align-middle">
+        <thead><tr><th>{% trans "زمان" %}</th><th>{% trans "کاربر" %}</th><th>{% trans "اکشن" %}</th><th>{% trans "هدف" %}</th><th>IP</th></tr></thead>
+        <tbody>
+          {% for log in object_list %}
+          <tr>
+            <td>{{ log.created_at|smartdatetime:CALENDAR }}</td>
+            <td>{{ log.actor.username|default:'-' }}</td>
+            <td>{{ log.action }}</td>
+            <td>{{ log.target_type }} / {{ log.target_id }}</td>
+            <td>{{ log.ip_address|default:'-' }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="5">{% trans "لاگی ثبت نشده است." %}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

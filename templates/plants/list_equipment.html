@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block content %}
+{% trans "بله,خیر" as yesno_str %}
+<div class="panel">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h4 mb-0">{% trans "تجهیزات" %}</h1>
+    <div class="d-flex gap-2 flex-wrap">
+      <a class="btn secondary" data-ajax="true" href="{% url 'plants:equipment-create' %}">{% trans "افزودن تجهیز" %}</a>
+      <a class="btn secondary" data-ajax="true" href="{% url 'plants:transformers' %}">{% trans "ترانسفورماتورها" %}</a>
+      <a class="btn secondary" data-ajax="true" href="{% url 'plants:gateways' %}">{% trans "گیت‌وی‌ها" %}</a>
+    </div>
+  </div>
+  <div class="table-responsive">
+    <table class="table">
+      <thead><tr><th>{% trans "نیروگاه" %}</th><th>{% trans "دسته" %}</th><th>{% trans "نام" %}</th><th>{% trans "سریال" %}</th><th>{% trans "سلامت" %}</th><th>{% trans "آنلاین" %}</th><th>{% trans "عملیات" %}</th></tr></thead>
+      <tbody>
+        {% for equipment in object_list %}
+        <tr>
+          <td>{{ equipment.plant.name }}</td>
+          <td>{{ equipment.category }}</td>
+          <td>{{ equipment.name }}</td>
+          <td>{{ equipment.serial_number }}</td>
+          <td>{{ equipment.health_status }}</td>
+          <td>{{ equipment.online|yesno:yesno_str }}</td>
+          <td class="d-flex gap-2">
+            <a class="btn secondary" data-ajax="true" href="{% url 'plants:equipment-edit' equipment.id %}">{% trans "ویرایش" %}</a>
+            <a class="btn secondary" data-ajax="true" href="{% url 'plants:equipment-delete' equipment.id %}">{% trans "حذف" %}</a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7">{% trans "موردی یافت نشد." %}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

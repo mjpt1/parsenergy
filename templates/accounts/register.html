@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-7">
+    <div class="card bg-black border-secondary">
+      <div class="card-body p-4">
+        <h1 class="h4 mb-3">{% trans "ثبت‌نام" %}</h1>
+        <form method="post">{% csrf_token %}
+          {{ form.as_p }}
+          <button class="btn btn-success w-100" type="submit">{% trans "ایجاد حساب" %}</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

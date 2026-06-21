@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block content %}
+<div class="panel">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h4 mb-0">{% if settings.customer_page_title %}{{ settings.customer_page_title }}{% else %}{% trans "قرارداد درخواست" %} #{{ req.id }}{% endif %}</h1>
+    <a class="btn secondary" data-ajax="true" href="{% url 'requests:my-detail' req.id %}">{% trans "بازگشت" %}</a>
+  </div>
+  {% if messages %}{% for message in messages %}
+    <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %}">{{ message }}</div>
+  {% endfor %}{% endif %}
+  {% if settings.customer_page_intro %}<p class="footer-note mb-3">{{ settings.customer_page_intro }}</p>{% endif %}
+
+  {% if contract %}
+    <table class="table mb-3">
+      <tbody>
+        <tr><th style="width:160px">{% trans "شماره قرارداد" %}</th><td>{{ contract.contract_number }}</td></tr>
+        <tr><th>{% trans "وضعیت" %}</th><td>{{ contract.get_status_display }}</td></tr>
+        <tr><th>{% trans "مبلغ" %}</th><td>{{ contract.offer.amount }} {{ contract.offer.currency }}</td></tr>
+        <tr><th>{% trans "ارزش افزوده" %}</th><td>{{ contract.offer.vat_percent }}٪ ({{ contract.offer.vat_amount }} {{ contract.offer.currency }})</td></tr>
+        <tr><th>{% trans "مبلغ کل قابل پرداخت" %}</th><td><strong>{{ contract.offer.total_amount }} {{ contract.offer.currency }}</strong></td></tr>
+        <tr><th>{% trans "احراز هویت" %}</th><td>{% if req.identity_verified %}<span class="badge">{% trans "انجام‌شده" %}</span>{% else %}<span class="badge warning">{% trans "انجام‌نشده" %}</span>{% endif %}</td></tr>
+      </tbody>
+    </table>
+
+    <div class="mb-3" style="white-space:pre-wrap;border:1px solid var(--pe-border, #ddd);border-radius:8px;padding:12px">{{ contract.body }}</div>
+
+    <div class="d-flex gap-2 flex-wrap mb-3">
+      <a class="btn secondary" href="{% url 'requests:contract-print' req.id %}" target="_blank" rel="noopener">{% trans "چاپ / ذخیره PDF" %}</a>
+      <a class="btn secondary" href="{% url 'requests:contract-word' req.id %}">{% trans "دانلود Word" %}</a>
+    </div>
+
+    {% if contract.status == 'generated' %}
+      {% if not req.identity_verified %}
+        <h2 class="h6">{% trans "احراز هویت" %}</h2>
+        <p class="footer-note">{% trans "برای ادامه، کد ملی خود را وارد کنید تا با شمارهٔ موبایل شما تطبیق داده شود." %}</p>
+        <form method="post" action="{% url 'requests:contract-send-otp' req.id %}" class="d-flex gap-2 flex-wrap">{% csrf_token %}
+          <input type="text" name="national_id" class="form-control" style="max-width:220px" placeholder="{% trans 'کد ملی (۱۰ رقم)' %}" inputmode="numeric" maxlength="10" required>
+          <button type="submit" class="btn">{% trans "احراز هویت و ارسال کد" %}</button>
+        </form>
+      {% else %}
+        <h2 class="h6">{% trans "تأیید قرارداد با کد پیامک" %}</h2>
+        <form method="post" action="{% url 'requests:contract-send-otp' req.id %}" class="mb-2">{% csrf_token %}
+          <input type="hidden" name="national_id" value="{{ req.national_id }}">
+          <button type="submit" class="btn secondary">{% trans "ارسال مجدد کد" %}</button>
+        </form>
+        <form method="post" action="{% url 'requests:contract-approve' req.id %}" class="d-flex gap-2">{% csrf_token %}
+          <input type="text" name="code" class="form-control" style="max-width:200px" placeholder="{% trans 'کد تأیید' %}" required>
+          <button type="submit" class="btn">{% trans "تأیید قرارداد" %}</button>
+        </form>
+      {% endif %}
+    {% elif contract.status == 'approved' %}
+      <div class="alert alert-success">{% trans "این قرارداد تأیید شده است." %}</div>
+      {% if req.status != 'paid' %}
+      <form method="post" action="{% url 'requests:pay-start' req.id %}">{% csrf_token %}
+        <button type="submit" class="btn">{% trans "ادامه و پرداخت" %}</button>
+      </form>
+      {% else %}
+      <div class="alert alert-success">{% trans "پرداخت این درخواست انجام شده است." %}</div>
+      {% endif %}
+    {% endif %}
+  {% else %}
+    <p>{% trans "قراردادی برای این درخواست تولید نشده است. ابتدا یک پیشنهاد را انتخاب کنید." %}</p>
+  {% endif %}
+</div>
+{% endblock %}

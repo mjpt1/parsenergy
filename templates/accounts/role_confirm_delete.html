@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block content %}
+<div class="panel">
+  <h1 class="h4 mb-3">{% trans "حذف نقش" %}</h1>
+  <p>{% trans "آیا از حذف این نقش مطمئن هستید؟" %} «{{ object.name }}»</p>
+  <form method="post">
+    {% csrf_token %}
+    <div class="d-flex gap-2">
+      <button type="submit" class="btn">{% trans "حذف" %}</button>
+      <a class="btn secondary" data-ajax="true" href="{% url 'accounts:roles' %}">{% trans "انصراف" %}</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

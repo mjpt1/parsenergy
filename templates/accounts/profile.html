@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block content %}
+<div class="card bg-black border-secondary">
+  <div class="card-body">
+    <h1 class="h4">{% trans "پروفایل" %}</h1>
+    <p>{% trans "کاربر" %}: {{ user.username }}</p>
+    <p>{% trans "نقش" %}: {{ user.role }}</p>
+    <p>{% trans "ایمیل" %}: {{ user.email }}</p>
+  </div>
+</div>
+{% endblock %}

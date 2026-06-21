@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block panel_attributes %}data-dashboard="owner" data-endpoint="{% url 'core:owner-dashboard-data' %}"{% endblock %}
+{% block topbar %}
+<div class="title">
+  <h2>{% trans "وضعیت نیروگاه" %}</h2>
+  <span>{% trans "پایش لحظه ای تولید انرژی" %}</span>
+</div>
+<div class="top-actions">
+  <div>{% trans "کاربر" %}: {{ request.user.get_full_name|default:request.user.username }}</div>
+  <button class="btn secondary" type="button" id="themeToggle" onclick="SolarOps.toggleTheme()">{% trans "حالت شب" %}</button>
+</div>
+{% endblock %}
+{% block content %}
+<div class="cards">
+        <div class="card">
+          <h3>{% trans "تولید لحظه ای" %}</h3>
+          <strong id="ownerRealtimePower">0 kW</strong>
+        </div>
+
+        <div class="card">
+          <h3>{% trans "تولید امروز" %}</h3>
+          <strong id="ownerTodayEnergy">0 kWh</strong>
+        </div>
+
+        <div class="card">
+          <h3>{% trans "راندمان نیروگاه" %}</h3>
+          <strong id="ownerEfficiency">0%</strong>
+        </div>
+
+        <div class="card">
+          <h3>{% trans "درآمد امروز" %}</h3>
+          <strong id="ownerTodayRevenue">0 ریال</strong>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="panel">
+          <h2>{% trans "نمودار تولید انرژی" %}</h2>
+          <canvas id="ownerPowerChart"></canvas>
+        </div>
+
+        <div class="panel">
+          <h2>{% trans "وضعیت تجهیزات" %}</h2>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>{% trans "تجهیز" %}</th>
+                <th>{% trans "وضعیت" %}</th>
+                <th>{% trans "توان" %}</th>
+              </tr>
+            </thead>
+            <tbody id="ownerInverterTable">
+              {% for plant in plants %}
+                {% for equipment in plant.equipment.all|slice:':4' %}
+                <tr>
+                  <td>{{ equipment.name }}</td>
+                  <td class="status-ok">{% if equipment.online %}{% trans "فعال" %}{% else %}{% trans "قطع ارتباط" %}{% endif %}</td>
+                  <td>0 kW</td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="3">{% trans "تجهیز ثبت نشده است." %}</td>
+                </tr>
+                {% endfor %}
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="panel">
+          <h2>{% trans "هشدارهای اخیر" %}</h2>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>{% trans "نوع هشدار" %}</th>
+                <th>{% trans "توضیحات" %}</th>
+                <th>{% trans "زمان" %}</th>
+              </tr>
+            </thead>
+            <tbody id="ownerAlertsTable">
+              {% for alert in recent_alerts %}
+              <tr>
+                <td>{{ alert.rule.name }}</td>
+                <td>{{ alert.message }}</td>
+                <td>{{ alert.created_at|date:'H:i' }}</td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="3">{% trans "هشداری ثبت نشده است." %}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="panel">
+          <h2>{% trans "نقشه نیروگاه" %}</h2>
+          <div class="map">
+            {% trans "نمایش موقعیت نیروگاه روی نقشه" %}
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>{% trans "گزارش ها" %}</h2>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>{% trans "گزارش" %}</th>
+              <th>{% trans "بازه زمانی" %}</th>
+              <th>{% trans "دانلود" %}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>{% trans "گزارش تولید" %}</td>
+              <td>{% trans "روزانه" %}</td>
+              <td>
+                {% if report_plant %}
+                <a class="badge" href="{% url 'reports:pdf' report_plant.id %}">PDF</a>
+                {% else %}
+                <a class="badge" href="{% url 'reports:center' %}">PDF</a>
+                {% endif %}
+              </td>
+            </tr>
+            <tr>
+              <td>{% trans "تحلیل عملکرد" %}</td>
+              <td>{% trans "ماهانه" %}</td>
+              <td>
+                {% if report_plant %}
+                <a class="badge" href="{% url 'reports:excel' report_plant.id %}">Excel</a>
+                {% else %}
+                <a class="badge" href="{% url 'reports:center' %}">Excel</a>
+                {% endif %}
+              </td>
+            </tr>
+            <tr>
+              <td>{% trans "گزارش درآمد" %}</td>
+              <td>{% trans "سالانه" %}</td>
+              <td>
+                {% if report_plant %}
+                <a class="badge" href="{% url 'reports:pdf' report_plant.id %}">PDF</a>
+                {% else %}
+                <a class="badge" href="{% url 'reports:center' %}">PDF</a>
+                {% endif %}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+{% endblock %}

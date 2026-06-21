@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block content %}
+<div class="panel" style="max-width:900px">
+  <h1 class="h4 mb-3">{% trans "تنظیمات قرارداد" %}</h1>
+  {% if messages %}{% for message in messages %}
+    <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %}">{{ message }}</div>
+  {% endfor %}{% endif %}
+
+  <form method="post" enctype="multipart/form-data">{% csrf_token %}
+    <h2 class="h6 mt-2 mb-3">{% trans "سربرگ و اطلاعات شرکت" %}</h2>
+    <div class="mb-3"><label class="form-label">{% trans "نام شرکت" %}</label>{{ form.company_name }}</div>
+    <div class="mb-3"><label class="form-label">{% trans "آدرس شرکت" %}</label>{{ form.company_address }}</div>
+    <div class="mb-3"><label class="form-label">{% trans "تلفن شرکت" %}</label>{{ form.company_phone }}</div>
+    <div class="mb-3">
+      <label class="form-label">{% trans "لوگو" %}</label>{{ form.logo }}
+      {% if form.instance.logo %}<div class="form-text"><a href="{{ form.instance.logo.url }}" target="_blank" rel="noopener">{% trans "لوگوی فعلی" %}</a></div>{% endif %}
+    </div>
+    <div class="mb-3"><label class="form-label">{% trans "متن سربرگ" %}</label>{{ form.header_note }}</div>
+    <div class="mb-3"><label class="form-label">{% trans "متن پاورقی" %}</label>{{ form.footer_note }}</div>
+    <div class="mb-3"><label class="form-label">{% trans "متن امضا" %}</label>{{ form.signature_text }}</div>
+
+    <h2 class="h6 mt-3 mb-3">{% trans "حاشیهٔ صفحه (چاپ/PDF) — میلی‌متر" %}</h2>
+    <div class="d-flex gap-2 flex-wrap mb-3">
+      <div style="max-width:120px"><label class="form-label">{% trans "بالا" %}</label>{{ form.margin_top }}</div>
+      <div style="max-width:120px"><label class="form-label">{% trans "راست" %}</label>{{ form.margin_right }}</div>
+      <div style="max-width:120px"><label class="form-label">{% trans "پایین" %}</label>{{ form.margin_bottom }}</div>
+      <div style="max-width:120px"><label class="form-label">{% trans "چپ" %}</label>{{ form.margin_left }}</div>
+    </div>
+
+    <h2 class="h6 mt-3 mb-3">{% trans "صفحهٔ نمایش به مشتری" %}</h2>
+    <div class="mb-3"><label class="form-label">{% trans "عنوان صفحهٔ مشتری" %}</label>{{ form.customer_page_title }}</div>
+    <div class="mb-3"><label class="form-label">{% trans "توضیح صفحهٔ مشتری" %}</label>{{ form.customer_page_intro }}</div>
+
+    <button type="submit" class="btn">{% trans "ذخیره" %}</button>
+  </form>
+</div>
+{% endblock %}

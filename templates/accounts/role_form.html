@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block content %}
+<div class="panel">
+  <h1 class="h4 mb-3">{% trans "فرم نقش" %}</h1>
+  <form method="post">
+    {% csrf_token %}
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label class="form-label">{% trans "نام نقش" %}</label>
+        {{ form.name }}
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">{% trans "توضیح" %}</label>
+        {{ form.description }}
+      </div>
+      <div class="col-md-4">
+        <label class="form-label d-block">{% trans "سیستمی" %}</label>
+        <div class="form-check">
+          {{ form.is_system }}
+          <label class="form-check-label" for="{{ form.is_system.id_for_label }}">{% trans "سیستمی" %}</label>
+        </div>
+      </div>
+    </div>
+    <div class="d-flex gap-2 mt-3">
+      <button type="submit" class="btn">{% trans "ذخیره" %}</button>
+      <a class="btn secondary" data-ajax="true" href="{% url 'accounts:roles' %}">{% trans "بازگشت" %}</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,56 @@
+{% load i18n calendar_tags %}<!doctype html>
+<html lang="{{ LANGUAGE_CODE }}" dir="{% if LANGUAGE_BIDI %}rtl{% else %}ltr{% endif %}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% trans "قرارداد" %} {{ contract.contract_number }}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    @page { size: A4; margin: {{ settings.margin_top }}mm {{ settings.margin_right }}mm {{ settings.margin_bottom }}mm {{ settings.margin_left }}mm; }
+    * { box-sizing: border-box; }
+    body { font-family: 'Vazirmatn', sans-serif; color: #111; background: #f1f1f1; line-height: 1.9; margin: 0; padding: 24px; }
+    .doc { max-width: 820px; margin: 0 auto; background: #fff; padding: 32px; box-shadow: 0 6px 24px rgba(0,0,0,.12); }
+    .company { text-align: center; margin-bottom: 18px; border-bottom: 1px solid #e3e3e3; padding-bottom: 14px; }
+    .company img { max-height: 90px; margin-bottom: 8px; }
+    .company h1 { font-size: 1.4rem; margin: 6px 0; }
+    .company p { margin: 2px 0; color: #444; font-size: .95rem; }
+    .meta { border: 1px solid #ccc; border-radius: 8px; padding: 10px 14px; margin: 16px 0; font-size: .95rem; }
+    .meta div { margin: 2px 0; }
+    .body { white-space: pre-wrap; }
+    .foot { margin-top: 24px; color: #333; }
+    .sign { margin-top: 48px; font-weight: 600; }
+    .toolbar { text-align: center; margin: 0 auto 22px; max-width: 820px; }
+    .toolbar button, .toolbar a { font-family: inherit; font-size: .95rem; padding: 10px 18px; border-radius: 8px; border: 1px solid #16a34a; background: #16a34a; color: #fff; cursor: pointer; text-decoration: none; margin: 0 4px; }
+    .toolbar a.secondary { background: #fff; color: #16a34a; }
+    @media print {
+      body { background: #fff; padding: 0; }
+      .toolbar { display: none; }
+      .doc { max-width: none; box-shadow: none; padding: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <button type="button" onclick="window.print()">{% trans "چاپ / ذخیره PDF" %}</button>
+    <a class="secondary" href="{% url 'requests:contract-word' req.id %}">{% trans "دانلود Word" %}</a>
+    <a class="secondary" href="{% url 'requests:contract' req.id %}">{% trans "بازگشت" %}</a>
+  </div>
+  <div class="doc">
+    <div class="company">
+      {% if settings.logo %}<img src="{{ settings.logo.url }}" alt="logo"><br>{% endif %}
+      {% if settings.company_name %}<h1>{{ settings.company_name }}</h1>{% endif %}
+      {% if settings.company_address %}<p>{{ settings.company_address }}</p>{% endif %}
+      {% if settings.company_phone %}<p>{{ settings.company_phone }}</p>{% endif %}
+      {% if settings.header_note %}<p>{{ settings.header_note }}</p>{% endif %}
+    </div>
+    <div class="meta">
+      <div>{% trans "شماره قرارداد" %}: {{ contract.contract_number }}</div>
+      <div>{% trans "تاریخ" %}: {{ contract.created_at|smartdatetime:CALENDAR }}</div>
+    </div>
+    <div class="body">{{ contract.body }}</div>
+    {% if settings.footer_note %}<div class="foot">{{ settings.footer_note }}</div>{% endif %}
+    {% if settings.signature_text %}<div class="sign">{{ settings.signature_text }}</div>{% endif %}
+  </div>
+</body>
+</html>

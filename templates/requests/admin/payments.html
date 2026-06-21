@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% load i18n calendar_tags %}
+{% block content %}
+<div class="panel">
+  <h1 class="h4 mb-3">{% trans "پرداخت‌ها" %}</h1>
+  <div class="table-responsive">
+    <table class="table">
+      <thead><tr><th>#</th><th>{% trans "درخواست" %}</th><th>{% trans "پیشنهاد" %}</th><th>{% trans "مبلغ" %}</th><th>{% trans "وضعیت" %}</th><th>{% trans "تاریخ پرداخت" %}</th></tr></thead>
+      <tbody>
+        {% for p in payments %}
+        <tr>
+          <td>{{ p.id }}</td>
+          <td><a data-ajax="true" href="{% url 'requests:admin-detail' p.request_id %}">#{{ p.request_id }}</a></td>
+          <td>{{ p.offer.title }}</td>
+          <td>{{ p.amount }}</td>
+          <td>{{ p.get_status_display }}</td>
+          <td>{{ p.paid_at|smartdatetime:CALENDAR|default:'—' }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6">{% trans "پرداختی یافت نشد." %}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

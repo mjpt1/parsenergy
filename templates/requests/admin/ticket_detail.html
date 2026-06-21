@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% load i18n calendar_tags %}
+{% block content %}
+<div class="panel">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h4 mb-0">{% trans "تیکت" %} #{{ ticket.id }} — {{ ticket.subject }}</h1>
+    <a class="btn secondary" data-ajax="true" href="{% url 'requests:admin-tickets' %}">{% trans "بازگشت" %}</a>
+  </div>
+  {% if messages %}{% for message in messages %}
+    <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %}">{{ message }}</div>
+  {% endfor %}{% endif %}
+
+  <div class="mb-3 d-flex gap-2 flex-wrap">
+    <span class="badge">{{ ticket.get_status_display }}</span>
+    <span class="badge warning">{{ ticket.get_priority_display }}</span>
+    {% if ticket.request_id %}<a class="badge" data-ajax="true" href="{% url 'requests:admin-detail' ticket.request_id %}">{% trans "درخواست" %} #{{ ticket.request_id }}</a>{% endif %}
+  </div>
+
+  <div class="mini-list mb-4">
+    {% for m in thread %}
+    <div class="item" style="flex-direction:column;align-items:stretch">
+      <div class="d-flex justify-content-between">
+        <strong>{% if m.is_staff_reply %}{% trans "پشتیبانی" %}{% else %}{% if m.author %}{{ m.author }}{% else %}{% trans "مشتری" %}{% endif %}{% endif %}</strong>
+        <small>{{ m.created_at|smartdatetime:CALENDAR }}</small>
+      </div>
+      <div style="white-space:pre-wrap">{{ m.body }}</div>
+      {% if m.attachment %}<a href="{{ m.attachment.url }}" target="_blank" rel="noopener">{% trans "پیوست" %}</a>{% endif %}
+    </div>
+    {% empty %}
+    <p>{% trans "پیامی وجود ندارد." %}</p>
+    {% endfor %}
+  </div>
+
+  <h2 class="h6">{% trans "ارسال پاسخ" %}</h2>
+  <form method="post" action="{% url 'requests:admin-ticket-reply' ticket.id %}" enctype="multipart/form-data" class="mb-4">{% csrf_token %}
+    <div class="mb-2">{{ reply_form.body }}</div>
+    <div class="mb-2">{{ reply_form.attachment }}</div>
+    <button type="submit" class="btn">{% trans "ارسال پاسخ" %}</button>
+  </form>
+
+  <h2 class="h6">{% trans "تغییر وضعیت" %}</h2>
+  <form method="post" action="{% url 'requests:admin-ticket-status' ticket.id %}" class="d-flex gap-2 flex-wrap">{% csrf_token %}
+    <select name="status" class="form-select" style="max-width:220px">
+      {% for value, label in status_choices %}
+      <option value="{{ value }}" {% if ticket.status == value %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="btn secondary">{% trans "اعمال" %}</button>
+  </form>
+</div>
+{% endblock %}

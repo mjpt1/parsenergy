@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block content %}
+<div class="card bg-black border-secondary">
+  <div class="card-body">
+    <h1 class="h4 mb-3">{% trans "مرکز گزارش‌ها" %}</h1>
+    <p>{% trans "خروجی‌های PDF و Excel برای گزارش‌های مدیریتی و بهره‌برداری" %}</p>
+    <div class="row g-3 mb-3">
+      <div class="col-md-4"><div class="metric-card p-3"><div class="text-secondary">{% trans "تعداد نیروگاه" %}</div><div class="fs-3 fw-bold">{{ plants|length }}</div></div></div>
+      <div class="col-md-4"><div class="metric-card p-3"><div class="text-secondary">{% trans "گزارش PDF" %}</div><div class="fs-3 fw-bold">{% trans "فعال" %}</div></div></div>
+      <div class="col-md-4"><div class="metric-card p-3"><div class="text-secondary">{% trans "گزارش Excel" %}</div><div class="fs-3 fw-bold">{% trans "فعال" %}</div></div></div>
+    </div>
+    <ul class="list-group list-group-flush">
+      {% for plant in plants %}
+      <li class="list-group-item bg-black text-light border-secondary d-flex justify-content-between align-items-center">
+        <span>{{ plant.name }} - {{ plant.capacity_kw }} kW</span>
+        <span class="d-flex gap-2">
+          <a class="btn btn-sm btn-outline-warning" data-no-ajax="true" href="{% url 'reports:pdf' plant.id %}">PDF</a>
+          <a class="btn btn-sm btn-outline-success" data-no-ajax="true" href="{% url 'reports:excel' plant.id %}">Excel</a>
+          <a class="btn btn-sm btn-outline-info" href="{% url 'analytics:plant-dashboard' plant.id %}">Analytics</a>
+        </span>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+{% endblock %}

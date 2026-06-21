@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block content %}
+<div class="panel">
+  <h1 class="h4 mb-3">{% trans "فرم" %}</h1>
+  <form method="post">{% csrf_token %}
+    {{ form.as_p }}
+    <div class="d-flex gap-2 mt-3">
+      <button type="submit" class="btn">{% trans "ذخیره" %}</button>
+      <a href="javascript:history.back()" class="btn secondary">{% trans "بازگشت" %}</a>
+    </div>
+  </form>
+</div>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    var lastSeen = document.querySelector('input[name="last_seen_at"]');
+    if (lastSeen && typeof lastSeen.showPicker === 'function') {
+      lastSeen.addEventListener('focus', function () {
+        lastSeen.showPicker();
+      });
+    }
+  });
+</script>
+{% endblock %}

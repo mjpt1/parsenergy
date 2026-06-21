@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block content %}
+<div class="panel" style="max-width:480px;margin:0 auto">
+  <h1 class="h4 mb-3">{% trans "تأیید شماره موبایل" %}</h1>
+  <p>{% trans "کد تأیید ارسال‌شده به شماره زیر را وارد کنید:" %} <strong>{{ mobile }}</strong></p>
+  {% if messages %}{% for message in messages %}
+    <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %}">{{ message }}</div>
+  {% endfor %}{% endif %}
+  <form method="post">{% csrf_token %}
+    <p><input type="text" name="code" class="form-control" placeholder="{% trans 'کد تأیید' %}" required></p>
+    <button type="submit" class="btn w-100">{% trans "تأیید و ورود" %}</button>
+  </form>
+  <form method="post" action="{% url 'requests:resend-otp' %}" class="mt-2">{% csrf_token %}
+    <button type="submit" class="btn secondary w-100">{% trans "ارسال مجدد کد" %}</button>
+  </form>
+</div>
+{% endblock %}

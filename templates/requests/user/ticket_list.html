@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% load i18n calendar_tags %}
+{% block content %}
+<div class="panel">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h4 mb-0">{% trans "تیکت‌های من" %}</h1>
+    <a class="btn" data-ajax="true" href="{% url 'requests:ticket-create' %}">{% trans "تیکت جدید" %}</a>
+  </div>
+  {% if messages %}{% for message in messages %}
+    <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %}">{{ message }}</div>
+  {% endfor %}{% endif %}
+  <div class="table-responsive">
+    <table class="table">
+      <thead><tr><th>#</th><th>{% trans "موضوع" %}</th><th>{% trans "وضعیت" %}</th><th>{% trans "به‌روزرسانی" %}</th></tr></thead>
+      <tbody>
+        {% for t in tickets %}
+        <tr>
+          <td>{{ t.id }}</td>
+          <td><a data-ajax="true" href="{% url 'requests:ticket-detail' t.id %}">{{ t.subject }}</a></td>
+          <td>{{ t.get_status_display }}</td>
+          <td>{{ t.updated_at|smartdatetime:CALENDAR }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4">{% trans "هنوز تیکتی ثبت نکرده‌اید." %}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

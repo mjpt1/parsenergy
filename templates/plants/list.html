@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block content %}
+<div class="panel">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h4 mb-0">{% trans "نیروگاه‌ها" %}</h1>
+    <div class="d-flex gap-2 flex-wrap">
+      <a class="btn secondary" data-ajax="true" href="{% url 'plants:create' %}">{% trans "افزودن نیروگاه" %}</a>
+      <a class="btn secondary" data-ajax="true" href="{% url 'plants:groups' %}">{% trans "مدیریت گروه‌ها" %}</a>
+    </div>
+  </div>
+  <div class="table-responsive">
+    <table class="table">
+      <thead><tr><th>{% trans "نام" %}</th><th>{% trans "کد" %}</th><th>{% trans "مالک" %}</th><th>{% trans "وضعیت" %}</th><th>{% trans "ظرفیت" %}</th><th>{% trans "عملیات" %}</th></tr></thead>
+      <tbody>
+        {% for plant in object_list %}
+        <tr>
+          <td>{{ plant.name }}</td>
+          <td>{{ plant.external_code }}</td>
+          <td>{{ plant.owner.username }}</td>
+          <td>{{ plant.connection_status }}</td>
+          <td>{{ plant.capacity_kw }}</td>
+          <td class="d-flex gap-2">
+            <a class="btn secondary" data-ajax="true" href="{% url 'plants:edit' plant.id %}">{% trans "ویرایش" %}</a>
+            <a class="btn secondary" data-ajax="true" href="{% url 'plants:delete' plant.id %}">{% trans "حذف" %}</a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6">{% trans "موردی یافت نشد." %}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

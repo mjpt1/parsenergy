@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% load i18n calendar_tags %}
+{% block content %}
+<div class="panel">
+  <h1 class="h4 mb-3">{% trans "پیشنهادهای قیمت" %}</h1>
+  <div class="table-responsive">
+    <table class="table">
+      <thead><tr><th>#</th><th>{% trans "درخواست" %}</th><th>{% trans "عنوان" %}</th><th>{% trans "مبلغ" %}</th><th>{% trans "اعتبار تا" %}</th><th>{% trans "فعال" %}</th><th>{% trans "ثبت‌کننده" %}</th></tr></thead>
+      <tbody>
+        {% for offer in offers %}
+        <tr>
+          <td>{{ offer.id }}</td>
+          <td><a data-ajax="true" href="{% url 'requests:admin-detail' offer.request_id %}">#{{ offer.request_id }}</a></td>
+          <td>{{ offer.title }}</td>
+          <td>{{ offer.amount }} {{ offer.currency }}</td>
+          <td>{{ offer.valid_until|smartdatetime:CALENDAR|default:'—' }}</td>
+          <td>{% if offer.is_active %}{% trans "بله" %}{% else %}{% trans "خیر" %}{% endif %}{% if offer.is_expired %} ({% trans "منقضی" %}){% endif %}</td>
+          <td>{{ offer.created_by|default:'—' }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7">{% trans "پیشنهادی یافت نشد." %}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

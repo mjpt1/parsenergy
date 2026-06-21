@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block content %}
+<div class="panel">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h4 mb-0">{% trans "درخواست" %} #{{ req.id }}</h1>
+    <a class="btn secondary" data-ajax="true" href="{% url 'requests:my-list' %}">{% trans "بازگشت" %}</a>
+  </div>
+  {% if messages %}{% for message in messages %}
+    <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %}">{{ message }}</div>
+  {% endfor %}{% endif %}
+
+  <table class="table mb-4">
+    <tbody>
+      <tr><th style="width:160px">{% trans "نام" %}</th><td>{{ req.full_name }}</td></tr>
+      <tr><th>{% trans "موبایل" %}</th><td>{{ req.mobile }}</td></tr>
+      <tr><th>{% trans "استان" %}</th><td>{{ req.province }}</td></tr>
+      <tr><th>{% trans "توضیحات" %}</th><td>{{ req.description|default:'—'|linebreaksbr }}</td></tr>
+      <tr><th>{% trans "وضعیت" %}</th><td>{{ req.get_status_display }}</td></tr>
+    </tbody>
+  </table>
+
+  <h2 class="h6">{% trans "پیشنهادها" %}</h2>
+  <div class="table-responsive mb-3">
+    <table class="table">
+      <thead><tr><th>{% trans "عنوان" %}</th><th>{% trans "مبلغ" %}</th><th>{% trans "ارزش افزوده" %}</th><th>{% trans "مبلغ کل" %}</th><th>{% trans "اعتبار تا" %}</th>{% if can_select %}<th>{% trans "انتخاب" %}</th>{% endif %}</tr></thead>
+      <tbody>
+        {% for offer in offers %}
+        <tr>
+          <td>{{ offer.title }}</td>
+          <td>{{ offer.amount }} {{ offer.currency }}</td>
+          <td>{{ offer.vat_percent }}٪</td>
+          <td>{{ offer.total_amount }} {{ offer.currency }}</td>
+          <td>{{ offer.valid_until|date:'Y/m/d H:i'|default:'—' }}</td>
+          {% if can_select %}
+          <td>
+            {% if offer.is_payable %}
+            <form method="post" action="{% url 'requests:select-offer' req.id %}" style="display:inline">{% csrf_token %}
+              <input type="hidden" name="offer_id" value="{{ offer.id }}">
+              <button type="submit" class="btn">{% trans "تأیید و دریافت قرارداد" %}</button>
+            </form>
+            {% else %}<span>{% trans "منقضی" %}</span>{% endif %}
+          </td>
+          {% endif %}
+        </tr>
+        {% empty %}
+        <tr><td colspan="6">{% trans "هنوز پیشنهادی ثبت نشده است." %}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="d-flex gap-2 flex-wrap">
+    {% if contract %}<a class="btn" data-ajax="true" href="{% url 'requests:contract' req.id %}">{% trans "مشاهده / تأیید قرارداد" %}</a>{% endif %}
+    {% if can_pay %}
+    <form method="post" action="{% url 'requests:pay-start' req.id %}" style="display:inline">{% csrf_token %}
+      <button type="submit" class="btn">{% trans "پرداخت" %}</button>
+    </form>
+    {% endif %}
+    <a class="btn secondary" data-ajax="true" href="{% url 'requests:messages' req.id %}">{% trans "تاریخچه پیام‌ها" %}</a>
+    {% if is_paid %}<a class="btn secondary" data-ajax="true" href="{% url 'requests:profile-complete' %}">{% trans "تکمیل پروفایل" %}</a>{% endif %}
+  </div>
+</div>
+{% endblock %}

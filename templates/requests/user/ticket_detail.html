@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% load i18n calendar_tags %}
+{% block content %}
+<div class="panel">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h4 mb-0">{% trans "تیکت" %} #{{ ticket.id }} — {{ ticket.subject }}</h1>
+    <a class="btn secondary" data-ajax="true" href="{% url 'requests:my-tickets' %}">{% trans "بازگشت" %}</a>
+  </div>
+  {% if messages %}{% for message in messages %}
+    <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %}">{{ message }}</div>
+  {% endfor %}{% endif %}
+
+  <div class="mb-3"><span class="badge">{{ ticket.get_status_display }}</span></div>
+
+  <div class="mini-list mb-4">
+    {% for m in thread %}
+    <div class="item" style="flex-direction:column;align-items:stretch">
+      <div class="d-flex justify-content-between">
+        <strong>{% if m.is_staff_reply %}{% trans "پشتیبانی" %}{% else %}{% trans "شما" %}{% endif %}</strong>
+        <small>{{ m.created_at|smartdatetime:CALENDAR }}</small>
+      </div>
+      <div style="white-space:pre-wrap">{{ m.body }}</div>
+      {% if m.attachment %}<a href="{{ m.attachment.url }}" target="_blank" rel="noopener">{% trans "پیوست" %}</a>{% endif %}
+    </div>
+    {% endfor %}
+  </div>
+
+  {% if ticket.status != 'closed' %}
+  <h2 class="h6">{% trans "ارسال پاسخ" %}</h2>
+  <form method="post" action="{% url 'requests:ticket-reply' ticket.id %}" enctype="multipart/form-data">{% csrf_token %}
+    <div class="mb-2">{{ reply_form.body }}</div>
+    <div class="mb-2">{{ reply_form.attachment }}</div>
+    <button type="submit" class="btn">{% trans "ارسال پاسخ" %}</button>
+  </form>
+  {% else %}
+  <div class="alert alert-secondary">{% trans "این تیکت بسته شده است." %}</div>
+  {% endif %}
+</div>
+{% endblock %}

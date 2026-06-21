@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block content %}
+<div class="panel">
+  <h1 class="h4 mb-3">{% trans "حالت آفلاین" %}</h1>
+  <p>{% trans "اتصال به اینترنت در دسترس نیست. لطفاً پس از بازگشت اتصال دوباره تلاش کنید." %}</p>
+  <a class="btn" href="/">{% trans "بازگشت به داشبورد" %}</a>
+</div>
+{% endblock %}

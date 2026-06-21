@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% load i18n calendar_tags %}
+{% block content %}
+<div class="panel">
+  <h1 class="h4 mb-3">{% trans "لاگ پیامک‌ها" %}</h1>
+  <div class="table-responsive">
+    <table class="table">
+      <thead><tr><th>#</th><th>{% trans "درخواست" %}</th><th>{% trans "موبایل" %}</th><th>{% trans "نوع" %}</th><th>{% trans "وضعیت" %}</th><th>{% trans "متن" %}</th><th>{% trans "تاریخ" %}</th></tr></thead>
+      <tbody>
+        {% for log in logs %}
+        <tr>
+          <td>{{ log.id }}</td>
+          <td>{% if log.request_id %}<a data-ajax="true" href="{% url 'requests:admin-detail' log.request_id %}">#{{ log.request_id }}</a>{% else %}—{% endif %}</td>
+          <td>{{ log.mobile }}</td>
+          <td>{{ log.get_message_type_display }}</td>
+          <td>{{ log.get_status_display }}</td>
+          <td>{{ log.body }}</td>
+          <td>{{ log.created_at|smartdatetime:CALENDAR }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7">{% trans "پیامکی یافت نشد." %}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
