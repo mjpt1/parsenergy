@@ -52,29 +52,36 @@ cPanel یک **virtualenv** و یک `passenger_wsgi.py` می‌سازد. بالا
 ```bash
 source ~/virtualenv/parsenergy/3.11/bin/activate   # نمونه؛ دستور دقیق را از cPanel کپی کنید
 cd ~/parsenergy
-pip install --upgrade pip
-pip install -r requirements-cpanel.txt
+sh scripts/cpanel_install.sh
 ```
 
 > اگر نصب `numpy/pandas/scikit-learn` به‌خاطر محدودیت منابع شکست خورد، با پشتیبانی هاست برای افزایش موقت حافظهٔ build هماهنگ کنید (این‌ها از wheel نصب می‌شوند و معمولاً بدون مشکل‌اند).
 
 ## گام ۵ — فایل `.env`
-از روی نمونه بسازید و مقداردهی کنید:
+اسکریپت بالا اگر `.env` وجود نداشته باشد، آن را از `.env.cpanel.example` می‌سازد و برای `SECRET_KEY` مقدار امن تولید می‌کند. بعد از اجرای اسکریپت، `.env` را ویرایش کنید:
 
 ```bash
-cp .env.cpanel.example .env
-# سپس .env را ویرایش کنید (File Manager یا nano):
-python -c "from django.core.management.utils import get_random_secret_key as k; print(k())"   # برای SECRET_KEY
+nano .env
 ```
 
 حداقل این‌ها را تنظیم کنید: `SECRET_KEY`، `DEBUG=False`، `ALLOWED_HOSTS`، `CSRF_TRUSTED_ORIGINS`، `SERVE_MEDIA=True`.
 
 ## گام ۶ — پایگاه‌داده، استاتیک، ادمین
+اگر `scripts/cpanel_install.sh` را اجرا کرده‌اید، migration، ترجمه و collectstatic انجام شده‌اند. فقط ادمین بسازید:
+
 ```bash
-python manage.py migrate
-python scripts/build_en_catalog.py        # ساخت ترجمهٔ انگلیسی (.mo) — اگر از قبل آپلود شده لازم نیست
-python manage.py collectstatic --noinput  # جمع‌آوری static برای WhiteNoise
 python manage.py createsuperuser          # ساخت کاربر مدیر
+```
+
+اگر نخواستید از اسکریپت استفاده کنید، این دستورها را دستی اجرا کنید:
+
+```bash
+pip install --upgrade pip
+pip install -r requirements-cpanel.txt
+python manage.py migrate
+python scripts/build_en_catalog.py        # ساخت ترجمهٔ انگلیسی (.mo)
+python manage.py collectstatic --noinput  # جمع‌آوری static برای WhiteNoise
+mkdir -p tmp && touch tmp/restart.txt
 ```
 
 ## گام ۷ — راه‌اندازی مجدد اپ
@@ -133,8 +140,5 @@ pymysql.install_as_MySQLdb()
 ```bash
 cd ~/parsenergy && git pull
 source ~/virtualenv/parsenergy/3.11/bin/activate
-pip install -r requirements-cpanel.txt
-python manage.py migrate
-python manage.py collectstatic --noinput
-touch tmp/restart.txt
+sh scripts/cpanel_install.sh
 ```

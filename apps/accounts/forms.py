@@ -11,7 +11,15 @@ class LoginForm(AuthenticationForm):
 class RegisterForm(UserCreationForm):
     class Meta:
         model = User
-        fields = ('username', 'email', 'phone_number', 'role')
+        fields = ('username', 'email', 'phone_number')
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        # Public registration must never grant elevated roles.
+        user.role = User.Role.OWNER
+        if commit:
+            user.save()
+        return user
 
 
 class RoleForm(forms.ModelForm):
