@@ -1,0 +1,84 @@
+{% load calendar_tags i18n %}<!doctype html>
+{% comment %}
+  The PDF route. Standalone rather than an extend: a print sheet wants none of
+  the panel chrome, and the browser's own print-to-PDF renders Persian correctly
+  — joined letters, right-to-left lines — which reportlab cannot do without a
+  shaping library and an embedded Persian TTF.
+{% endcomment %}
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <title>{% trans "گزارش سرنخ‌های نمایشگاهی" %}</title>
+  <link rel="stylesheet" href="/static/css/fonts.css">
+  <style>
+    @page { size: A4 landscape; margin: 12mm; }
+    body { font-family: 'IRANSansX', Tahoma, sans-serif; color: #111; margin: 0; }
+    h1 { font-size: 16pt; margin: 0 0 2mm; }
+    .meta { font-size: 9pt; color: #555; margin-bottom: 5mm; }
+    table { width: 100%; border-collapse: collapse; font-size: 8.5pt; }
+    th, td { border: 1px solid #999; padding: 3px 5px; text-align: right; }
+    thead th { background: #1f6f3d; color: #fff; }
+    tbody tr:nth-child(even) { background: #f3f6f3; }
+    .sum { margin: 0 0 5mm; font-size: 9.5pt; }
+    .sum td, .sum th { border: 1px solid #bbb; }
+    .noprint { margin-bottom: 6mm; }
+    @media print { .noprint { display: none; } }
+  </style>
+</head>
+<body>
+  <div class="noprint">
+    <button onclick="window.print()">{% trans "چاپ / ذخیره به‌صورت PDF" %}</button>
+    <span style="font-size:9pt;color:#555">
+      {% trans "در پنجرهٔ چاپ، مقصد را روی «Save as PDF» بگذارید." %}</span>
+  </div>
+
+  <h1>{% trans "گزارش سرنخ‌های نمایشگاهی" %}</h1>
+  <div class="meta">
+    {% trans "تعداد" %}: {{ total }} —
+    {% trans "تاریخ گزارش" %}: {% now "Y/m/d H:i" %}
+  </div>
+
+  {% if breakdown %}
+  <table class="sum">
+    <thead><tr>
+      <th>{% trans "بازاریاب" %}</th><th>{% trans "کل" %}</th>
+      <th>{% trans "تکمیل مرحله ۲" %}</th><th>{% trans "سرنخ داغ" %}</th>
+    </tr></thead>
+    <tbody>
+      {% for row in breakdown %}
+      <tr><td>{{ row.name }}</td><td>{{ row.total }}</td>
+          <td>{{ row.completed }}</td><td>{{ row.hot }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+
+  <table>
+    <thead><tr>
+      <th>{% trans "شناسه" %}</th><th>{% trans "نام" %}</th><th>{% trans "موبایل" %}</th>
+      <th>{% trans "شرکت" %}</th><th>{% trans "استان" %}</th><th>{% trans "هدف" %}</th>
+      <th>{% trans "زمان اقدام" %}</th><th>{% trans "کیفیت" %}</th>
+      <th>{% trans "مرحله ۲" %}</th><th>{% trans "بازاریاب" %}</th><th>{% trans "تاریخ" %}</th>
+    </tr></thead>
+    <tbody>
+      {% for lead in leads %}
+      <tr>
+        <td>{{ lead.lead_code }}</td>
+        <td>{{ lead.full_name }}</td>
+        <td>{{ lead.mobile }}</td>
+        <td>{{ lead.company }}</td>
+        <td>{{ lead.province }}</td>
+        <td>{% for label in lead.goal_labels %}{{ label }}{% if not forloop.last %}، {% endif %}{% endfor %}</td>
+        <td>{{ lead.get_timeline_display }}</td>
+        <td>{{ lead.get_temperature_display }}</td>
+        <td>{% if lead.stage2_completed %}{% trans "تکمیل" %}{% else %}{% trans "ناقص" %}{% endif %}</td>
+        <td>{% if lead.marketer %}{{ lead.marketer.get_full_name|default:lead.marketer.username }}{% else %}{% trans "عمومی" %}{% endif %}</td>
+        <td>{{ lead.created_at|smartdatetime:CALENDAR }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="11">{% trans "موردی یافت نشد." %}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</body>
+</html>

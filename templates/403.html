@@ -1,0 +1,39 @@
+{% load i18n %}<!doctype html>
+{% comment %}
+  The other 403: the visitor is signed in but the page belongs to a role they
+  do not have. Saying so plainly saves a support call — the usual cause is a
+  marketer opening a link meant for management, or a bookmark kept after a role
+  changed.
+{% endcomment %}
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% trans "دسترسی مجاز نیست" %}</title>
+  <link rel="stylesheet" href="/static/css/fonts.css">
+  <style>
+    body{font-family:'IRANSansX',Tahoma,sans-serif;background:#f4f7fb;color:#0f172a;
+      margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+    .card{background:#fff;border:1px solid #d8e2ef;border-radius:16px;padding:32px 26px;
+      max-width:460px;width:100%;text-align:center}
+    .icon{width:62px;height:62px;border-radius:50%;background:#fee2e2;color:#b91c1c;
+      display:flex;align-items:center;justify-content:center;font-size:1.9rem;margin:0 auto 16px}
+    h1{font-size:1.2rem;margin:0 0 10px}
+    p{color:#4b5563;font-size:.94rem;line-height:1.9;margin:0 0 20px}
+    .btn{display:inline-block;padding:12px 22px;border-radius:10px;background:#15803d;
+      color:#fff;text-decoration:none;font-weight:700;font-size:.95rem}
+    .btn.secondary{background:#fff;border:1px solid #d8e2ef;color:#0f172a;margin-inline-start:8px}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon">🔒</div>
+    <h1>{% trans "دسترسی به این صفحه مجاز نیست" %}</h1>
+    <p>
+      {% trans "این بخش برای نقش کاربری شما باز نیست. اگر فکر می‌کنید باید دسترسی داشته باشید، از مدیر سیستم بخواهید نقش حساب شما را بررسی کند." %}
+    </p>
+    <a class="btn" href="/dashboard/">{% trans "داشبورد من" %}</a>
+    <a class="btn secondary" href="/accounts/login/">{% trans "ورود با حساب دیگر" %}</a>
+  </div>
+</body>
+</html>

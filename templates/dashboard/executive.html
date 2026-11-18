@@ -1,0 +1,373 @@
+{% extends 'base.html' %}
+{% load calendar_tags humanize i18n ux_tags %}
+{% comment %}
+  The one management dashboard: the whole business on one screen, ranked.
+  Four headline figures, then the funnel and whatever is actually wrong, then
+  per-department detail, charts, and the SLA table last.
+
+  Every number on this page is read from the database. Where a figure cannot
+  honestly be derived from what we store, the metrics layer returns None and
+  the cell shows a dash — nothing here is filled in with a plausible-looking
+  placeholder. Styling lives in static/css/dashboard.css, scoped under `.exec`.
+{% endcomment %}
+{% block panel_attributes %}data-exec="1"{% endblock %}
+
+{% block topbar %}
+<header class="exec-hero">
+  <div class="exec-hero-id">
+    {% trans "میز کار مدیریت" as fallback_title %}
+    <h1>{{ page_title|default:fallback_title }}</h1>
+    <p class="sub">
+      {{ request.user.get_full_name|default:request.user.username }}
+      · {{ today|smartdate:CALENDAR }}
+      · {% trans "پایش نیروگاه‌ها و قیف فروش" %}
+    </p>
+  </div>
+  <div class="exec-hero-actions">
+    {% if system_health_percent is not None %}
+    {% comment %}Donut drawn by hand: r=26 → circumference ≈ 163. `widthratio`
+    turns the percentage into the filled arc length, so no JS is involved.{% endcomment %}
+    <div class="health {% if system_health_percent < 50 %}is-bad{% elif system_health_percent < 80 %}is-warn{% endif %}"
+         title="{% trans 'سلامت سرور' %}">
+      <svg viewBox="0 0 60 60" aria-hidden="true">
+        <circle class="track" cx="30" cy="30" r="26" fill="none" stroke-width="6"></circle>
+        <circle class="fill" cx="30" cy="30" r="26" fill="none" stroke-width="6"
+                stroke-dasharray="{% widthratio system_health_percent 100 163 %} 163"></circle>
+      </svg>
+      <div><b>{{ system_health_percent }}%</b><span>{% trans "سلامت سرور" %}</span></div>
+    </div>
+    {% endif %}
+    <button class="btn secondary" type="button" id="themeToggle" onclick="SolarOps.toggleTheme()">{% trans "حالت شب" %}</button>
+    <a class="btn secondary" data-ajax="true" href="{% url 'accounts:profile' %}">{% trans "پروفایل" %}</a>
+    {% comment %}This block replaces the shell's own top bar, so the sign-out
+    control has to be repeated here or it disappears.{% endcomment %}
+    <form method="post" action="{% url 'accounts:logout' %}" class="logout-form" style="display:inline">{% csrf_token %}
+      <button class="btn secondary" type="submit">{% trans "خروج" %}</button>
+    </form>
+  </div>
+</header>
+{% endblock %}
+
+{% block content %}
+<div class="exec">
+
+  {# ---------------------------------------------------------- headline #}
+  {% include 'partials/todo.html' %}
+
+  <section class="exec-kpis">
+    <a class="kpi" data-ajax="true" href="{% url 'requests:admin-list' %}" style="--tone:var(--pe-accent)">
+      <div class="kpi-top">
+        <div><div class="kpi-val">{{ stats.total }}</div>
+          <div class="kpi-label">{% trans "کل پرونده‌های فعال" %}</div></div>
+        <span class="kpi-icon"><svg class="ic"><use href="#i-inbox"></use></svg></span>
+      </div>
+      <div class="kpi-foot">
+        {% if lead_trend_pct is None %}
+          {{ leads_this_week }} {% trans "ورودی در هفتهٔ گذشته" %}
+        {% elif lead_trend_pct >= 0 %}
+          <b class="up"><svg class="ic"><use href="#i-trend-up"></use></svg>{{ lead_trend_pct }}٪</b> {% trans "رشد ورودی هفتگی" %}
+        {% else %}
+          <b class="down"><svg class="ic"><use href="#i-trend-down"></use></svg>{{ lead_trend_pct }}٪</b> {% trans "افت ورودی هفتگی" %}
+        {% endif %}
+      </div>
+    </a>
+
+    <a class="kpi" data-ajax="true" href="{% url 'requests:admin-list' %}" style="--tone:var(--warn)">
+      <div class="kpi-top">
+        <div><div class="kpi-val">{{ stats.needs_contact }}</div>
+          <div class="kpi-label">{% trans "نیازمند تماس و تعیین وضعیت" %}</div></div>
+        <span class="kpi-icon"><svg class="ic"><use href="#i-phone"></use></svg></span>
+      </div>
+      <div class="kpi-foot">
+        <svg class="ic"><use href="#i-clock"></use></svg>
+        {% if avg_wait_hours %}{% trans "میانگین انتظار" %}: {{ avg_wait_hours|age }}
+        {% else %}{% trans "صف خالی است" %}{% endif %}
+      </div>
+    </a>
+
+    <a class="kpi" data-ajax="true" href="{% url 'requests:admin-tracking' %}"
+       style="--tone:{% if stats.overdue %}var(--bad){% else %}var(--ok){% endif %}">
+      <div class="kpi-top">
+        <div><div class="kpi-val">{{ stats.overdue }}</div>
+          <div class="kpi-label">{% trans "پرونده‌های دیرکرد" %}</div></div>
+        <span class="kpi-icon {% if stats.overdue %}beat{% endif %}"><svg class="ic"><use href="#i-alert"></use></svg></span>
+      </div>
+      <div class="kpi-foot">
+        {% if sla_compliance_pct is not None %}{% trans "رعایت مهلت" %}: {{ sla_compliance_pct }}٪
+        {% else %}{% trans "آستانه" %} {{ sla_hours }} {% trans "ساعت" %}{% endif %}
+      </div>
+    </a>
+
+    <a class="kpi" data-ajax="true" href="{% url 'plants:list' %}"
+       style="--tone:{% if fleet_stats.alerts %}var(--warn){% else %}var(--info){% endif %}">
+      <div class="kpi-top">
+        <div><div class="kpi-val">{{ fleet_stats.plants }}</div>
+          <div class="kpi-label">{% trans "نیروگاه پایش برخط" %}</div></div>
+        <span class="kpi-icon"><svg class="ic"><use href="#i-bolt"></use></svg></span>
+      </div>
+      <div class="kpi-foot">
+        <i class="dot ok"></i>
+        {% if capacity_kw %}{% trans "ظرفیت" %}: {{ capacity_kw|floatformat:0|intcomma }} {% trans "کیلووات" %}
+        {% else %}{{ fleet_stats.online }} {% trans "آنلاین" %} · {{ fleet_stats.offline }} {% trans "آفلاین" %}{% endif %}
+      </div>
+    </a>
+  </section>
+
+  {# ------------------------------------------------- funnel + warnings #}
+  <section class="exec-grid split">
+    <div class="exec-card" style="--tone:var(--pe-accent)">
+      <div class="exec-card-head">
+        <h2><svg class="ic"><use href="#i-filter"></use></svg>{% trans "قیف تبدیل درخواست به نیروگاه" %}</h2>
+        {% if conversion_pct is not None %}
+        <span class="head-stat">{% trans "نرخ تبدیل نهایی" %}: <b>{{ conversion_pct }}٪</b></span>
+        {% endif %}
+      </div>
+      <div class="exec-card-body">
+        {% comment %}Five columns, each a share of the whole funnel, so the
+        bottleneck is visible without reading a single number.{% endcomment %}
+        <div class="funnel">
+          {% for stage in funnel %}
+          <div class="fstep {% if forloop.last %}is-end{% endif %}">
+            <div class="fname">{{ stage.label }}</div>
+            <div class="fnum">{{ stage.count }}</div>
+            <div class="fpct">{% if stage.pct is not None %}{{ stage.pct }}٪{% else %}—{% endif %}</div>
+            <div class="fbar"><i style="width:{{ stage.pct|default:0 }}%"></i></div>
+          </div>
+          {% empty %}
+          <div class="exec-empty">{% trans "هنوز درخواستی ثبت نشده است." %}</div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <div class="exec-card" style="--tone:{% if attention %}var(--warn){% else %}var(--ok){% endif %}">
+      <div class="exec-card-head">
+        <h2><svg class="ic"><use href="#i-alert"></use></svg>{% trans "نیازمند توجه" %}</h2>
+        {% if attention %}<span class="pill" style="--tone:var(--warn)">{{ attention|length }} {% trans "پرونده" %}</span>{% endif %}
+      </div>
+      <div class="exec-card-body">
+        <div class="alist">
+          {% for item in attention %}
+          <a class="aitem" data-ajax="true" href="{% url 'requests:admin-detail' item.id %}"
+             style="--tone:{% if item.tone == 'bad' %}var(--bad){% else %}var(--warn){% endif %}">
+            <span class="acopy">
+              <b>{{ item.title }}</b>
+              <i>{{ item.reason }}</i>
+            </span>
+            <span class="pill">{{ item.tag }}</span>
+          </a>
+          {% empty %}
+          <div class="aitem" style="--tone:var(--ok)">
+            <span class="acopy"><b>{% trans "همه‌چیز مرتب است" %}</b>
+              <i>{% trans "هیچ پروندهٔ معوق یا ناقصی در صف نیست." %}</i></span>
+          </div>
+          {% endfor %}
+        </div>
+        {% if attention %}
+        <a class="btn-wide" data-ajax="true" href="{% url 'requests:admin-tracking' %}">{% trans "ارجاع و تعیین تکلیف" %}</a>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+
+  {# ----------------------------------------------------------- the map #}
+  <section class="exec-card" style="--tone:var(--info)">
+    <div class="exec-card-head">
+      <div>
+        <h2><svg class="ic"><use href="#i-map"></use></svg>{% trans "نقشهٔ پایش مکانی سایت‌ها" %}</h2>
+        <p class="head-sub">{% trans "نیروگاه‌های در حال کار، نیروگاه‌های در حال ساخت و درخواست‌ها" %}</p>
+      </div>
+      <div class="map-legend">
+        <span><i class="dot ok"></i>{{ fleet_stats.online }} {% trans "نرمال" %}</span>
+        <span><i class="dot warn"></i>{{ fleet_stats.warn_cells }} {% trans "هشدار" %}</span>
+        <span><i class="dot bad"></i>{{ fleet_stats.alerts }} {% trans "خطا" %}</span>
+      </div>
+    </div>
+    <div class="exec-card-body flush">
+      <div id="fleetMap" class="fleet-map"></div>
+      {{ map_points|json_script:"fleet-map-data" }}
+    </div>
+  </section>
+
+  {# ----------------------------------------------- department breakdown #}
+  <section class="exec-grid cols-4">
+    <div class="exec-card" style="--tone:var(--pe-accent)">
+      <div class="exec-card-head"><h2><svg class="ic"><use href="#i-megaphone"></use></svg>{% trans "توسعه بازار" %}</h2></div>
+      <div class="exec-card-body">
+        <div class="srow"><span>{% trans "درخواست‌های وب‌سایت" %}</span><strong>{{ website_leads }}</strong></div>
+        <div class="srow"><span>{% trans "ورودی QR غرفه" %}</span><strong class="accent">{{ exhibition_leads }}</strong></div>
+        <div class="srow"><span>{% trans "در صف بازاریابی" %}</span><strong>{{ stats.in_marketing }}</strong></div>
+        <div class="srow {% if qualify_rate_pct %}is-ok{% endif %}"><span>{% trans "نرخ تأیید صلاحیت" %}</span>
+          <strong>{% if qualify_rate_pct is not None %}{{ qualify_rate_pct }}٪{% else %}—{% endif %}</strong></div>
+      </div>
+    </div>
+
+    <div class="exec-card" style="--tone:#7c3aed">
+      <div class="exec-card-head"><h2><svg class="ic"><use href="#i-case"></use></svg>{% trans "فروش" %}</h2></div>
+      <div class="exec-card-body">
+        <div class="srow"><span>{% trans "پیشنهادهای قیمت" %}</span><strong>{{ offers_total }}</strong></div>
+        <div class="srow"><span>{% trans "در مذاکره" %}</span><strong>{{ stats.in_negotiation }}</strong></div>
+        <div class="srow"><span>{% trans "قرارداد صادرشده" %}</span><strong class="ok">{{ contracts_total }}</strong></div>
+        <div class="srow {% if stats.unassigned_sales %}is-bad{% endif %}"><span>{% trans "بدون مسئول" %}</span><strong>{{ stats.unassigned_sales }}</strong></div>
+      </div>
+    </div>
+
+    <div class="exec-card" style="--tone:var(--info)">
+      <div class="exec-card-head"><h2><svg class="ic"><use href="#i-wrench"></use></svg>{% trans "مهندسی و نیروگاه‌ها" %}</h2></div>
+      <div class="exec-card-body">
+        <div class="srow"><span>{% trans "ارزیابی‌های فعال" %}</span><strong>{{ stats.in_technical }}</strong></div>
+        <div class="srow"><span>{% trans "اینورتر برخط" %}</span><strong class="accent">{{ inverters_online }} / {{ inverters_total }}</strong></div>
+        {% comment %}Named for what it measures. Real yield efficiency needs
+        metered output over a period; until telemetry flows, that number would
+        be invented, so module health is reported instead.{% endcomment %}
+        <div class="srow"><span>{% trans "سلامت ماژول‌ها" %}</span>
+          <strong class="ok">{% if module_health_pct is not None %}{{ module_health_pct }}٪{% else %}—{% endif %}</strong></div>
+        <div class="srow {% if fleet_stats.hot_cells %}is-bad{% endif %}"><span>{% trans "پنل داغ" %}</span><strong>{{ fleet_stats.hot_cells }}</strong></div>
+      </div>
+    </div>
+
+    <div class="exec-card" style="--tone:var(--ok)">
+      <div class="exec-card-head"><h2><svg class="ic"><use href="#i-check-shield"></use></svg>{% trans "عملیات و مهلت‌ها" %}</h2></div>
+      <div class="exec-card-body">
+        <div class="srow is-ok"><span>{% trans "رعایت مهلت پیگیری" %}</span>
+          <strong>{% if sla_compliance_pct is not None %}{{ sla_compliance_pct }}٪{% else %}—{% endif %}</strong></div>
+        <div class="srow {% if overdue_count %}is-bad{% endif %}"><span>{% trans "پرونده با تأخیر" %}</span><strong>{{ overdue_count }}</strong></div>
+        <div class="srow"><span>{% trans "میانگین رسیدگی به هشدار" %}</span>
+          <strong>{% if avg_ack_minutes is not None %}{{ avg_ack_minutes }} {% trans "دقیقه" %}{% else %}—{% endif %}</strong></div>
+        <div class="srow"><span>{% trans "منتقل‌شده به CRM" %}</span><strong>{{ stats.crm_transferred }}</strong></div>
+      </div>
+    </div>
+  </section>
+
+  {# ------------------------------------------------------------ charts #}
+  {% if workload or by_province %}
+  <section class="exec-grid split">
+    <div class="exec-card" style="--tone:#7c3aed">
+      <div class="exec-card-head">
+        <h2><svg class="ic"><use href="#i-bars"></use></svg>{% trans "ظرفیت و بار کاری کارشناسان فروش" %}</h2>
+      </div>
+      <div class="exec-card-body">
+        {% if workload %}
+        <div class="chart-box"><canvas id="execWorkloadChart"></canvas></div>
+        {{ workload|json_script:"exec-workload-data" }}
+        {% else %}
+        <div class="exec-empty">{% trans "هنوز پرونده‌ای به کارشناسی تخصیص نیافته است." %}</div>
+        {% endif %}
+      </div>
+    </div>
+    <div class="exec-card" style="--tone:var(--pe-accent)">
+      <div class="exec-card-head"><h2><svg class="ic"><use href="#i-pie"></use></svg>{% trans "پراکندگی استانی پروژه‌ها" %}</h2></div>
+      <div class="exec-card-body">
+        {% if by_province %}
+        <div class="chart-box"><canvas id="execProvinceChart"></canvas></div>
+        {{ by_province|json_script:"exec-province-data" }}
+        {% else %}
+        <div class="exec-empty">{% trans "داده‌ای برای نمایش نیست." %}</div>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+  {% endif %}
+
+  {# --------------------------------------------------------- PV layout #}
+  {% if module_grid %}
+  <section class="exec-card" style="--tone:var(--warn)">
+    <div class="exec-card-head">
+      <h2><svg class="ic"><use href="#i-grid"></use></svg>{% trans "چیدمان ماتریسی ماژول‌ها" %}{% if selected_plant %} — {{ selected_plant.name }}{% endif %}</h2>
+      <a class="more" data-ajax="true" href="{% url 'plants:dashboard' %}{% if selected_plant %}?plant={{ selected_plant.id }}{% endif %}">{% trans "جزئیات پایش ←" %}</a>
+    </div>
+    <div class="exec-card-body">
+      <div class="layout-wrap">
+        <div>
+          <div id="pvModuleGrid" class="cell-grid" data-cols="{{ module_grid.cols }}"></div>
+          <div class="cell-legend">
+            <span><i class="ok"></i>{% trans "عادی" %}</span>
+            <span><i class="warn"></i>{% trans "هشدار" %}</span>
+            <span><i class="hot"></i>{% trans "داغ" %}</span>
+            <span><i class="offline"></i>{% trans "آفلاین" %}</span>
+            <span><i class="fault"></i>{% trans "خطا" %}</span>
+          </div>
+        </div>
+        <div id="pvModuleDetail" class="cell-detail">
+          <div class="srow"><span>{% trans "کل" %}</span><strong>{{ module_grid.summary.total }}</strong></div>
+          <div class="srow is-ok"><span>{% trans "سالم" %}</span><strong>{{ module_grid.summary.ok }}</strong></div>
+          <div class="srow is-warn"><span>{% trans "هشدار" %}</span><strong>{{ module_grid.summary.warn }}</strong></div>
+          <div class="srow is-bad"><span>{% trans "داغ" %}</span><strong>{{ module_grid.summary.hot }}</strong></div>
+        </div>
+      </div>
+      {{ module_grid|json_script:"pv-module-grid-data" }}
+    </div>
+  </section>
+  {% endif %}
+
+  {# ------------------------------------------------------- the SLA table #}
+  <section class="exec-card" style="--tone:var(--pe-accent)">
+    <div class="exec-card-head">
+      <h2><svg class="ic"><use href="#i-table"></use></svg>{% trans "پیگیری پرونده‌ها، مرحله و مهلت" %}</h2>
+      <a class="btn-sm" data-no-ajax href="{% url 'requests:admin-list' %}?export=excel">
+        <svg class="ic"><use href="#i-download"></use></svg>{% trans "خروجی اکسل" %}
+      </a>
+    </div>
+    <div class="exec-card-body flush">
+      <table class="dtable">
+        <thead><tr>
+          <th>{% trans "شناسه" %}</th>
+          <th>{% trans "مشتری / سازمان" %}</th>
+          <th>{% trans "موقعیت و متراژ" %}</th>
+          <th>{% trans "مرحلهٔ جاری" %}</th>
+          <th>{% trans "کارشناس مسئول" %}</th>
+          <th>{% trans "مهلت" %}</th>
+          <th></th>
+        </tr></thead>
+        <tbody>
+          {% for row in sla_rows %}
+          <tr>
+            <td class="id">#{{ row.id }}</td>
+            <td class="strong">{{ row.title }}{% if row.from_qr %} <span class="tag-qr">QR</span>{% endif %}</td>
+            <td>{{ row.place }}</td>
+            <td><span class="pill" style="--tone:var(--info)">{{ row.stage }}</span></td>
+            <td>{% if row.owner %}{{ row.owner }} <i class="muted">({{ row.owner_dept }})</i>{% else %}<i class="muted">{% trans "تخصیص نیافته" %}</i>{% endif %}</td>
+            <td>
+              {% if row.remaining_h is None %}
+                <i class="muted">—</i>
+              {% elif row.overdue %}
+                <b class="bad"><svg class="ic"><use href="#i-alert"></use></svg>{% trans "تأخیر" %} {{ row.remaining_h|cut:"-" }} {% trans "ساعت" %}</b>
+              {% else %}
+                <b class="ok">{{ row.remaining_h }} {% trans "ساعت مانده" %}</b>
+              {% endif %}
+            </td>
+            <td><a class="go" data-ajax="true" href="{% url 'requests:admin-detail' row.id %}" title="{% trans 'جزئیات' %}"><svg class="ic"><use href="#i-eye"></use></svg></a></td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="7" class="exec-empty">{% trans "هیچ پروندهٔ بازی در جریان نیست." %}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  {% if fleet_alerts %}
+  <section class="exec-card" style="--tone:var(--bad)">
+    <div class="exec-card-head">
+      <h2><svg class="ic"><use href="#i-bell"></use></svg>{% trans "هشدارهای نیروگاه‌ها" %}</h2>
+      <a class="more" data-ajax="true" href="{% url 'alerts:list' %}">{% trans "همهٔ هشدارها ←" %}</a>
+    </div>
+    <div class="exec-card-body flush">
+      <table class="dtable">
+        <thead><tr><th>{% trans "نیروگاه" %}</th><th>{% trans "پیام" %}</th><th>{% trans "شدت" %}</th></tr></thead>
+        <tbody>
+          {% for a in fleet_alerts %}
+          <tr>
+            <td class="strong">{{ a.rule.plant.name }}</td>
+            <td>{{ a.message|truncatechars:90 }}</td>
+            <td><span class="pill" style="--tone:var(--bad)">{{ a.severity|fa }}</span></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+  {% endif %}
+
+</div>
+{% endblock %}

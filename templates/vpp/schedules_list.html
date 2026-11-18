@@ -3,16 +3,16 @@
 {% block content %}
 <div class="panel">
   <div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="h4 mb-0">{% trans "برنامه‌های Dispatch" %}</h1>
+    <h1 class="h4 mb-0">{% trans "برنامه‌های تولید" %}</h1>
     <div class="d-flex gap-2 flex-wrap">
       <a class="btn secondary" data-ajax="true" href="{% url 'vpp:schedule-create' %}">{% trans "افزودن برنامه" %}</a>
       <a class="btn secondary" data-ajax="true" href="{% url 'vpp:list' %}">{% trans "بازگشت به VPP" %}</a>
-      <a class="btn secondary" data-ajax="true" href="{% url 'vpp:members' %}">{% trans "اعضای VPP" %}</a>
+      <a class="btn secondary" data-ajax="true" href="{% url 'vpp:members' %}">{% trans "اعضای نیروگاه مجازی" %}</a>
     </div>
   </div>
   <div class="table-responsive">
     <table class="table">
-      <thead><tr><th>VPP</th><th>{% trans "شروع" %}</th><th>{% trans "پایان" %}</th><th>{% trans "هدف (kW)" %}</th><th>{% trans "عملیات" %}</th></tr></thead>
+      <thead><tr><th>{% trans "نیروگاه مجازی" %}</th><th>{% trans "شروع" %}</th><th>{% trans "پایان" %}</th><th>{% trans "هدف (kW)" %}</th><th>{% trans "عملیات" %}</th></tr></thead>
       <tbody>
         {% for s in object_list %}
         <tr>

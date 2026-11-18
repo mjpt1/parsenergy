@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% load calendar_tags i18n ux_tags %}
+{% block content %}
+<div class="panel">
+  <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <div>
+      <h1 class="h4 mb-1">{% trans "داشبورد فنی" %}</h1>
+      <p class="footer-note mb-0">{% trans "پیشنهاد فنی درخواست‌ها و پایش نیروگاه‌ها" %}</p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+      <a class="btn secondary" data-ajax="true" href="{% url 'requests:admin-list' %}">{% trans "صف پیشنهاد فنی" %}</a>
+      <a class="btn secondary" data-ajax="true" href="{% url 'plants:dashboard' %}">{% trans "جزئیات پایش" %}</a>
+    </div>
+  </div>
+
+  {% include 'partials/todo.html' %}
+
+  <div class="d-flex gap-3 flex-wrap mb-4">
+    <div class="panel" style="flex:1;min-width:110px;text-align:center"><div class="h3 mb-0">{{ stats.in_technical }}</div><div class="text-muted">{% trans "صف پیشنهاد فنی" %}</div></div>
+    <div class="panel" style="flex:1;min-width:110px;text-align:center"><div class="h3 mb-0">{% if avg_proposal_hours %}{{ avg_proposal_hours|age }}{% else %}—{% endif %}</div><div class="text-muted">{% trans "میانگین زمان پیشنهاد فنی" %}</div></div>
+    <div class="panel" style="flex:1;min-width:110px;text-align:center"><div class="h3 mb-0" style="color:{% if fleet_stats.alerts %}#dc2626{% else %}#16a34a{% endif %}">{{ fleet_stats.alerts }}</div><div class="text-muted">{% trans "خطای بحرانی" %}</div></div>
+    <div class="panel" style="flex:1;min-width:110px;text-align:center"><div class="h3 mb-0" style="color:{% if fleet_stats.hot_cells %}#dc2626{% endif %}">{{ fleet_stats.hot_cells }}</div><div class="text-muted">{% trans "پنل داغ" %}</div></div>
+    <div class="panel" style="flex:1;min-width:110px;text-align:center"><div class="h3 mb-0">{{ fleet_stats.warn_cells }}</div><div class="text-muted">{% trans "هشدار دما" %}</div></div>
+    <div class="panel" style="flex:1;min-width:110px;text-align:center"><div class="h3 mb-0">{{ fleet_stats.online }} / {{ fleet_stats.offline }}</div><div class="text-muted">{% trans "متصل / قطع" %}</div></div>
+    <div class="panel" style="flex:1;min-width:110px;text-align:center"><div class="h3 mb-0">{{ fleet_stats.plants }}</div><div class="text-muted">{% trans "نیروگاه" %}</div></div>
+  </div>
+
+  <div class="row g-3 mb-3">
+    <div class="col-lg-5">
+      <div class="panel h-100">
+        <h2 class="h6">{% trans "درخواست‌های منتظر قیمت" %}</h2>
+        <table class="table table-sm mb-0">
+          <thead><tr><th>#</th><th>{% trans "محل" %}</th><th>{% trans "موقعیت روی نقشه" %}</th><th>{% trans "اولویت" %}</th><th></th></tr></thead>
+          <tbody>
+            {% for r in technical_queue %}
+            <tr>
+              <td>#{{ r.id }}</td>
+              <td>{{ r.province }}{% if r.city %} / {{ r.city }}{% endif %}</td>
+              <td>{% if r.has_map %}{% trans "ثبت شده" %}{% else %}<span class="badge text-bg-danger">{% trans "ثبت نشده" %}</span>{% endif %}</td>
+              <td>{{ r.priority|fa }}</td>
+              <td><a data-ajax="true" href="{% url 'requests:admin-detail' r.id %}">{% trans "ثبت پیشنهاد" %}</a></td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5">{% trans "درخواستی منتظر قیمت نیست." %}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="col-lg-7">
+      <h2 class="h6 mb-2">{% trans "نقشهٔ نیروگاه‌ها" %}</h2>
+      <div id="fleetMap" class="fleet-map tall"></div>
+      {{ map_points|json_script:"fleet-map-data" }}
+    </div>
+  </div>
+
+  {% if module_grid %}
+  <div class="panel mb-3">
+    <h2 class="h6 mb-2">{% trans "چیدمان پنل‌ها" %}{% if selected_plant %} — {{ selected_plant.name }}{% endif %}</h2>
+    <div class="layout-wrap">
+      <div>
+        <div id="pvModuleGrid" class="cell-grid" data-cols="{{ module_grid.cols }}"></div>
+        <div class="cell-legend">
+          <span><i class="ok"></i>{% trans "عادی" %}</span>
+          <span><i class="warn"></i>{% trans "هشدار دما" %}</span>
+          <span><i class="hot"></i>{% trans "داغ" %}</span>
+          <span><i class="offline"></i>{% trans "قطع" %}</span>
+          <span><i class="fault"></i>{% trans "خطا" %}</span>
+        </div>
+      </div>
+      <div id="pvModuleDetail" class="cell-detail">
+        <div class="mini-stat"><span>{% trans "کل پنل" %}</span><strong>{{ module_grid.summary.total }}</strong></div>
+        <div class="mini-stat"><span>{% trans "سالم" %}</span><strong style="color:#16a34a">{{ module_grid.summary.ok }}</strong></div>
+        <div class="mini-stat"><span>{% trans "هشدار" %}</span><strong style="color:#d97706">{{ module_grid.summary.warn }}</strong></div>
+        <div class="mini-stat"><span>{% trans "داغ" %}</span><strong style="color:#dc2626">{{ module_grid.summary.hot }}</strong></div>
+      </div>
+    </div>
+    {{ module_grid|json_script:"pv-module-grid-data" }}
+  </div>
+  {% endif %}
+
+  {% if fleet_alerts %}
+  <h2 class="h6 mb-2">{% trans "خطاها و هشدارهای تجهیزات" %}</h2>
+  <table class="table mb-3">
+    <thead><tr><th>{% trans "شدت" %}</th><th>{% trans "نیروگاه" %}</th><th>{% trans "پیام" %}</th><th>{% trans "زمان" %}</th></tr></thead>
+    <tbody>
+      {% for a in fleet_alerts %}
+      <tr>
+        <td>{{ a.severity|fa }}</td>
+        <td>{{ a.rule.plant.name }}</td>
+        <td>{{ a.message|truncatechars:100 }}</td>
+        <td>{{ a.created_at|smartdatetime:CALENDAR }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+
+</div>
+{% endblock %}

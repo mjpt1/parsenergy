@@ -1,6 +1,13 @@
 {% extends 'base.html' %}
 {% load i18n calendar_tags %}
 {% block content %}
+{% include 'partials/settings_tabs.html' with active='contract' %}
+<div class="hub-sublinks">
+  <a class="btn secondary" data-ajax="true" href="{% url 'requests:contract-settings' %}">{% trans "تنظیمات قرارداد" %}</a>
+  <a class="btn secondary" data-ajax="true" href="{% url 'requests:admin-templates' %}">{% trans "قالب‌های قرارداد" %}</a>
+  <a class="btn secondary" href="{% url 'admin:requests_requestformstep_changelist' %}" target="_blank" rel="noopener">{% trans "فرم‌ساز ارزیابی" %} ↗</a>
+</div>
+
 <div class="panel">
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h1 class="h4 mb-0">{% trans "قالب‌های قرارداد" %}</h1>

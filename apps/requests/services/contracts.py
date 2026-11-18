@@ -137,11 +137,11 @@ def render_contract_body(request: Request, offer: RequestOffer, contract_number:
         'city': request.city or '',
         'description': request.description or '',
         'offer_title': offer.title,
-        'amount': offer.amount,
+        'amount': f'{int(offer.amount):,}',
         'currency': offer.currency,
         'vat_percent': offer.vat_percent,
-        'vat_amount': offer.vat_amount,
-        'total_amount': offer.total_amount,
+        'vat_amount': f'{int(offer.vat_amount):,}',
+        'total_amount': f'{int(offer.total_amount):,}',
         'date': timezone.localtime(timezone.now()).strftime('%Y-%m-%d %H:%M'),
     }
     for key, value in context.items():
@@ -152,6 +152,8 @@ def render_contract_body(request: Request, offer: RequestOffer, contract_number:
 @transaction.atomic
 def generate_contract(*, request: Request, offer: RequestOffer, actor=None) -> RequestContract:
     """Create (or regenerate) the contract for the selected offer."""
+    if not offer.has_price:
+        raise ContractError(_('مبلغ این پیشنهاد هنوز تعیین نشده است.'))
     contract = RequestContract.objects.filter(request=request).first()
     if contract is not None:
         if contract.status == RequestContract.Status.APPROVED:

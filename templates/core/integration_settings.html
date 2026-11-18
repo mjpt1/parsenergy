@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
-{% load i18n %}
+{% load i18n calendar_tags %}
 {% block content %}
+{% include 'partials/settings_tabs.html' with active='services' %}
 <div class="panel" style="max-width:880px">
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h1 class="h4 mb-0">{% trans "تنظیمات سرویس‌ها" %}</h1>
@@ -9,6 +10,17 @@
   {% if messages %}{% for message in messages %}
     <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %}">{{ message }}</div>
   {% endfor %}{% endif %}
+
+  {% if needs_approval_note %}
+  <div class="alert alert-info">{% trans "تغییر پیامک، شاهکار و درگاه پرداخت بعد از تأیید مدیر اعمال می‌شود. مقادیر این صفحه همان تنظیمات فعلی سایت است." %}</div>
+  {% for change in my_setting_requests %}
+  <div class="panel mb-2">
+    <strong>{{ change.get_status_display }}</strong>
+    <span class="footer-note">{{ change.created_at|smartdatetime:CALENDAR }}</span>
+    <ul class="mb-0 mt-1">{% for row in change.rows %}<li>{{ row.label }}{% if row.secret %}: {% trans "مقدار جدید" %}{% else %}: {{ row.new }}{% endif %}</li>{% endfor %}</ul>
+  </div>
+  {% endfor %}
+  {% endif %}
 
   <form method="post">{% csrf_token %}
     <div class="panel mb-3">
@@ -23,13 +35,41 @@
           <label class="form-label">{% trans "آدرس سرویس پیامک (URL)" %}</label>
           {{ form.sms_base_url }}
         </div>
-        <div class="col-md-6">
-          <label class="form-label">{% trans "کلید API پیامک" %}</label>
-          {{ form.sms_api_key }}
+        <div class="col-md-3">
+          <label class="form-label">{% trans "نام کاربری پنل پیامک" %}</label>
+          {{ form.sms_username }}
+          <small class="text-muted">{% trans "فقط ملی پیامک — نام کاربری حساب شما" %}</small>
         </div>
         <div class="col-md-3">
-          <label class="form-label">{% trans "شمارهٔ فرستنده" %}</label>
+          <label class="form-label">{% trans "کلید API / رمز عبور" %}</label>
+          {{ form.sms_api_key }}
+          <small class="text-muted">{% trans "ایران‌پیامک: Api-Key — ملی پیامک: رمز عبور" %}</small>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">{% trans "شمارهٔ فرستنده / خط" %}</label>
           {{ form.sms_sender }}
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">{% trans "کد الگوی OTP" %}</label>
+          {{ form.sms_pattern_code }}
+          <small class="text-muted">{% trans "ایران‌پیامک: مثل eVGPFLbu9C — ملی پیامک: شناسهٔ عددی الگو (bodyId)" %}</small>
+        </div>
+        <div class="col-md-12">
+          <label class="form-label d-block">{% trans "الگوهای فعال ملی پیامک" %}</label>
+          {% for label, code in sms_patterns %}
+            <span class="badge" style="margin-inline-end:6px">{{ label }}: {{ code|default:'—' }}</span>
+          {% endfor %}
+          <div><small class="text-muted">{% trans "خودکار تنظیم شده‌اند؛ نیازی به وارد کردن نیست." %}</small></div>
+        </div>
+        <div class="col-md-12">
+          <label class="form-label">{% trans "کلید رمز یکبارمصرف ملی پیامک" %}</label>
+          {{ form.sms_otp_key }}
+          <small class="text-muted">{% trans "از پنل ملی پیامک (بخش ارسال رمز یکبارمصرف) آدرس کامل یا فقط کلید آخر آن را اینجا بگذارید. اگر پر باشد، کدهای ورود و قرارداد را خود ملی پیامک می‌سازد و می‌فرستد؛ اگر خطا بدهد، ارسال با الگو انجام می‌شود." %}</small>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">{% trans "نام متغیر الگو" %}</label>
+          {{ form.sms_pattern_var }}
+          <small class="text-muted">{% trans "پیش‌فرض: code" %}</small>
         </div>
         <div class="col-md-3">
           <label class="form-label d-block">{% trans "وضعیت" %}</label>
@@ -37,6 +77,36 @@
             {{ form.sms_enabled }}
             <label class="form-check-label" for="{{ form.sms_enabled.id_for_label }}">{% trans "فعال‌سازی ارسال پیامک" %}</label>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel mb-3">
+      <h2 class="h6 mb-3">{% trans "نقشه (map.ir، نشان، بلد)" %}</h2>
+      <div class="row g-3">
+        <div class="col-md-8">
+          <label class="form-label">{% trans "کلید API نقشه" %}</label>
+          {{ form.map_api_key }}
+          <small class="text-muted">{% trans "برای کاشی‌های نقشه و تبدیل مختصات به آدرس. کلید را از پنل map.ir کپی کنید." %}</small>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label d-block">{% trans "تاریخ انقضای کلید فعلی" %}</label>
+          {% if map_key_expiry %}<strong>{{ map_key_expiry|smartdate:CALENDAR }}</strong>{% else %}—{% endif %}
+        </div>
+        <div class="col-md-12">
+          <label class="form-label">{% trans "کلید API تام‌تام (نقشهٔ ماهواره‌ای)" %}</label>
+          {{ form.tomtom_api_key }}
+          <small class="text-muted">{% trans "ترتیب حالت ماهواره: تام‌تام، بعد گوگل، بعد بینگ، و اگر هیچ‌کدام جواب ندهد نقشهٔ معمولی." %}</small>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">{% trans "کلید API نشان" %}</label>
+          {{ form.neshan_api_key }}
+          <small class="text-muted">{% trans "کلید سرویس (service.…). اگر map.ir آدرس ندهد، آدرس از نشان گرفته می‌شود." %}</small>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">{% trans "کلید API بلد" %}</label>
+          {{ form.balad_api_key }}
+          <small class="text-muted">{% trans "فعلاً فقط ذخیره می‌شود؛ پس از دریافت مستندات API بلد وصل می‌شود." %}</small>
         </div>
       </div>
     </div>
@@ -70,6 +140,56 @@
           <div class="form-check">
             {{ form.shahkar_mock_result }}
             <label class="form-check-label" for="{{ form.shahkar_mock_result.id_for_label }}">{% trans "در حالت آزمایشی، نتیجه موفق باشد" %}</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel mb-3">
+      <h2 class="h6 mb-3">{% trans "درگاه پرداخت" %}</h2>
+      <p class="form-text mb-3">{% trans "تا زمانی که درگاه «فعال» نشود، پرداخت با شبیه‌ساز داخلی انجام می‌شود و پول واقعی جابه‌جا نمی‌گردد. مبلغ‌ها به تومان به درگاه ارسال می‌شوند." %}</p>
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label">{% trans "درگاه پرداخت" %}</label>
+          {{ form.payment_provider }}
+        </div>
+        <div class="col-md-8">
+          <label class="form-label">{% trans "آدرس سایت برای بازگشت از درگاه" %}</label>
+          {{ form.payment_site_url }}
+          <small class="text-muted">{% trans "مثلاً https://pars-tida.ir — بدون اسلش پایانی" %}</small>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">{% trans "کد پذیرنده / کلید درگاه" %}</label>
+          {{ form.payment_merchant_id }}
+          <small class="text-muted">{% trans "زرین‌پال: Merchant ID — جیبیت: apiKey — دیجی‌پی: client id" %}</small>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">{% trans "رمز درگاه (Secret)" %}</label>
+          {{ form.payment_api_key }}
+          <small class="text-muted">{% trans "جیبیت: secretKey — دیجی‌پی: client secret — زرین‌پال: خالی" %}</small>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">{% trans "نام کاربری درگاه" %}</label>
+          {{ form.payment_username }}
+          <small class="text-muted">{% trans "فقط دیجی‌پی" %}</small>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">{% trans "رمز عبور درگاه" %}</label>
+          {{ form.payment_password }}
+          <small class="text-muted">{% trans "فقط دیجی‌پی" %}</small>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label d-block">{% trans "وضعیت" %}</label>
+          <div class="form-check">
+            {{ form.payment_enabled }}
+            <label class="form-check-label" for="{{ form.payment_enabled.id_for_label }}">{% trans "فعال‌سازی درگاه پرداخت" %}</label>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label d-block">{% trans "حالت آزمایشی" %}</label>
+          <div class="form-check">
+            {{ form.payment_sandbox }}
+            <label class="form-check-label" for="{{ form.payment_sandbox.id_for_label }}">{% trans "استفاده از sandbox" %}</label>
           </div>
         </div>
       </div>

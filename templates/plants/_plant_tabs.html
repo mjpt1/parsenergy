@@ -1,0 +1,12 @@
+{% load i18n %}
+<style>
+.plant-tabs{display:flex;gap:6px;overflow-x:auto;margin-bottom:14px;padding-bottom:4px}
+.plant-tabs a{flex:0 0 auto;padding:8px 14px;border-radius:999px;border:1px solid rgba(127,127,127,.3);text-decoration:none;color:inherit;font-size:.9rem}
+.plant-tabs a.active{background:#22a35a;border-color:#22a35a;color:#fff}
+</style>
+<nav class="plant-tabs" aria-label="{% trans 'بخش‌های نیروگاه' %}">
+  <a data-ajax="true" class="{% if plant_tab == 'screen' %}active{% endif %}" href="{% url 'plants:screen' %}?plant={{ plant.pk }}">{% trans "نمای زنده" %}</a>
+  <a data-ajax="true" class="{% if plant_tab == 'monitor' %}active{% endif %}" href="{% url 'plants:monitor' %}?plant={{ plant.pk }}">{% trans "پایش و نمودارها" %}</a>
+  <a data-ajax="true" class="{% if plant_tab == 'revenue' %}active{% endif %}" href="{% url 'plants:revenue' %}?plant={{ plant.pk }}">{% trans "درآمد" %}</a>
+  <a data-ajax="true" class="{% if plant_tab == 'bills' %}active{% endif %}" href="{% url 'plants:bills' %}?plant={{ plant.pk }}">{% trans "صورتحساب و معیار" %}</a>
+</nav>

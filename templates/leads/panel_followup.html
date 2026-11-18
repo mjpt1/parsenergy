@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% load i18n calendar_tags %}
+{% comment %}
+  Which leads filled form 1 and form 2. Those who stopped after form 1 can be
+  sent their own stage-2 link again by SMS — selected rows, or all of them.
+  A lead reminded in the last 24 hours is skipped by the server, whatever is
+  ticked, so a double click never texts anyone twice.
+{% endcomment %}
+{% block content %}
+<style>
+  .fu-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+  .fu-tabs a{padding:8px 14px;border:1px solid var(--pe-border,#e5e7eb);border-radius:999px;background:#fff;font-size:.88rem;text-decoration:none;color:inherit}
+  .fu-tabs a.on{background:#4b773c;border-color:#4b773c;color:#fff}
+  .fu-tabs b{margin-inline-start:6px}
+  .fu-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:end;margin-bottom:14px}
+  .fu-bar label{font-size:.8rem;color:#666;display:block;margin-bottom:3px}
+  .fu-table{width:100%;border-collapse:collapse;background:#fff;font-size:.88rem}
+  .fu-table th,.fu-table td{padding:9px 10px;border-bottom:1px solid var(--pe-border,#e5e7eb);text-align:right}
+  .fu-table thead th{background:#f6f8f5;font-size:.8rem;white-space:nowrap}
+  .fu-wrap{overflow-x:auto;border:1px solid var(--pe-border,#e5e7eb);border-radius:12px}
+  .tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:.75rem}
+  .tag.ok{background:#e3f1dc;color:#2f5a22}
+  .tag.no{background:#fdf0e1;color:#8a4b0b}
+  .fu-actions{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+  .fu-muted{color:#888;font-size:.8rem}
+</style>
+
+<h1 class="h4 mb-2">{% trans "پیگیری تکمیل فرم درخواست‌ها" %}</h1>
+<p class="fu-muted" style="margin-top:0">{% trans "درخواست‌هایی که فقط فرم اول را پر کرده‌اند را ببینید و لینک تکمیل فرم دوم را دوباره برایشان پیامک کنید." %}</p>
+
+{% if messages %}{% for message in messages %}
+  <div class="alert {% if message.tags == 'error' %}alert-danger{% elif message.tags == 'info' %}alert-info{% else %}alert-success{% endif %}">{{ message }}</div>
+{% endfor %}{% endif %}
+
+<form method="get" class="fu-bar">
+  <input type="hidden" name="stage" value="{{ stage }}">
+  {% if is_management %}
+  <div><label for="mk">{% trans "بازاریاب" %}</label>
+    <select id="mk" name="marketer" class="form-select">
+      <option value="">{% trans "همه" %}</option>
+      {% for m in marketers %}<option value="{{ m.pk }}" {% if current.marketer == m.pk|stringformat:"s" %}selected{% endif %}>{{ m.get_full_name|default:m.username }}</option>{% endfor %}
+      <option value="public" {% if current.marketer == 'public' %}selected{% endif %}>{% trans "QR عمومی" %}</option>
+    </select></div>
+  {% endif %}
+  <div><label for="df">{% trans "از تاریخ" %}</label><input id="df" type="text" inputmode="numeric" placeholder="۱۴۰۵/۰۸/۰۱" autocomplete="off" name="date_from" value="{{ current.date_from }}" class="form-control"></div>
+  <div><label for="dt">{% trans "تا تاریخ" %}</label><input id="dt" type="text" inputmode="numeric" placeholder="۱۴۰۵/۰۸/۰۱" autocomplete="off" name="date_to" value="{{ current.date_to }}" class="form-control"></div>
+  <button class="btn" type="submit">{% trans "اعمال" %}</button>
+</form>
+
+<nav class="fu-tabs">
+  <a class="{% if stage == 'stage1' %}on{% endif %}" href="?stage=stage1&marketer={{ current.marketer }}&date_from={{ current.date_from }}&date_to={{ current.date_to }}">{% trans "فقط فرم اول" %}<b>{{ counts.stage1 }}</b></a>
+  <a class="{% if stage == 'stage2' %}on{% endif %}" href="?stage=stage2&marketer={{ current.marketer }}&date_from={{ current.date_from }}&date_to={{ current.date_to }}">{% trans "هر دو فرم" %}<b>{{ counts.stage2 }}</b></a>
+  <a class="{% if stage == 'all' %}on{% endif %}" href="?stage=all&marketer={{ current.marketer }}&date_from={{ current.date_from }}&date_to={{ current.date_to }}">{% trans "همه" %}<b>{{ counts.all }}</b></a>
+</nav>
+
+<form method="post" id="fuForm">{% csrf_token %}
+  {% if stage != 'stage2' and counts.stage1 %}
+  <div class="fu-actions">
+    <button class="btn" type="submit" name="scope" value="selected">{% trans "ارسال یادآوری به انتخاب‌شده‌ها" %}</button>
+    <button class="btn secondary" type="submit" name="scope" value="all"
+            onclick="return confirm('{% trans "پیامک یادآوری برای همهٔ درخواست‌های ناقص این فیلتر ارسال شود؟" %}')">{% trans "ارسال به همهٔ ناقص‌ها" %} ({{ counts.stage1 }})</button>
+  </div>
+  {% endif %}
+  <div class="fu-wrap">
+  <table class="fu-table">
+    <thead><tr>
+      <th><input type="checkbox" aria-label="{% trans 'انتخاب همه' %}" onclick="document.querySelectorAll('#fuForm input[name=lead]:not(:disabled)').forEach(c=>c.checked=this.checked)"></th>
+      <th>{% trans "کد" %}</th><th>{% trans "نام" %}</th><th>{% trans "موبایل" %}</th><th>{% trans "شرکت" %}</th>
+      {% if is_management %}<th>{% trans "بازاریاب" %}</th>{% endif %}
+      <th>{% trans "ثبت" %}</th><th>{% trans "فرم ۱" %}</th><th>{% trans "فرم ۲" %}</th><th>{% trans "یادآوری" %}</th>
+    </tr></thead>
+    <tbody>
+    {% for lead in leads %}
+      <tr>
+        <td>{% if not lead.stage2_completed %}<input type="checkbox" name="lead" value="{{ lead.pk }}" {% if not lead.remindable %}disabled title="{% trans 'در ۲۴ ساعت گذشته یادآوری شده' %}"{% endif %}>{% endif %}</td>
+        <td>{% if lead.request %}<a data-ajax="true" href="{% url 'requests:admin-detail' lead.request.pk %}">{{ lead.lead_code }}</a>{% else %}{{ lead.lead_code }}{% endif %}</td>
+        <td>{{ lead.request.full_name|default:"—" }}</td>
+        <td dir="ltr" style="text-align:right">{{ lead.request.mobile|default:"—" }}</td>
+        <td>{{ lead.company|default:"—" }}</td>
+        {% if is_management %}<td>{% if lead.marketer %}{{ lead.marketer.get_full_name|default:lead.marketer.username }}{% else %}<span class="fu-muted">{% trans "عمومی" %}</span>{% endif %}</td>{% endif %}
+        <td style="white-space:nowrap">{{ lead.created_at|smartdatetime:CALENDAR }}</td>
+        <td><span class="tag ok">✓</span></td>
+        <td>{% if lead.stage2_completed %}<span class="tag ok">✓ {{ lead.stage2_completed_at|smartdate:CALENDAR }}</span>{% else %}<span class="tag no">{% trans "تکمیل نشده" %}</span>{% endif %}</td>
+        <td>{% if lead.reminder_count %}{{ lead.reminder_count }} {% trans "بار" %}<div class="fu-muted">{{ lead.last_reminder_at|smartdatetime:CALENDAR }}</div>{% else %}<span class="fu-muted">—</span>{% endif %}</td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="10" class="fu-muted">{% trans "موردی نیست." %}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</form>
+{% endblock %}

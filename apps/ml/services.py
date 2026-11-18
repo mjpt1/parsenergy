@@ -2,11 +2,9 @@ from dataclasses import dataclass
 from pathlib import Path
 import joblib
 import numpy as np
-from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
-from sklearn.pipeline import Pipeline
-from sklearn.impute import SimpleImputer
-from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import train_test_split
+# sklearn/scipy are imported inside the functions that use them. Importing
+# them at module level made every app start take long enough on cPanel that
+# Passenger killed the worker mid-import and visitors got a 500 after restarts.
 
 MODEL_DIR = Path('media/models')
 MODEL_DIR.mkdir(parents=True, exist_ok=True)
@@ -26,6 +24,10 @@ class MaintenanceRecommendation:
 
 
 def build_forecast_model():
+    from sklearn.ensemble import RandomForestRegressor
+    from sklearn.impute import SimpleImputer
+    from sklearn.pipeline import Pipeline
+    from sklearn.preprocessing import StandardScaler
     return Pipeline([
         ('imputer', SimpleImputer(strategy='median')),
         ('scaler', StandardScaler()),
@@ -34,6 +36,9 @@ def build_forecast_model():
 
 
 def build_fault_model():
+    from sklearn.ensemble import RandomForestClassifier
+    from sklearn.impute import SimpleImputer
+    from sklearn.pipeline import Pipeline
     return Pipeline([
         ('imputer', SimpleImputer(strategy='median')),
         ('model', RandomForestClassifier(n_estimators=50, random_state=42)),
@@ -41,6 +46,7 @@ def build_fault_model():
 
 
 def train_models(features: np.ndarray, target_kw: np.ndarray, fault_target: np.ndarray):
+    from sklearn.model_selection import train_test_split
     X_train, X_test, y_train, y_test = train_test_split(features, target_kw, test_size=0.2, random_state=42)
     forecast_model = build_forecast_model().fit(X_train, y_train)
     fault_model = build_fault_model().fit(features, fault_target)

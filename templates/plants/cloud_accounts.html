@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% load i18n calendar_tags %}
+{% block content %}
+<div class="panel">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <h1 class="h4 m-0">{% trans "حساب‌های ابری اینورترها" %}</h1>
+    <a class="btn" data-ajax="true" href="{% url 'plants:cloud-account-create' %}">{% trans "افزودن حساب" %}</a>
+  </div>
+  <p class="footer-note">{% trans "برای هر اپلیکیشن سولاکس (developer.solaxcloud.com) یک حساب بسازید و Client ID و Client Secret آن را وارد کنید. سپس در فرم اینورتر، منبع داده را «SolaX Cloud» و این حساب را انتخاب کنید. داده هر ۵ دقیقه خودکار خوانده می‌شود." %}</p>
+  <div class="table-responsive">
+    <table class="table">
+      <thead><tr><th>{% trans "نام" %}</th><th>{% trans "سرویس" %}</th><th>Client ID</th><th>{% trans "اینورترها" %}</th><th>{% trans "آخرین خطا" %}</th><th></th></tr></thead>
+      <tbody>
+        {% for a in object_list %}
+        <tr>
+          <td>{{ a.name }}</td><td>{{ a.get_provider_display }}</td><td dir="ltr">{{ a.client_id|slice:":8" }}…</td><td>{{ a.n }}</td>
+          <td>{% if a.last_error %}<span style="color:#dc2626">{{ a.last_error }}</span>{% else %}—{% endif %}</td>
+          <td><a class="btn secondary btn-sm" data-ajax="true" href="{% url 'plants:cloud-account-edit' a.pk %}">{% trans "ویرایش" %}</a></td>
+        </tr>
+        {% empty %}<tr><td colspan="6">{% trans "هنوز حسابی ثبت نشده است." %}</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

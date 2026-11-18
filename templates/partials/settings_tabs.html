@@ -1,0 +1,23 @@
+{% comment %}
+  The single entry point for everything configurable. Include it at the top of
+  each settings screen, naming the tab that screen represents:
+
+      {% include 'partials/settings_tabs.html' with active='services' %}
+
+  The views stay untouched — each screen only declares which tab it is.
+{% endcomment %}
+{% load i18n %}
+<div class="hub">
+  <h1 class="hub-title">{% trans "تنظیمات" %}</h1>
+  <p class="hub-sub">{% trans "همهٔ تنظیمات سامانه از همین‌جا انجام می‌شود." %}</p>
+  <nav class="hub-tabs">
+    <a class="hub-tab{% if active == 'services' %} is-active{% endif %}" data-ajax="true" href="{% url 'core:integration-settings' %}">🔌 {% trans "سرویس‌ها" %}</a>
+    {% if request.user.role != 'technical' %}<a class="hub-tab{% if active == 'contract' %} is-active{% endif %}" data-ajax="true" href="{% url 'requests:contract-settings' %}">📄 {% trans "قرارداد و فرم" %}</a>{% endif %}
+    {% if request.user.role != 'technical' %}<a class="hub-tab{% if active == 'qr' %} is-active{% endif %}" data-ajax="true" href="{% url 'leads:sources' %}">🎪 {% trans "QR بازاریاب‌ها" %}</a>{% endif %}
+    {% if request.user.role != 'technical' %}<a class="hub-tab{% if active == 'ai' %} is-active{% endif %}" data-ajax="true" href="{% url 'core:ai-settings' %}">🤖 {% trans "هوش مصنوعی" %}</a>{% endif %}
+    <a class="hub-tab{% if active == 'connections' %} is-active{% endif %}" data-ajax="true" href="{% url 'core:connections' %}">🔗 {% trans "اتصالات و پروتکل‌ها" %}</a>
+    {% if request.user.role != 'technical' %}<a class="hub-tab{% if active == 'security' %} is-active{% endif %}" data-ajax="true" href="{% url 'core:security' %}">🔐 {% trans "امنیت و بکاپ" %}</a>{% endif %}
+    <a class="hub-tab{% if active == 'parameters' %} is-active{% endif %}" data-ajax="true" href="{% url 'core:parameters' %}">⚙️ {% trans "پارامترهای سیستم" %}</a>
+    {% if request.user.is_admin_role %}<a class="hub-tab{% if active == 'approvals' %} is-active{% endif %}" data-ajax="true" href="{% url 'core:setting-approvals' %}">✅ {% trans "تأیید تغییرات" %}{% if nav_counts.setting_approvals %} ({{ nav_counts.setting_approvals }}){% endif %}</a>{% endif %}
+  </nav>
+</div>

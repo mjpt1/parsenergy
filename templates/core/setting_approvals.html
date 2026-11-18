@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% load i18n calendar_tags %}
+{% block content %}
+{% include 'partials/settings_tabs.html' with active='approvals' %}
+<div class="panel" style="max-width:880px">
+  <h1 class="h4 mb-1">{% trans "تأیید تغییرات" %}</h1>
+  <p class="footer-note">{% trans "تغییراتی که بخش فنی در پیامک، شاهکار و درگاه پرداخت ثبت کرده است. تا تأیید نکنید روی سایت اعمال نمی‌شود." %}</p>
+  {% for message in messages %}<div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %}">{{ message }}</div>{% endfor %}
+
+  {% for change in pending %}
+  <div class="panel mb-3">
+    <div class="mb-2"><strong>{{ change.requested_by.get_full_name|default:change.requested_by.username }}</strong>
+      <span class="footer-note">{{ change.created_at|smartdatetime:CALENDAR }}</span></div>
+    <div class="table-responsive">
+      <table class="table">
+        <thead><tr><th>{% trans "تنظیم" %}</th><th>{% trans "مقدار فعلی" %}</th><th>{% trans "مقدار جدید" %}</th></tr></thead>
+        <tbody>{% for row in change.rows %}
+          <tr><td>{{ row.label }}</td>
+            {% if row.secret %}<td colspan="2">{% trans "کلید یا رمز جدید وارد شده است (مقدار نمایش داده نمی‌شود)" %}</td>
+            {% else %}<td>{{ row.old }}</td><td>{{ row.new }}</td>{% endif %}</tr>
+        {% endfor %}</tbody>
+      </table>
+    </div>
+    <div class="d-flex gap-2">
+      <form method="post" action="{% url 'core:setting-approval-decide' change.pk 'approve' %}" data-no-ajax="true">{% csrf_token %}<button class="btn" type="submit">{% trans "تأیید و اعمال" %}</button></form>
+      <form method="post" action="{% url 'core:setting-approval-decide' change.pk 'reject' %}" data-no-ajax="true">{% csrf_token %}<button class="btn secondary" type="submit">{% trans "رد" %}</button></form>
+    </div>
+  </div>
+  {% empty %}
+  <p>{% trans "تغییری منتظر تأیید نیست." %}</p>
+  {% endfor %}
+
+  {% if decided %}
+  <h2 class="h6 mt-4">{% trans "بررسی‌های اخیر" %}</h2>
+  <div class="table-responsive">
+    <table class="table">
+      <thead><tr><th>{% trans "درخواست‌دهنده" %}</th><th>{% trans "نتیجه" %}</th><th>{% trans "بررسی‌کننده" %}</th><th>{% trans "زمان" %}</th></tr></thead>
+      <tbody>{% for change in decided %}
+        <tr><td>{{ change.requested_by.get_full_name|default:change.requested_by.username }}</td><td>{{ change.get_status_display }}</td>
+          <td>{{ change.decided_by.get_full_name|default:change.decided_by.username }}</td><td>{{ change.decided_at|smartdatetime:CALENDAR }}</td></tr>
+      {% endfor %}</tbody>
+    </table>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,1316 @@
+/* =====================================================================
+   Executive dashboard skin + the app shell's navigation.
+
+   Two jobs, one file, because they share a palette and are always rendered
+   together. Everything dashboard-specific is scoped under `.exec` or
+   `[data-exec]`; the navigation rules are scoped under `.panel-body` like the
+   rest of the shell.
+
+   The visual target is the client's dark mockup. It is reproduced here in
+   plain CSS rather than by adding Tailwind's browser CDN build, which
+   compiles stylesheets in the visitor's browser on every page view and is not
+   meant for production. The same design then gets a light counterpart, because
+   this app flips between day and night on the clock and dropping one of them
+   would be a regression.
+
+   Written with logical properties (inline-start/end) so it mirrors itself in
+   RTL, and on the existing --pe-* tokens so both themes come for free.
+   ===================================================================== */
+
+.exec,
+.exec-hero {
+	--r-lg: 18px;
+	--r-md: 13px;
+	--r-sm: 9px;
+	--ok: #16a34a;
+	--warn: #d97706;
+	--bad: #dc2626;
+	--info: #0284c7;
+	--shadow-1: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px -14px rgba(15, 23, 42, 0.2);
+	--shadow-2: 0 1px 2px rgba(15, 23, 42, 0.05), 0 18px 40px -22px rgba(15, 23, 42, 0.3);
+}
+
+.exec {
+	display: flex;
+	flex-direction: column;
+	gap: 18px;
+	/* Tabular figures keep columns of numbers from dancing as they update. */
+	font-variant-numeric: tabular-nums;
+}
+
+html[data-theme="dark"] .exec,
+html[data-theme="dark"] .exec-hero {
+	--ok: #34d399;
+	--warn: #fbbf24;
+	--bad: #f87171;
+	--info: #38bdf8;
+	--shadow-1: 0 1px 2px rgba(0, 0, 0, 0.35), 0 8px 24px -14px rgba(0, 0, 0, 0.7);
+	--shadow-2: 0 1px 2px rgba(0, 0, 0, 0.4), 0 18px 40px -22px rgba(0, 0, 0, 0.85);
+}
+
+/* The mockup's deep navy. Applied as a theme override rather than hard-coded
+   so the light theme keeps its own surfaces. */
+html[data-theme="dark"] .panel-body {
+	--pe-bg: #070d19;
+	--pe-panel: #0b1329;
+	--pe-panel-alt: #0f1a36;
+	--pe-border: #1b2a4e;
+}
+
+/* ---------------------------------------------------------------- icons */
+
+.ic {
+	width: 1em;
+	height: 1em;
+	flex: none;
+	stroke: currentColor;
+	fill: none;
+	stroke-width: 1.8;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+	vertical-align: -0.125em;
+}
+
+/* ------------------------------------------------------------ app shell */
+
+/* 280px could not hold an icon, a label like "سنسورها و کنتورها" and a count
+   badge at once — labels truncated and the column grew a horizontal
+   scrollbar. The drawer breakpoint in responsive.css keeps its own width. */
+@media (min-width: 1101px) {
+	.panel-body .app {
+		grid-template-columns: 304px 1fr;
+	}
+
+	.panel-body .app.nav-collapsed {
+		grid-template-columns: 1fr;
+	}
+}
+
+.panel-body .sidebar {
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	overflow-x: hidden;
+}
+
+.panel-body .brand {
+	margin: 0;
+	padding: 16px 16px 14px;
+	border-block-end: 1px solid var(--pe-border);
+	gap: 10px;
+}
+
+.panel-body .brand .logo {
+	width: 36px;
+	height: 36px;
+	border-radius: 11px;
+	font-size: 20px;
+	color: #052e16;
+	background: linear-gradient(135deg, var(--pe-accent-strong), var(--pe-accent));
+	box-shadow: 0 6px 16px -6px var(--pe-accent);
+}
+
+.panel-body .brand h1 {
+	font-size: 0.86rem;
+	font-weight: 800;
+	letter-spacing: -0.01em;
+}
+
+.panel-body .brand p {
+	font-size: 0.68rem;
+}
+
+/* Who is signed in. */
+.who {
+	display: flex;
+	align-items: center;
+	gap: 9px;
+	margin: 12px 12px 4px;
+	padding: 9px 10px;
+	border-radius: var(--r-md, 13px);
+	background: var(--pe-panel-alt);
+	border: 1px solid var(--pe-border);
+}
+
+.who-av {
+	width: 30px;
+	height: 30px;
+	border-radius: 50%;
+	display: grid;
+	place-items: center;
+	flex: none;
+	font-size: 0.7rem;
+	font-weight: 800;
+	color: var(--pe-accent);
+	background: color-mix(in srgb, var(--pe-accent) 14%, transparent);
+	border: 1px solid color-mix(in srgb, var(--pe-accent) 28%, transparent);
+}
+
+.who-id {
+	min-width: 0;
+	flex: 1;
+}
+
+.who-id b {
+	display: block;
+	font-size: 0.74rem;
+	font-weight: 700;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.who-id i {
+	display: block;
+	font-style: normal;
+	font-size: 0.66rem;
+	color: var(--pe-accent);
+}
+
+.who-dot {
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	flex: none;
+	background: var(--pe-accent);
+	animation: breathe 2.4s ease-in-out infinite;
+}
+
+@keyframes breathe {
+
+	0%,
+	100% {
+		opacity: 1;
+	}
+
+	50% {
+		opacity: 0.35;
+	}
+}
+
+.panel-body .nav {
+	gap: 2px;
+	margin: 0;
+	padding: 6px 12px 12px;
+	overflow-y: auto;
+	overflow-x: hidden;
+	flex: 1;
+	min-width: 0;
+	/* Bootstrap owns a `.nav` component too, and ours reuses the class name.
+	   Its `flex-wrap: wrap` was harmless while the menu was short; once two
+	   groups could be open at once the column overflowed and the links wrapped
+	   into a second column beside the first. */
+	flex-wrap: nowrap;
+}
+
+.nav-cat {
+	padding: 14px 6px 5px;
+	font-size: 0.64rem;
+	font-weight: 800;
+	letter-spacing: 0.06em;
+	color: var(--pe-muted);
+	opacity: 0.8;
+}
+
+.panel-body .nav a {
+	padding: 8px 11px;
+	border-radius: var(--r-md, 13px);
+	gap: 9px;
+	font-size: 0.78rem;
+	min-width: 0;
+	transition: background 160ms ease, color 160ms ease;
+}
+
+.panel-body .nav a .ic {
+	font-size: 15px;
+	color: var(--pe-muted);
+	transition: color 160ms ease;
+}
+
+.panel-body .nav a span {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.panel-body .nav a:hover {
+	background: var(--pe-panel-alt);
+	border-color: transparent;
+	transform: none;
+}
+
+.panel-body .nav a:hover .ic {
+	color: var(--pe-accent);
+}
+
+.panel-body .nav a.active {
+	background: var(--pe-accent-strong);
+	border-color: transparent;
+	color: #fff;
+	font-weight: 700;
+	transform: none;
+	box-shadow: 0 6px 16px -8px var(--pe-accent-strong);
+}
+
+.panel-body .nav a.active .ic {
+	color: #fff;
+}
+
+/* ------------------------------------------------- collapsible nav groups */
+
+.panel-body .nav-group-toggle {
+	padding: 8px 11px;
+	border-radius: var(--r-md, 13px);
+	gap: 9px;
+	font-size: 0.78rem;
+	font-family: inherit;
+	font-weight: 500;
+	min-width: 0;
+	transition: background 160ms ease;
+}
+
+.panel-body .nav-group-toggle .ic {
+	font-size: 15px;
+	color: var(--pe-muted);
+}
+
+.panel-body .nav-group-toggle > span:first-of-type {
+	flex: 1;
+	min-width: 0;
+	text-align: start;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.panel-body .nav-group-toggle:hover {
+	background: var(--pe-panel-alt);
+	border-color: transparent;
+}
+
+.panel-body .nav-group-toggle:hover .ic {
+	color: var(--pe-accent);
+}
+
+/* An open group keeps its header lit so you can see where you are without
+   expanding the others. */
+.panel-body .nav-group.open > .nav-group-toggle {
+	color: var(--pe-accent);
+}
+
+.panel-body .nav-group.open > .nav-group-toggle .ic {
+	color: var(--pe-accent);
+}
+
+.panel-body .nav-group .chevron {
+	font-size: 0.7rem;
+	opacity: 0.55;
+	flex: none;
+}
+
+.panel-body .nav-subitems {
+	gap: 1px;
+	margin: 2px 4px 6px;
+	padding-inline-end: 12px;
+	padding-inline-start: 0;
+	border-inline-end: 1px solid var(--pe-border);
+	border-inline-start: 0;
+}
+
+.panel-body .nav-subitems a {
+	padding: 7px 11px;
+	font-size: 0.75rem;
+	border-radius: 9px;
+	color: var(--pe-muted);
+}
+
+.panel-body .nav-subitems a:hover {
+	color: var(--pe-text);
+}
+
+.panel-body .nav-subitems a.active {
+	background: color-mix(in srgb, var(--pe-accent) 14%, transparent);
+	color: var(--pe-accent);
+	font-weight: 700;
+	box-shadow: none;
+}
+
+/* Badge next to a nav item. */
+.nav-n {
+	flex: none;
+	font-size: 0.66rem;
+	font-weight: 700;
+	padding: 1px 7px;
+	border-radius: 999px;
+	background: var(--pe-panel-alt);
+	color: var(--pe-muted);
+	border: 1px solid var(--pe-border);
+}
+
+.panel-body .nav a.active .nav-n {
+	background: rgba(255, 255, 255, 0.22);
+	color: #fff;
+	border-color: transparent;
+}
+
+.nav-n.ok {
+	color: var(--pe-accent);
+	background: color-mix(in srgb, var(--pe-accent) 12%, transparent);
+	border-color: color-mix(in srgb, var(--pe-accent) 26%, transparent);
+}
+
+.nav-n.bad {
+	color: #dc2626;
+	background: rgba(220, 38, 38, 0.12);
+	border-color: rgba(220, 38, 38, 0.3);
+}
+
+html[data-theme="dark"] .nav-n.bad {
+	color: #f87171;
+}
+
+.side-foot {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	padding: 10px 14px;
+	border-block-start: 1px solid var(--pe-border);
+	font-size: 0.68rem;
+	color: var(--pe-muted);
+}
+
+.side-foot .live {
+	display: inline-block;
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	background: var(--pe-accent);
+	margin-inline-end: 6px;
+}
+
+.side-out {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	background: none;
+	border: 0;
+	padding: 4px 6px;
+	border-radius: 8px;
+	font-family: inherit;
+	font-size: 0.68rem;
+	color: var(--pe-muted);
+	cursor: pointer;
+}
+
+.side-out:hover {
+	color: #dc2626;
+	background: rgba(220, 38, 38, 0.1);
+}
+
+.side-out .ic {
+	font-size: 13px;
+}
+
+/* ---------------------------------------------------------------- hero */
+
+/* The dashboard supplies its own header, so the shell's generic top bar
+   stops being a card here and becomes a bare row: hamburger, then hero. */
+[data-exec] .topbar {
+	background: transparent;
+	border: 0;
+	box-shadow: none;
+	padding: 0;
+	border-radius: 0;
+	margin-block-end: 18px;
+	align-items: stretch;
+	gap: 10px;
+}
+
+[data-exec] .topbar .hamburger-btn {
+	align-self: flex-start;
+	margin-block-start: 14px;
+}
+
+.exec-hero {
+	flex: 1;
+	position: relative;
+	overflow: hidden;
+	border: 1px solid var(--pe-border);
+	border-radius: var(--r-lg);
+	padding: 16px 20px;
+	background: var(--pe-panel);
+	box-shadow: var(--shadow-1);
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 18px;
+	flex-wrap: wrap;
+}
+
+/* One wash of brand colour. One translucent layer only — stacking them
+   turns the surface to mud. */
+.exec-hero::before {
+	content: '';
+	position: absolute;
+	inset-block-start: -70%;
+	inset-inline-end: -8%;
+	width: 420px;
+	height: 420px;
+	border-radius: 50%;
+	background: radial-gradient(circle, color-mix(in srgb, var(--pe-accent) 16%, transparent), transparent 68%);
+	pointer-events: none;
+}
+
+.exec-hero>* {
+	position: relative;
+}
+
+.exec-hero h1 {
+	margin: 0 0 3px;
+	font-size: clamp(1.05rem, 0.95rem + 0.4vw, 1.3rem);
+	font-weight: 800;
+	/* Negative tracking on display sizes; body text keeps its own. */
+	letter-spacing: -0.02em;
+	line-height: 1.4;
+}
+
+.exec-hero .sub {
+	margin: 0;
+	color: var(--pe-muted);
+	font-size: 0.8rem;
+	line-height: 1.7;
+}
+
+.exec-hero-actions {
+	display: flex;
+	gap: 8px;
+	flex-wrap: wrap;
+	align-items: center;
+}
+
+/* Health ring: one SVG donut, no library. */
+.health {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding-inline-end: 6px;
+}
+
+.health svg {
+	width: 52px;
+	height: 52px;
+	transform: rotate(-90deg);
+}
+
+.health .track {
+	stroke: var(--pe-border);
+}
+
+.health .fill {
+	stroke: var(--ok);
+	stroke-linecap: round;
+	transition: stroke-dashoffset 900ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.health.is-warn .fill {
+	stroke: var(--warn);
+}
+
+.health.is-bad .fill {
+	stroke: var(--bad);
+}
+
+.health b {
+	display: block;
+	font-size: 0.95rem;
+	line-height: 1.3;
+}
+
+.health span {
+	color: var(--pe-muted);
+	font-size: 0.7rem;
+}
+
+/* ------------------------------------------------------------ headline */
+
+.exec-kpis {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+	gap: 14px;
+}
+
+.kpi {
+	background: var(--pe-panel);
+	border: 1px solid var(--pe-border);
+	border-radius: var(--r-lg);
+	padding: 15px 16px;
+	box-shadow: var(--shadow-1);
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	text-decoration: none;
+	color: inherit;
+	transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
+		box-shadow 220ms cubic-bezier(0.22, 1, 0.36, 1),
+		border-color 220ms ease;
+}
+
+a.kpi:hover {
+	transform: translateY(-2px);
+	box-shadow: var(--shadow-2);
+	border-color: color-mix(in srgb, var(--tone, var(--pe-accent)) 45%, var(--pe-border));
+}
+
+/* Respond to the press itself, not to the release. */
+a.kpi:active {
+	transform: translateY(0) scale(0.985);
+	transition-duration: 90ms;
+}
+
+.kpi-top {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 10px;
+}
+
+.kpi-icon {
+	width: 38px;
+	height: 38px;
+	border-radius: var(--r-md);
+	display: grid;
+	place-items: center;
+	background: color-mix(in srgb, var(--tone, var(--pe-accent)) 12%, transparent);
+	color: var(--tone, var(--pe-accent));
+	border: 1px solid color-mix(in srgb, var(--tone, var(--pe-accent)) 26%, transparent);
+	flex: none;
+}
+
+.kpi-icon .ic {
+	font-size: 18px;
+}
+
+/* A pulse only while something actually needs attention — motion that means
+   nothing is just noise. */
+.kpi-icon.beat {
+	animation: beat 2.2s ease-in-out infinite;
+}
+
+@keyframes beat {
+
+	0%,
+	100% {
+		box-shadow: 0 0 0 0 color-mix(in srgb, var(--tone) 50%, transparent);
+	}
+
+	60% {
+		box-shadow: 0 0 0 8px transparent;
+	}
+}
+
+.kpi-val {
+	font-size: clamp(1.5rem, 1.25rem + 0.9vw, 1.95rem);
+	font-weight: 800;
+	letter-spacing: -0.03em;
+	line-height: 1.15;
+}
+
+.kpi-label {
+	color: var(--pe-muted);
+	font-size: 0.78rem;
+	line-height: 1.5;
+	margin-block-start: 2px;
+}
+
+.kpi-foot {
+	font-size: 0.72rem;
+	color: var(--pe-muted);
+	margin-block-start: auto;
+	display: flex;
+	align-items: center;
+	gap: 5px;
+}
+
+.kpi-foot .ic {
+	font-size: 13px;
+}
+
+.kpi-foot b {
+	display: inline-flex;
+	align-items: center;
+	gap: 3px;
+	font-weight: 700;
+}
+
+.kpi-foot b.up {
+	color: var(--ok);
+}
+
+.kpi-foot b.down {
+	color: var(--bad);
+}
+
+/* --------------------------------------------------------------- cards */
+
+.exec-grid {
+	display: grid;
+	gap: 14px;
+}
+
+.exec-grid.cols-2 {
+	grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
+}
+
+.exec-grid.cols-4 {
+	grid-template-columns: repeat(auto-fit, minmax(235px, 1fr));
+}
+
+.exec-grid.split {
+	grid-template-columns: 1.9fr 1fr;
+}
+
+.exec-card {
+	background: var(--pe-panel);
+	border: 1px solid var(--pe-border);
+	border-radius: var(--r-lg);
+	box-shadow: var(--shadow-1);
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	min-width: 0;
+}
+
+.exec-card-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 13px 16px;
+	border-block-end: 1px solid var(--pe-border);
+}
+
+.exec-card-head h2 {
+	margin: 0;
+	font-size: 0.82rem;
+	font-weight: 700;
+	letter-spacing: -0.01em;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.exec-card-head h2 .ic {
+	font-size: 16px;
+	color: var(--tone, var(--pe-accent));
+}
+
+.exec-card-head .head-sub {
+	margin: 3px 0 0;
+	font-size: 0.68rem;
+	color: var(--pe-muted);
+}
+
+.exec-card-head .head-stat {
+	font-size: 0.73rem;
+	color: var(--pe-muted);
+	white-space: nowrap;
+}
+
+.exec-card-head .head-stat b {
+	color: var(--tone, var(--pe-accent));
+	font-weight: 700;
+}
+
+.exec-card-head .more {
+	font-size: 0.74rem;
+	color: var(--pe-muted);
+	text-decoration: none;
+	white-space: nowrap;
+}
+
+.exec-card-head .more:hover {
+	color: var(--pe-accent);
+}
+
+.btn-sm {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	padding: 5px 11px;
+	border-radius: 9px;
+	font-size: 0.72rem;
+	text-decoration: none;
+	color: var(--pe-text);
+	background: var(--pe-panel-alt);
+	border: 1px solid var(--pe-border);
+	white-space: nowrap;
+}
+
+.btn-sm:hover {
+	border-color: var(--pe-accent);
+	color: var(--pe-accent);
+}
+
+.exec-card-body {
+	padding: 14px 16px;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	flex: 1;
+}
+
+.exec-card-body.flush {
+	padding: 0;
+}
+
+/* -------------------------------------------------------------- funnel */
+
+.funnel {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: 8px;
+}
+
+.fstep {
+	background: var(--pe-panel-alt);
+	border: 1px solid var(--pe-border);
+	border-radius: var(--r-md);
+	padding: 11px 8px;
+	text-align: center;
+}
+
+/* The end of the funnel is the only step that means money. */
+.fstep.is-end {
+	background: color-mix(in srgb, var(--ok) 10%, transparent);
+	border-color: color-mix(in srgb, var(--ok) 32%, transparent);
+}
+
+.fname {
+	font-size: 0.68rem;
+	color: var(--pe-muted);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.fnum {
+	font-size: 1.1rem;
+	font-weight: 800;
+	letter-spacing: -0.02em;
+	margin: 3px 0 1px;
+}
+
+.fstep.is-end .fnum,
+.fstep.is-end .fpct {
+	color: var(--ok);
+}
+
+.fpct {
+	font-size: 0.66rem;
+	color: var(--pe-accent);
+}
+
+.fbar {
+	height: 3px;
+	border-radius: 999px;
+	background: var(--pe-border);
+	overflow: hidden;
+	margin-block-start: 7px;
+}
+
+.fbar i {
+	display: block;
+	height: 100%;
+	border-radius: 999px;
+	background: var(--pe-accent);
+	/* Grows from zero on first paint. */
+	transform-origin: var(--grow, right);
+	animation: grow-x 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.fstep.is-end .fbar i {
+	background: var(--ok);
+}
+
+@keyframes grow-x {
+	from {
+		transform: scaleX(0);
+	}
+
+	to {
+		transform: scaleX(1);
+	}
+}
+
+/* ----------------------------------------------------------- stat rows */
+
+.srow {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 8px 0;
+	border-block-end: 1px dashed var(--pe-border);
+	font-size: 0.8rem;
+}
+
+.srow:last-child {
+	border-block-end: 0;
+}
+
+.srow>span {
+	color: var(--pe-muted);
+}
+
+.srow>strong {
+	font-weight: 700;
+	font-size: 0.88rem;
+}
+
+.srow>strong.accent {
+	color: var(--info);
+}
+
+.srow>strong.ok,
+.srow.is-ok>strong {
+	color: var(--ok);
+}
+
+.srow.is-bad>strong {
+	color: var(--bad);
+}
+
+.srow.is-warn>strong {
+	color: var(--warn);
+}
+
+/* -------------------------------------------------------------- alerts */
+
+.alist {
+	display: flex;
+	flex-direction: column;
+	gap: 7px;
+}
+
+.aitem {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 10px;
+	padding: 9px 11px;
+	border-radius: var(--r-md);
+	background: var(--pe-panel-alt);
+	border: 1px solid var(--pe-border);
+	border-inline-start: 3px solid var(--tone, var(--pe-accent));
+	font-size: 0.78rem;
+	text-decoration: none;
+	color: inherit;
+	transition: border-color 160ms ease, background 160ms ease;
+}
+
+a.aitem:hover {
+	background: color-mix(in srgb, var(--tone, var(--pe-accent)) 8%, var(--pe-panel-alt));
+}
+
+.acopy {
+	min-width: 0;
+}
+
+.acopy b {
+	display: block;
+	font-weight: 700;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.acopy i {
+	display: block;
+	font-style: normal;
+	font-size: 0.7rem;
+	color: var(--pe-muted);
+	margin-block-start: 1px;
+}
+
+.btn-wide {
+	display: block;
+	margin-block-start: 12px;
+	padding: 8px;
+	text-align: center;
+	border-radius: var(--r-md);
+	font-size: 0.76rem;
+	font-weight: 700;
+	text-decoration: none;
+	color: var(--tone, var(--pe-accent));
+	background: color-mix(in srgb, var(--tone, var(--pe-accent)) 10%, transparent);
+	border: 1px solid color-mix(in srgb, var(--tone, var(--pe-accent)) 30%, transparent);
+}
+
+.btn-wide:hover {
+	background: color-mix(in srgb, var(--tone, var(--pe-accent)) 18%, transparent);
+}
+
+/* ---------------------------------------------------------------- dots */
+
+.dot {
+	display: inline-block;
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	flex: none;
+	background: var(--pe-muted);
+}
+
+.dot.ok {
+	background: var(--ok);
+}
+
+.dot.warn {
+	background: var(--warn);
+}
+
+.dot.bad {
+	background: var(--bad);
+}
+
+.map-legend {
+	display: flex;
+	gap: 7px;
+	flex-wrap: wrap;
+}
+
+.map-legend span {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	font-size: 0.7rem;
+	padding: 3px 9px;
+	border-radius: 999px;
+	background: var(--pe-panel-alt);
+	border: 1px solid var(--pe-border);
+	color: var(--pe-muted);
+	white-space: nowrap;
+}
+
+/* --------------------------------------------------------------- table */
+
+.dtable {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 0.78rem;
+}
+
+.dtable th {
+	text-align: start;
+	font-weight: 600;
+	font-size: 0.7rem;
+	letter-spacing: 0.02em;
+	color: var(--pe-muted);
+	padding: 10px 14px;
+	background: var(--pe-panel-alt);
+	border-block-end: 1px solid var(--pe-border);
+	white-space: nowrap;
+}
+
+.dtable td {
+	padding: 10px 14px;
+	border-block-end: 1px solid var(--pe-border);
+	vertical-align: middle;
+}
+
+.dtable tbody tr:last-child td {
+	border-block-end: 0;
+}
+
+.dtable tbody tr {
+	transition: background 150ms ease;
+}
+
+.dtable tbody tr:hover {
+	background: var(--pe-panel-alt);
+}
+
+.dtable .id {
+	color: var(--pe-muted);
+	font-size: 0.74rem;
+	font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+	direction: ltr;
+}
+
+.dtable .strong {
+	font-weight: 700;
+}
+
+.dtable .muted {
+	color: var(--pe-muted);
+	font-style: normal;
+	font-size: 0.74rem;
+}
+
+.dtable b.ok {
+	color: var(--ok);
+	font-weight: 600;
+}
+
+.dtable b.bad {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	color: var(--bad);
+	font-weight: 700;
+}
+
+.dtable .go {
+	color: var(--pe-muted);
+	text-decoration: none;
+	font-size: 15px;
+}
+
+.dtable .go:hover {
+	color: var(--pe-accent);
+}
+
+.tag-qr {
+	font-size: 0.62rem;
+	font-weight: 700;
+	padding: 1px 5px;
+	border-radius: 5px;
+	color: var(--info);
+	background: color-mix(in srgb, var(--info) 14%, transparent);
+	border: 1px solid color-mix(in srgb, var(--info) 30%, transparent);
+	direction: ltr;
+	display: inline-block;
+}
+
+.pill {
+	display: inline-block;
+	padding: 2px 9px;
+	border-radius: 999px;
+	font-size: 0.7rem;
+	font-weight: 600;
+	line-height: 1.7;
+	background: color-mix(in srgb, var(--tone, var(--pe-accent)) 13%, transparent);
+	color: var(--tone, var(--pe-accent));
+	border: 1px solid color-mix(in srgb, var(--tone, var(--pe-accent)) 28%, transparent);
+	white-space: nowrap;
+}
+
+/* ---------------------------------------------------------------- misc */
+
+.exec .fleet-map,
+.exec #fleetMap {
+	width: 100%;
+	height: 380px;
+	border-radius: 0;
+}
+
+/* A bright white map inside a dark panel is the one combination that looks
+   broken. The obvious fix — a dark basemap — turned out not to be free: Carto
+   now answers keyless requests with a tile reading "API KEY REQUIRED", and
+   every other styled service wants a key too.
+
+   So the map is darkened here instead. The filter is on the *tile pane* only,
+   which is why it works: markers, popups and zoom controls live in sibling
+   panes and keep their real colours, so a red alert dot stays red. Costs no
+   request, needs no key, and cannot be blocked. If a Carto key is ever set
+   under `map_carto_key` the server serves real dark tiles and this becomes a
+   no-op worth removing. */
+html[data-theme="dark"] .leaflet-tile-pane {
+	filter: invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.88) saturate(0.85);
+}
+
+/* Leaflet's own chrome is light by default and glares in the dark theme. */
+html[data-theme="dark"] .exec .leaflet-container {
+	background: var(--pe-panel-alt);
+}
+
+html[data-theme="dark"] .exec .leaflet-popup-content-wrapper,
+html[data-theme="dark"] .exec .leaflet-popup-tip {
+	background: var(--pe-panel-alt);
+	color: var(--pe-text);
+	border: 1px solid var(--pe-border);
+}
+
+html[data-theme="dark"] .exec .leaflet-control-zoom a {
+	background: var(--pe-panel-alt);
+	color: var(--pe-text);
+	border-color: var(--pe-border);
+}
+
+.exec-empty {
+	padding: 24px 16px;
+	text-align: center;
+	color: var(--pe-muted);
+	font-size: 0.8rem;
+}
+
+.exec .chart-box {
+	position: relative;
+	height: 230px;
+}
+
+.exec .chart-box canvas {
+	width: 100% !important;
+	height: 100% !important;
+	min-height: 0 !important;
+}
+
+.exec .layout-wrap {
+	display: grid;
+	grid-template-columns: 1fr 220px;
+	gap: 16px;
+	align-items: start;
+}
+
+/* Cards settle in rather than snapping in — short, and only once. */
+.exec-hero,
+.exec>* {
+	animation: rise 480ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.exec>*:nth-child(1) { animation-delay: 0ms; }
+.exec>*:nth-child(2) { animation-delay: 40ms; }
+.exec>*:nth-child(3) { animation-delay: 70ms; }
+.exec>*:nth-child(4) { animation-delay: 100ms; }
+.exec>*:nth-child(n+5) { animation-delay: 130ms; }
+
+@keyframes rise {
+	from {
+		opacity: 0;
+		transform: translateY(9px);
+	}
+
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}
+
+/* ------------------------------------------------------- accessibility */
+
+@media (prefers-reduced-motion: reduce) {
+
+	.exec-hero,
+	.exec>*,
+	.fbar i,
+	.who-dot,
+	.kpi-icon.beat {
+		animation: none;
+	}
+
+	.exec .health .fill,
+	.exec a.kpi {
+		transition: none;
+	}
+}
+
+@media (prefers-contrast: more) {
+	.exec .aitem {
+		border-color: var(--tone, var(--pe-accent));
+	}
+}
+
+/* ---------------------------------------------------------- responsive */
+
+@media (max-width: 1250px) {
+	.exec-grid.split {
+		grid-template-columns: 1fr;
+	}
+}
+
+@media (max-width: 1100px) {
+	.exec .layout-wrap {
+		grid-template-columns: 1fr;
+	}
+}
+
+@media (max-width: 760px) {
+	.exec {
+		gap: 14px;
+	}
+
+	.exec-hero {
+		padding: 14px 16px;
+	}
+
+	/* Something upstream renders .btn as a block at this width, so each hero
+	   control claimed a full row and pushed the first real number below the
+	   fold. They share one line here and size to their own text. */
+	.exec-hero-actions {
+		width: 100%;
+		gap: 6px;
+	}
+
+	.exec-hero-actions .btn,
+	.exec-hero-actions form {
+		display: inline-flex !important;
+		width: auto;
+		flex: 0 0 auto;
+		padding: 8px 12px;
+		font-size: 0.78rem;
+	}
+
+	.exec-hero .health {
+		order: -1;
+	}
+
+	/* Five funnel columns do not fit a phone; two rows read better than a
+	   horizontal scrollbar. */
+	.funnel {
+		grid-template-columns: repeat(2, 1fr);
+	}
+
+	.fstep.is-end {
+		grid-column: span 2;
+	}
+
+	.exec .fleet-map,
+	.exec #fleetMap {
+		height: 290px;
+	}
+
+	.dtable th,
+	.dtable td {
+		padding: 9px 11px;
+	}
+}
+
+/* "Today's tasks" (templates/partials/todo.html): actions first, counters after. */
+.todo-box { margin: 0 0 20px; }
+.todo-title { font-size: 1.05rem; font-weight: 700; margin: 0 0 10px; }
+.todo-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+.todo-item {
+	display: flex; align-items: center; gap: 12px; padding: 12px 14px;
+	border: 1px solid var(--pe-border, rgba(127,127,127,.25)); border-inline-start: 4px solid #d97706;
+	border-radius: 14px; background: var(--pe-panel, transparent); color: inherit; text-decoration: none;
+	transition: transform .15s ease, box-shadow .15s ease;
+}
+.todo-item:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(0,0,0,.12); }
+.todo-item.bad { border-inline-start-color: #dc2626; }
+.todo-n { font-size: 1.5rem; min-width: 2.2ch; text-align: center; color: #d97706; }
+.todo-item.bad .todo-n { color: #dc2626; }
+.todo-text { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.todo-text small { opacity: .7; font-size: .8rem; }
+.todo-go { opacity: .5; font-size: 1.1rem; }
+.todo-empty { margin: 0; padding: 12px 14px; border-radius: 14px; background: rgba(22,163,74,.1); color: #16a34a; }
+
+/* Request page: the next step on top, and the stages as a row of steps. */
+.next-step {
+	display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
+	padding: 12px 16px; margin: 0 0 16px; border-radius: 14px;
+	background: rgba(37, 99, 235, .1); border: 1px solid rgba(37, 99, 235, .35);
+}
+.steps { display: flex; list-style: none; padding: 0; margin: 0 0 12px; gap: 6px; counter-reset: step; flex-wrap: wrap; }
+.steps li {
+	flex: 1 1 120px; position: relative; padding: 10px 12px 10px 12px; border-radius: 12px;
+	border: 1px solid var(--pe-border, rgba(127,127,127,.25)); opacity: .6; counter-increment: step;
+	display: flex; flex-direction: column; gap: 2px;
+}
+.steps li b::before { content: counter(step, persian) ". "; }
+.steps li small { font-size: .78rem; opacity: .8; min-height: 1em; }
+.steps li.done { opacity: 1; border-color: rgba(22,163,74,.6); background: rgba(22,163,74,.08); }
+.steps li.done b::after { content: " ✓"; color: #16a34a; }
+.steps li.now { opacity: 1; border-color: #2563eb; background: rgba(37,99,235,.1); box-shadow: 0 0 0 2px rgba(37,99,235,.25); }

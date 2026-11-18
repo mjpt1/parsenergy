@@ -35,13 +35,26 @@ class RolePermission(models.Model):
 
 class User(AbstractUser):
     class Role(models.TextChoices):
-        OWNER = 'owner', 'Owner'
-        ADMIN = 'admin', 'Admin'
-        OPERATOR = 'operator', 'Operator'
-        ANALYST = 'analyst', 'Analyst'
+        OWNER = 'owner', 'مالک نیروگاه'
+        ADMIN = 'admin', 'مدیریت'
+        OPERATOR = 'operator', 'اپراتور'
+        ANALYST = 'analyst', 'تحلیلگر'
+        MARKETING = 'marketing', 'توسعه بازار'
+        SALES = 'sales', 'فروش'
+        TECHNICAL = 'technical', 'فنی'
+        OPERATIONS = 'operations', 'عملیات'
+        # Handles contracts, invoices and settlement. Reads the commercial end
+        # of the pipeline; does not own a pipeline stage and cannot move one.
+        FINANCIAL = 'financial', 'مالی'
+        CUSTOMER = 'customer', 'مالک'
+        # An outside company: sees only the projects it is connected to.
+        CONTRACTOR = 'contractor', 'پیمانکار'
 
     role = models.CharField(max_length=20, choices=Role.choices, default=Role.OWNER)
     roles = models.ManyToManyField('Role', through='UserRole', related_name='users', blank=True)
+    # Optional, per-user extra access toggles managed by admins (beyond the main role).
+    extra_permissions = models.ManyToManyField(
+        'Permission', blank=True, related_name='granted_users')
     phone_number = models.CharField(max_length=20, blank=True)
     mfa_enabled = models.BooleanField(default=False)
     mfa_secret = models.CharField(max_length=128, blank=True)
@@ -53,8 +66,63 @@ class User(AbstractUser):
     def is_admin_role(self):
         return self.role == self.Role.ADMIN or self.is_superuser
 
+    def is_management(self):
+        """Admins/superusers who oversee every department (NOT customers/owners)."""
+        return self.is_superuser or self.role == self.Role.ADMIN
+
+    def is_marketing(self):
+        return self.role == self.Role.MARKETING
+
+    def is_sales(self):
+        return self.role == self.Role.SALES
+
+    def is_technical(self):
+        return self.role == self.Role.TECHNICAL
+
+    def is_operations(self):
+        return self.role == self.Role.OPERATIONS
+
+    def is_financial(self):
+        return self.role == self.Role.FINANCIAL
+
+    def is_customer(self):
+        return self.role == self.Role.CUSTOMER
+
+    # --- Navigation capabilities (role default OR an admin-granted extra) ---
+    @property
+    def can_access_plants(self):
+        return (self.is_superuser or self.role in (
+            self.Role.ADMIN, self.Role.TECHNICAL, self.Role.OPERATIONS,
+            self.Role.OWNER, self.Role.CUSTOMER,
+        ) or self.has_permission_code('plants.access'))
+
+    @property
+    def can_manage_contractors(self):
+        return self.is_superuser or self.role in (self.Role.ADMIN, self.Role.TECHNICAL, self.Role.OPERATIONS)
+
+    @property
+    def can_edit_plants(self):
+        return self.is_superuser or self.role in (self.Role.ADMIN, self.Role.TECHNICAL, self.Role.OPERATIONS)
+
+    @property
+    def can_access_reports(self):
+        return (self.is_superuser or self.role in (self.Role.ADMIN, self.Role.TECHNICAL)
+                or self.has_permission_code('reports.access'))
+
+    @property
+    def can_build_proposal(self):
+        # shortcut: trial run for one account only; switch to can_access_reports when it opens to staff.
+        return self.username == 'mjpt1'
+
+    @property
+    def can_access_analytics(self):
+        return (self.is_superuser or self.role in (self.Role.ADMIN, self.Role.TECHNICAL)
+                or self.has_permission_code('analytics.access'))
+
     def has_permission_code(self, code: str) -> bool:
         if self.is_superuser or self.is_admin_role():
+            return True
+        if self.extra_permissions.filter(code=code).exists():
             return True
         return RolePermission.objects.filter(
             role__users=self,

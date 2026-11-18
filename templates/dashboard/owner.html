@@ -1,154 +1,339 @@
-{% extends 'base.html' %}
-{% load i18n %}
-{% block panel_attributes %}data-dashboard="owner" data-endpoint="{% url 'core:owner-dashboard-data' %}"{% endblock %}
-{% block topbar %}
-<div class="title">
-  <h2>{% trans "وضعیت نیروگاه" %}</h2>
-  <span>{% trans "پایش لحظه ای تولید انرژی" %}</span>
-</div>
-<div class="top-actions">
-  <div>{% trans "کاربر" %}: {{ request.user.get_full_name|default:request.user.username }}</div>
-  <button class="btn secondary" type="button" id="themeToggle" onclick="SolarOps.toggleTheme()">{% trans "حالت شب" %}</button>
-</div>
-{% endblock %}
+{% extends 'base_portal.html' %}
+{% load calendar_tags i18n ux_tags %}
+{% comment %}
+  The customer's monitoring home. It lives in the portal shell (pars-energy
+  branding, no staff sidebar) but keeps the full dashboard: live production,
+  map, panel layout, equipment, alerts and reports.
+
+  `initOwnerPanel()` in main.js polls the endpoint below; it reads the two data
+  attributes off #panelContent *or* the body, which is why they go on the body
+  here — the portal shell has no #panelContent wrapper.
+{% endcomment %}
+{% block body_attributes %}data-dashboard="owner" data-endpoint="{% url 'core:owner-dashboard-data' %}"{% endblock %}
 {% block content %}
+<style>
+  /* The dashboard markup came from the staff shell, so it needs its own
+     portal-scoped styling rather than main.css (which restyles <body>). */
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:20px}
+  .cards .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px 16px;text-align:center}
+  .cards .card h3{margin:0 0 6px;font-size:.84rem;font-weight:500;color:var(--muted)}
+  .cards .card strong{font-size:1.55rem;font-weight:700;color:var(--ink)}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px 20px;margin-bottom:20px}
+  .panel h2{margin:0 0 14px;font-size:1.05rem;font-weight:700}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  @media (max-width:900px){.grid{grid-template-columns:1fr}}
+  .fleet-map{height:260px;border-radius:12px;overflow:hidden;border:1px solid var(--line);margin-bottom:.75rem}
+  .fleet-map.tall{height:320px}
+  .layout-wrap{display:grid;grid-template-columns:1fr 220px;gap:18px}
+  @media (max-width:760px){.layout-wrap{grid-template-columns:1fr}}
+  .cell-grid{display:grid;gap:3px}
+  .cell-grid .cell{aspect-ratio:1;border-radius:3px;background:#d7dbd2;cursor:pointer}
+  .cell-grid .cell.ok{background:#4b773c}
+  .cell-grid .cell.warn{background:#f59e0b}
+  .cell-grid .cell.hot{background:#dc2626}
+  .cell-grid .cell.fault{background:#7c3aed}
+  .cell-grid .cell.offline{background:#d7dbd2}
+  .cell-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px;font-size:.8rem;color:var(--muted)}
+  .cell-legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-inline-end:5px;vertical-align:-1px}
+  .cell-legend i.ok{background:#4b773c}.cell-legend i.warn{background:#f59e0b}
+  .cell-legend i.hot{background:#dc2626}.cell-legend i.offline{background:#d7dbd2}
+  .cell-legend i.fault{background:#7c3aed}
+  .cell-grid .cell.idle{background:#7fb6d6}
+  .cell-grid .cell.pending{background:repeating-linear-gradient(45deg,#c9cec3 0 3px,#e8ebe4 3px 6px)}
+  .cell-legend i.idle{background:#7fb6d6}
+  .cell-legend i.pending{background:repeating-linear-gradient(45deg,#c9cec3 0 2px,#e8ebe4 2px 4px)}
+  .layout-wrap>div{min-width:0}
+  .pv-sections{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;min-width:0}
+  .pv-section-head{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline;margin-bottom:8px}
+  .pv-section-head small{color:var(--muted)}
+  .pv-blocks{display:grid;grid-template-columns:minmax(0,1fr);gap:10px}
+  .pv-blocks .cell-grid{gap:2px}
+  .pv-blocks .cell-grid.small-block{width:fit-content}
+  .cell-detail{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:14px}
+  .mini-stat{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line);font-size:.86rem}
+  .mini-stat:last-child{border-bottom:0}
+  .status-ok{color:#16a34a}.status-bad{color:#dc2626}
+  .badge{display:inline-block;background:var(--green);color:#fff;padding:4px 12px;border-radius:8px;font-size:.8rem}
+  canvas{max-height:260px}
+  /* Phones: two cards per row so the first screen shows all four numbers. */
+  @media (max-width:600px){
+    .cards{grid-template-columns:1fr 1fr;gap:10px}
+    .cards .card{padding:14px 10px}
+    .cards .card strong{font-size:1.2rem}
+    .panel{padding:16px 14px}
+  }
+  .plant-state{display:flex;align-items:center;gap:12px;flex-wrap:wrap;border-radius:14px;padding:14px 18px;margin-bottom:16px;font-weight:600}
+  .plant-state small{font-weight:400;opacity:.8}
+  .plant-state.ok{background:#e8f3e3;color:#2f5d22}
+  .plant-state.stale,.plant-state.waiting{background:#fff4e0;color:#8a5300}
+  .plant-state.down{background:#fde8e8;color:#9b1c1c}
+  .plant-pick{display:flex;gap:8px;align-items:center;margin-bottom:14px}
+  .cards .card small{display:block;color:var(--muted);font-size:.72rem;margin-top:4px}
+</style>
+
+{% if plants|length > 1 %}
+<form method="get" class="plant-pick">
+  <label class="form-label mb-0">{% trans "نیروگاه" %}</label>
+  <select name="plant" class="form-select" style="max-width:280px" onchange="this.form.submit()">
+    {% for p in plants %}<option value="{{ p.id }}" {% if p.id == selected_plant.id %}selected{% endif %}>{{ p.name }}</option>{% endfor %}
+  </select>
+</form>
+{% endif %}
+
+{% if plant_state %}
+<div class="plant-state {{ plant_state }}">
+  {% if plant_state == 'ok' %}✓ {% trans "نیروگاه شما کار می‌کند و داده‌ها به‌روز است." %}
+  {% elif plant_state == 'stale' %}⚠ {% trans "بیش از نیم ساعت است داده‌ای از نیروگاه نرسیده است." %}
+  {% elif plant_state == 'down' %}⚠ {% trans "ارتباط با نیروگاه قطع است؛ تیم پشتیبانی در جریان است." %}
+  {% else %}⏳ {% trans "نیروگاه ثبت شده و منتظر اولین داده است." %}{% endif %}
+  {% if last_seen %}<small>{% trans "آخرین داده:" %} {{ last_seen|age_since }} {% trans "پیش" %}</small>{% endif %}
+</div>
+{% endif %}
+
+{% if active_request %}
+<h2 class="h6 mb-2">{% trans "پیگیری درخواست" %} #{{ active_request.id }}
+  <a class="ms-2 small" href="{% url 'requests:my-detail' active_request.id %}">{% trans "مشاهده" %}</a></h2>
+{% include 'requests/user/_progress.html' with req=active_request %}
+{% endif %}
+
+{% if plants %}
 <div class="cards">
-        <div class="card">
-          <h3>{% trans "تولید لحظه ای" %}</h3>
-          <strong id="ownerRealtimePower">0 kW</strong>
-        </div>
+  <div class="card">
+    <h3>{% trans "توان همین حالا" %}</h3>
+    <strong id="ownerRealtimePower">—</strong>
+    <small>{% trans "کیلووات" %}</small>
+  </div>
+  <div class="card">
+    <h3>{% trans "تولید امروز" %}</h3>
+    <strong id="ownerTodayEnergy">—</strong>
+    <small>{% trans "کیلووات‌ساعت" %}</small>
+  </div>
+  <div class="card">
+    <h3>{% trans "تولید ۳۰ روز اخیر" %}</h3>
+    <strong id="ownerMonthEnergy">—</strong>
+    <small>{% trans "کیلووات‌ساعت" %}</small>
+  </div>
+  {% if has_tariff %}
+  <div class="card">
+    <h3>{% trans "صرفه‌جویی امروز" %}</h3>
+    <strong id="ownerTodaySaving">—</strong>
+    <small>{% trans "تومان (تخمینی)" %}</small>
+  </div>
+  {% else %}
+  <div class="card">
+    <h3>{% trans "درصد استفاده از ظرفیت" %}</h3>
+    <strong id="ownerEfficiency">—</strong>
+    <small>{% trans "توان فعلی نسبت به ظرفیت" %}</small>
+  </div>
+  {% endif %}
+</div>
 
-        <div class="card">
-          <h3>{% trans "تولید امروز" %}</h3>
-          <strong id="ownerTodayEnergy">0 kWh</strong>
-        </div>
+{% if selected_plant %}
+<p class="mb-3 d-flex gap-2 flex-wrap"><a class="btn" href="{% url 'plants:screen' %}?plant={{ selected_plant.id }}">{% trans "نمای زندهٔ نیروگاه" %}</a><a class="btn secondary" href="{% url 'plants:monitor' %}?plant={{ selected_plant.id }}">{% trans "پایش کامل نیروگاه و نمودارها" %}</a></p>
+{% endif %}
 
-        <div class="card">
-          <h3>{% trans "راندمان نیروگاه" %}</h3>
-          <strong id="ownerEfficiency">0%</strong>
-        </div>
+{% if latest_bill %}
+<div class="panel mb-3">
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <h2 class="mb-0">{% trans "آخرین صورتحساب" %}</h2>
+    <a href="{% url 'plants:bills' %}?plant={{ selected_plant.id }}">{% trans "همهٔ صورتحساب‌ها و نمودار" %}</a>
+  </div>
+  <p class="mb-0">{{ latest_bill.energy_kwh|floatformat:0 }} {% trans "کیلووات‌ساعت" %} · {% trans "خالص پرداختی" %}: <strong>{{ latest_bill.net_rial|floatformat:0 }}</strong> {% trans "ریال" %}</p>
+</div>
+{% endif %}
 
-        <div class="card">
-          <h3>{% trans "درآمد امروز" %}</h3>
-          <strong id="ownerTodayRevenue">0 ریال</strong>
-        </div>
+{% if revenue %}
+<div class="panel mb-3">
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <h2 class="mb-0">{% trans "درآمد نیروگاه" %}</h2>
+    <a href="{% url 'plants:revenue' %}?plant={{ revenue.plant_id }}">{% trans "بازهٔ دلخواه" %}</a>
+  </div>
+  {% include 'plants/_revenue_panel.html' %}
+</div>
+{% endif %}
+
+<div class="panel mb-3">
+  <h2>{% trans "نقشه قرارگیری نیروگاه من" %}</h2>
+  {% if map_points %}
+  <div id="fleetMap" class="fleet-map tall"></div>
+  {{ map_points|json_script:"fleet-map-data" }}
+  {% if selected_plant %}
+  <div class="d-flex gap-3 flex-wrap mt-2 footer-note">
+    <span>{{ selected_plant.name }} — {{ selected_plant.location_name }}</span>
+    <span>{% trans "ظرفیت" %}: {{ selected_plant.capacity_kw|floatformat:"-2" }} {% trans "کیلووات" %}</span>
+    <span>{% trans "وضعیت" %}: {{ selected_plant.get_connection_status_display }}</span>{% for inverter in selected_plant.inverters.all %} <a href="{% url 'plants:inverter-detail' inverter.pk %}">{% trans "جزئیات اینورتر" %} {{ inverter.model_name }}</a>{% endfor %}
+  </div>
+  {% endif %}
+  {% else %}
+  <p class="footer-note mb-0">{% trans "هنوز نیروگاهی به حساب شما متصل نشده است. پس از تحویل، موقعیت روی نقشه اینجا نمایش داده می‌شود." %}</p>
+  {% endif %}
+</div>
+
+{% if module_grid and module_grid.summary.total %}
+<div class="panel mb-3">
+  <h2>{% trans "چیدمان پنل‌ها — وضعیت و دما" %}</h2>
+  {% if module_grid %}
+  <p class="footer-note mb-2">{% trans "روی هر پنل کلیک کنید تا دما، وضعیت، استرینگ و اینورتر را ببینید." %}</p>
+  <div class="layout-wrap">
+    <div>
+      <div id="pvModuleGrid" class="cell-grid" data-cols="{{ module_grid.cols }}"></div>
+      <div class="cell-legend">
+        <span><i class="ok"></i>{% trans "عادی" %}</span>
+        <span><i class="warn"></i>{% trans "هشدار دما" %}</span>
+        <span><i class="hot"></i>{% trans "داغ" %}</span>
+        <span><i class="offline"></i>{% trans "قطع" %}</span>
+        <span><i class="fault"></i>{% trans "خطا" %}</span>
       </div>
+    </div>
+    <div id="pvModuleDetail" class="cell-detail">
+      <div class="mini-stat"><span>{% trans "کل پنل" %}</span><strong>{{ module_grid.summary.total }}</strong></div>
+      <div class="mini-stat"><span>{% trans "سالم" %}</span><strong style="color:#16a34a">{{ module_grid.summary.ok }}</strong></div>
+      <div class="mini-stat"><span>{% trans "هشدار" %}</span><strong style="color:#d97706">{{ module_grid.summary.warn }}</strong></div>
+      <div class="mini-stat"><span>{% trans "داغ" %}</span><strong style="color:#dc2626">{{ module_grid.summary.hot }}</strong></div>
+    </div>
+  </div>
+  {{ module_grid|json_script:"pv-module-grid-data" }}
+  {% endif %}
+</div>
+{% endif %}
 
-      <div class="grid">
-        <div class="panel">
-          <h2>{% trans "نمودار تولید انرژی" %}</h2>
-          <canvas id="ownerPowerChart"></canvas>
-        </div>
+<div class="grid">
+  <div class="panel">
+    <h2>{% trans "نمودار تولید انرژی" %}</h2>
+    <canvas id="ownerPowerChart"></canvas>
+  </div>
+  <div class="panel">
+    <h2>{% trans "وضعیت تجهیزات" %}</h2>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>{% trans "تجهیز" %}</th>
+          <th>{% trans "وضعیت" %}</th>
+          <th>{% trans "جزئیات" %}</th>
+        </tr>
+      </thead>
+      <tbody id="ownerInverterTable">
+        {% for plant in plants %}
+          {% for inv in plant.inverters.all %}
+          <tr>
+            <td>{{ inv.serial_number }}</td>
+            <td class="{% if inv.online %}status-ok{% else %}status-bad{% endif %}">{% if inv.online %}{% trans "متصل" %}{% else %}{% trans "قطع" %}{% endif %}</td>
+            <td>{{ inv.rated_power_kw|floatformat:"-2" }} {% trans "کیلووات" %} · {{ inv.model_name }}</td>
+          </tr>
+          {% endfor %}
+          {% for sensor in plant.sensors.all %}
+          <tr>
+            <td>{{ sensor.name }}</td>
+            <td class="{% if sensor.is_active %}status-ok{% else %}status-bad{% endif %}">{% if sensor.is_active %}{% trans "فعال" %}{% else %}{% trans "غیرفعال" %}{% endif %}</td>
+            <td>{{ sensor.get_sensor_type_display }} · {{ sensor.unit }}</td>
+          </tr>
+          {% endfor %}
+          {% for meter in plant.meters.all %}
+          <tr>
+            <td>{{ meter.meter_code }}</td>
+            <td class="{% if meter.online %}status-ok{% else %}status-bad{% endif %}">{% if meter.online %}{% trans "متصل" %}{% else %}{% trans "قطع" %}{% endif %}</td>
+            <td>{{ meter.protocol }}</td>
+          </tr>
+          {% endfor %}
+          {% for gw in plant.gateways.all %}
+          <tr>
+            <td>{{ gw.name }}</td>
+            <td class="{% if gw.online %}status-ok{% else %}status-bad{% endif %}">{% if gw.online %}{% trans "متصل" %}{% else %}{% trans "قطع" %}{% endif %}</td>
+            <td>{{ gw.ip_address }}</td>
+          </tr>
+          {% empty %}
+          {% endfor %}
+        {% empty %}
+        <tr><td colspan="3">{% trans "نیروگاهی ثبت نشده است." %}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
 
-        <div class="panel">
-          <h2>{% trans "وضعیت تجهیزات" %}</h2>
-          <table class="table">
-            <thead>
-              <tr>
-                <th>{% trans "تجهیز" %}</th>
-                <th>{% trans "وضعیت" %}</th>
-                <th>{% trans "توان" %}</th>
-              </tr>
-            </thead>
-            <tbody id="ownerInverterTable">
-              {% for plant in plants %}
-                {% for equipment in plant.equipment.all|slice:':4' %}
-                <tr>
-                  <td>{{ equipment.name }}</td>
-                  <td class="status-ok">{% if equipment.online %}{% trans "فعال" %}{% else %}{% trans "قطع ارتباط" %}{% endif %}</td>
-                  <td>0 kW</td>
-                </tr>
-                {% empty %}
-                <tr>
-                  <td colspan="3">{% trans "تجهیز ثبت نشده است." %}</td>
-                </tr>
-                {% endfor %}
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      </div>
+{% endif %}{# plants #}
 
-      <div class="grid">
-        <div class="panel">
-          <h2>{% trans "هشدارهای اخیر" %}</h2>
-          <table class="table">
-            <thead>
-              <tr>
-                <th>{% trans "نوع هشدار" %}</th>
-                <th>{% trans "توضیحات" %}</th>
-                <th>{% trans "زمان" %}</th>
-              </tr>
-            </thead>
-            <tbody id="ownerAlertsTable">
-              {% for alert in recent_alerts %}
-              <tr>
-                <td>{{ alert.rule.name }}</td>
-                <td>{{ alert.message }}</td>
-                <td>{{ alert.created_at|date:'H:i' }}</td>
-              </tr>
-              {% empty %}
-              <tr>
-                <td colspan="3">{% trans "هشداری ثبت نشده است." %}</td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
+<div class="grid">
+  {% if plants %}
+  <div class="panel">
+    <h2>{% trans "هشدارهای اخیر" %}</h2>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>{% trans "نوع هشدار" %}</th>
+          <th>{% trans "توضیحات" %}</th>
+          <th>{% trans "زمان" %}</th>
+        </tr>
+      </thead>
+      <tbody id="ownerAlertsTable">
+        {% for alert in recent_alerts %}
+        <tr>
+          <td>{{ alert.rule.name }}</td>
+          <td>{{ alert.message }}</td>
+          <td>{{ alert.created_at|smartdatetime:CALENDAR }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="3">{% trans "هشداری ثبت نشده است." %}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}{# plants #}
+  <div class="panel">
+    <h2>{% trans "درخواست‌ها و پیشنهادهای من" %}</h2>
+    <table class="table">
+      <thead><tr><th>#</th><th>{% trans "مرحله" %}</th><th>{% trans "استان" %}</th></tr></thead>
+      <tbody>
+        {% for r in my_requests %}
+        <tr>
+          <td><a data-ajax="true" href="{% url 'requests:my-detail' r.id %}">{{ r.id }}</a></td>
+          <td>{% with p=r|customer_progress %}{{ p.current|default:r.get_status_display }}{% endwith %}</td>
+          <td>{{ r.province }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="3">{% trans "درخواستی نیست." %} <a data-ajax="true" href="{% url 'requests:submit' %}">{% trans "ثبت درخواست" %}</a></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
 
-        <div class="panel">
-          <h2>{% trans "نقشه نیروگاه" %}</h2>
-          <div class="map">
-            {% trans "نمایش موقعیت نیروگاه روی نقشه" %}
-          </div>
-        </div>
-      </div>
-
-      <div class="panel">
-        <h2>{% trans "گزارش ها" %}</h2>
-        <table class="table">
-          <thead>
-            <tr>
-              <th>{% trans "گزارش" %}</th>
-              <th>{% trans "بازه زمانی" %}</th>
-              <th>{% trans "دانلود" %}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>{% trans "گزارش تولید" %}</td>
-              <td>{% trans "روزانه" %}</td>
-              <td>
-                {% if report_plant %}
-                <a class="badge" href="{% url 'reports:pdf' report_plant.id %}">PDF</a>
-                {% else %}
-                <a class="badge" href="{% url 'reports:center' %}">PDF</a>
-                {% endif %}
-              </td>
-            </tr>
-            <tr>
-              <td>{% trans "تحلیل عملکرد" %}</td>
-              <td>{% trans "ماهانه" %}</td>
-              <td>
-                {% if report_plant %}
-                <a class="badge" href="{% url 'reports:excel' report_plant.id %}">Excel</a>
-                {% else %}
-                <a class="badge" href="{% url 'reports:center' %}">Excel</a>
-                {% endif %}
-              </td>
-            </tr>
-            <tr>
-              <td>{% trans "گزارش درآمد" %}</td>
-              <td>{% trans "سالانه" %}</td>
-              <td>
-                {% if report_plant %}
-                <a class="badge" href="{% url 'reports:pdf' report_plant.id %}">PDF</a>
-                {% else %}
-                <a class="badge" href="{% url 'reports:center' %}">PDF</a>
-                {% endif %}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+{% if plants %}
+<div class="panel">
+  <h2>{% trans "گزارش‌ها" %}</h2>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>{% trans "گزارش" %}</th>
+        <th>{% trans "بازه زمانی" %}</th>
+        <th>{% trans "دانلود" %}</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>{% trans "گزارش تولید" %}</td>
+        <td>{% trans "روزانه" %}</td>
+        <td>
+          {% if report_plant %}
+          <a class="badge" target="_blank" href="{% url 'reports:pdf' report_plant.id %}">PDF</a>
+          {% else %}
+          <a class="badge" href="{% url 'reports:center' %}">PDF</a>
+          {% endif %}
+        </td>
+      </tr>
+      <tr>
+        <td>{% trans "تحلیل عملکرد" %}</td>
+        <td>{% trans "ماهانه" %}</td>
+        <td>
+          {% if report_plant %}
+          <a class="badge" href="{% url 'reports:excel' report_plant.id %}">Excel</a>
+          {% else %}
+          <a class="badge" href="{% url 'reports:center' %}">Excel</a>
+          {% endif %}
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+{% endif %}
 {% endblock %}

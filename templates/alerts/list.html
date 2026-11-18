@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load i18n %}
+{% load i18n ux_tags %}
 {% block content %}
 <div class="card bg-black border-secondary">
   <div class="card-body">
@@ -9,7 +9,7 @@
     </div>
     <div class="table-responsive">
       <table class="table table-dark table-striped align-middle">
-        <thead><tr><th>{% trans "نیروگاه" %}</th><th>{% trans "نام" %}</th><th>Metric</th><th>{% trans "آستانه" %}</th><th>Severity</th><th>{% trans "کانال‌ها" %}</th><th>{% trans "عملیات" %}</th></tr></thead>
+        <thead><tr><th>{% trans "نیروگاه" %}</th><th>{% trans "نام" %}</th><th>{% trans "شاخص" %}</th><th>{% trans "آستانه" %}</th><th>{% trans "شدت" %}</th><th>{% trans "کانال‌ها" %}</th><th>{% trans "عملیات" %}</th></tr></thead>
         <tbody>
           {% for rule in object_list %}
           <tr>
@@ -17,7 +17,7 @@
             <td>{{ rule.name }}</td>
             <td>{{ rule.metric }}</td>
             <td>{{ rule.comparator }} {{ rule.threshold_value }}</td>
-            <td>{{ rule.severity }}</td>
+            <td>{{ rule.severity|fa }}</td>
             <td>{{ rule.channels }}</td>
             <td class="d-flex gap-2">
               <a class="btn btn-sm btn-outline-info" href="{% url 'alerts:edit' rule.id %}">{% trans "ویرایش" %}</a>

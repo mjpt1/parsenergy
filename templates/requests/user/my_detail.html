@@ -1,11 +1,19 @@
-{% extends 'base.html' %}
-{% load i18n %}
+{% extends 'base_portal.html' %}
+{% load calendar_tags humanize i18n ux_tags %}
 {% block content %}
 <div class="panel">
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h1 class="h4 mb-0">{% trans "درخواست" %} #{{ req.id }}</h1>
-    <a class="btn secondary" data-ajax="true" href="{% url 'requests:my-list' %}">{% trans "بازگشت" %}</a>
+    <div class="d-flex gap-2">
+      {% if can_edit %}<a class="btn secondary" data-ajax="true" href="{% url 'requests:my-edit' req.id %}">✏️ {% trans "ویرایش درخواست" %}</a>{% endif %}
+      <a class="btn secondary" data-ajax="true" href="{% url 'requests:my-list' %}">{% trans "بازگشت" %}</a>
+    </div>
   </div>
+  {% include 'requests/user/_progress.html' %}
+
+  {% if not can_edit and not is_paid %}
+  <div class="alert alert-light">{% trans "برای ویرایش این درخواست، لطفاً با کارشناسان پارس انرژی هماهنگ کنید تا دسترسی ویرایش برایتان باز شود." %}</div>
+  {% endif %}
   {% if messages %}{% for message in messages %}
     <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %}">{{ message }}</div>
   {% endfor %}{% endif %}
@@ -16,7 +24,7 @@
       <tr><th>{% trans "موبایل" %}</th><td>{{ req.mobile }}</td></tr>
       <tr><th>{% trans "استان" %}</th><td>{{ req.province }}</td></tr>
       <tr><th>{% trans "توضیحات" %}</th><td>{{ req.description|default:'—'|linebreaksbr }}</td></tr>
-      <tr><th>{% trans "وضعیت" %}</th><td>{{ req.get_status_display }}</td></tr>
+      <tr><th>{% trans "مرحله" %}</th><td>{% with p=req|customer_progress %}{{ p.current|default:req.get_status_display }}{% endwith %}</td></tr>
     </tbody>
   </table>
 
@@ -28,10 +36,10 @@
         {% for offer in offers %}
         <tr>
           <td>{{ offer.title }}</td>
-          <td>{{ offer.amount }} {{ offer.currency }}</td>
+          <td>{% if offer.has_price %}{{ offer.amount|intcomma }} {{ offer.currency }}{% else %}{% trans "در حال تعیین" %}{% endif %}</td>
           <td>{{ offer.vat_percent }}٪</td>
-          <td>{{ offer.total_amount }} {{ offer.currency }}</td>
-          <td>{{ offer.valid_until|date:'Y/m/d H:i'|default:'—' }}</td>
+          <td>{% if offer.has_price %}<strong>{{ offer.total_amount|intcomma }} {{ offer.currency }}</strong>{% else %}—{% endif %}</td>
+          <td>{{ offer.valid_until|smartdatetime:CALENDAR|default:'—' }}</td>
           {% if can_select %}
           <td>
             {% if offer.is_payable %}
@@ -39,6 +47,7 @@
               <input type="hidden" name="offer_id" value="{{ offer.id }}">
               <button type="submit" class="btn">{% trans "تأیید و دریافت قرارداد" %}</button>
             </form>
+            {% elif not offer.has_price %}<span>{% trans "منتظر تعیین مبلغ" %}</span>
             {% else %}<span>{% trans "منقضی" %}</span>{% endif %}
           </td>
           {% endif %}
@@ -50,6 +59,8 @@
     </table>
   </div>
 
+  {% include 'requests/user/_project.html' %}
+  {% if price_missing %}<div class="alert alert-warning">{% trans "مبلغ این پیشنهاد هنوز تعیین نشده است؛ پس از ثبت مبلغ توسط کارشناس فروش می‌توانید پرداخت کنید." %}</div>{% endif %}
   <div class="d-flex gap-2 flex-wrap">
     {% if contract %}<a class="btn" data-ajax="true" href="{% url 'requests:contract' req.id %}">{% trans "مشاهده / تأیید قرارداد" %}</a>{% endif %}
     {% if can_pay %}

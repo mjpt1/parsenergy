@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'apps.api',
     'apps.pwa',
     'apps.requests',
+    'apps.leads',
 ]
 
 MIDDLEWARE = [
@@ -60,7 +61,10 @@ MIDDLEWARE = [
     'django_otp.middleware.OTPMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'apps.api.middleware.IntegrationReadOnlyMiddleware',
     'apps.accounts.middleware.RoleRoutingMiddleware',
+    'apps.core.middleware.NoStoreHTMLMiddleware',
+    'apps.analytics.middleware.VisitTrackingMiddleware',
 ]
 
 ROOT_URLCONF = 'solarops.urls'
@@ -79,6 +83,8 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'apps.core.context_processors.global_settings',
                 'apps.core.context_processors.calendar_settings',
+                'apps.core.context_processors.ai_flags',
+                'apps.core.context_processors.nav_counts',
             ],
         },
     },
@@ -91,7 +97,16 @@ ASGI_APPLICATION = 'solarops.asgi.application'
 # otherwise fall back to local SQLite for development.
 if env('DATABASE_URL', default=''):
     DATABASES = {'default': env.db('DATABASE_URL')}
-    DATABASES['default']['CONN_MAX_AGE'] = env.int('DB_CONN_MAX_AGE', default=600)
+    # The host's MariaDB drops idle connections after 180s (wait_timeout), so
+    # keep reused connections well under that and test them before each request;
+    # otherwise a stale one fails with "MySQL server has gone away" (HTTP 500).
+    DATABASES['default']['CONN_MAX_AGE'] = env.int('DB_CONN_MAX_AGE', default=60)
+    DATABASES['default']['CONN_HEALTH_CHECKS'] = True
+    # Strict mode: an invalid or too-long value raises an error instead of being
+    # silently truncated or replaced in MariaDB.
+    if 'mysql' in DATABASES['default']['ENGINE']:
+        DATABASES['default'].setdefault('OPTIONS', {})['init_command'] = (
+            "SET sql_mode='STRICT_TRANS_TABLES'")
 else:
     DATABASES = {
         'default': {
@@ -112,11 +127,9 @@ TIME_ZONE = 'Asia/Tehran'
 USE_I18N = True
 USE_TZ = True
 
-# Bilingual support. Persian is the source language (the {% trans %} msgids are
-# Persian); the English catalog lives in locale/en. Users switch dynamically.
+# Persian-only: no language switcher, LocaleMiddleware always resolves to fa.
 LANGUAGES = [
     ('fa', 'فارسی'),
-    ('en', 'English'),
 ]
 LOCALE_PATHS = [BASE_DIR / 'locale']
 
@@ -126,6 +139,8 @@ STATICFILES_DIRS = [BASE_DIR / 'static']
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+# Contracts and receipts: never under MEDIA_ROOT, downloaded only through permission checks.
+PRIVATE_MEDIA_ROOT = BASE_DIR / 'private_media'
 # On hosts without a separate web server for uploads (e.g. cPanel/Passenger),
 # set SERVE_MEDIA=True so Django itself serves /media/ (see urls.py).
 SERVE_MEDIA = env.bool('SERVE_MEDIA', default=False)
@@ -189,6 +204,10 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
+        # Service accounts (username prefix `svc-`) are read-only on every
+        # endpoint, enforced here rather than per view so a new viewset cannot
+        # accidentally open a write path to an integration token.
+        'apps.api.permissions.ReadOnlyForIntegrations',
     ],
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
@@ -240,6 +259,16 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = TIME_ZONE
+
+# A CSRF failure here is nearly always an expired form, not an attack, so the
+# visitor gets a Persian page with a retry button instead of Django's bare 403.
+CSRF_FAILURE_VIEW = 'apps.core.views.csrf_failure'
+
+# Slide the session forward on every request. Without this the two-week cookie
+# is counted from login, so someone who uses the panel daily is still logged
+# out mid-task a fortnight later — and that logout surfaces as a CSRF 403 on
+# whatever form they happened to have open.
+SESSION_SAVE_EVERY_REQUEST = True
 
 LOGIN_URL = 'accounts:login'
 LOGIN_REDIRECT_URL = 'dashboard'

@@ -1,0 +1,67 @@
+{% extends printing|yesno:"leads/print_base.html,base.html" %}
+{% load i18n calendar_tags %}
+{% block content %}
+<style>
+  .rp-table{width:100%;border-collapse:collapse;background:#fff;font-size:.86rem}
+  .rp-table th,.rp-table td{padding:8px 10px;border-bottom:1px solid var(--pe-border,#e5e7eb);text-align:right}
+  .rp-table thead th{background:#f6f8f5;font-weight:700;font-size:.8rem;white-space:nowrap}
+  .rp-wrap{overflow-x:auto;border:1px solid var(--pe-border,#e5e7eb);border-radius:12px}
+  .rp-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:16px}
+  .rp-kpi{background:#fff;border:1px solid var(--pe-border,#e5e7eb);border-radius:12px;padding:12px 14px}
+  .rp-kpi b{display:block;font-size:1.3rem}
+  .rp-kpi span{font-size:.8rem;color:#666}
+  .rp-bar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+  .tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:.75rem;background:#eef2ee}
+  .tag.ok{background:#e3f1dc;color:#2f5a22}
+  .tag.no{background:#fdf0e1;color:#8a4b0b}
+  .rp-muted{color:#888}
+</style>
+
+<h1 class="h4 mb-1">{% trans "عملکرد بازاریاب" %}: {{ name }}</h1>
+<p class="meta rp-muted" style="margin-top:0">
+  {% if date_from or date_to %}{% trans "بازه" %}: {{ date_from|default:"…" }} {% trans "تا" %} {{ date_to|default:"…" }}{% else %}{% trans "همهٔ زمان‌ها" %}{% endif %}
+</p>
+
+{% if not printing %}
+<div class="rp-bar">
+  <a class="btn secondary" data-ajax="true" href="{% url 'leads:marketer-report' %}?date_from={{ date_from }}&date_to={{ date_to }}">{% trans "بازگشت به گزارش" %}</a>
+  <a class="btn secondary" target="_blank" href="?print=1&date_from={{ date_from }}&date_to={{ date_to }}">{% trans "نسخهٔ چاپی / PDF" %}</a>
+</div>
+{% endif %}
+
+<div class="{% if printing %}kpis{% else %}rp-kpis{% endif %}">
+  <div class="{% if printing %}kpi{% else %}rp-kpi{% endif %}"><b>{{ summary.total }}</b><span>{% trans "کل درخواست" %}</span></div>
+  <div class="{% if printing %}kpi{% else %}rp-kpi{% endif %}"><b>{{ summary.stage2_pct }}٪</b><span>{% trans "تکمیل فرم دوم" %}</span></div>
+  <div class="{% if printing %}kpi{% else %}rp-kpi{% endif %}"><b>{{ summary.hot }} / {{ summary.warm }} / {{ summary.cold }}</b><span>{% trans "داغ / گرم / سرد" %}</span></div>
+  <div class="{% if printing %}kpi{% else %}rp-kpi{% endif %}"><b>{{ summary.referred }}</b><span>{% trans "ارجاع شده" %}</span></div>
+  <div class="{% if printing %}kpi{% else %}rp-kpi{% endif %}"><b>{{ summary.won }}</b><span>{% trans "قرارداد / پرداخت" %} ({{ summary.won_pct }}٪)</span></div>
+</div>
+
+<div class="{% if not printing %}rp-wrap{% endif %}">
+<table class="rp-table">
+  <thead><tr>
+    <th>{% trans "کد" %}</th><th>{% trans "تاریخ" %}</th><th>{% trans "نام" %}</th><th>{% trans "شرکت" %}</th>
+    <th>{% trans "رویداد" %}</th><th>{% trans "فرم ۲" %}</th><th>{% trans "کیفیت" %}</th>
+    <th>{% trans "بخش فعلی" %}</th><th>{% trans "وضعیت" %}</th><th>{% trans "اقدام بعدی" %}</th>
+  </tr></thead>
+  <tbody>
+  {% for lead in leads %}
+    <tr>
+      <td>{% if lead.request and not printing %}<a data-ajax="true" href="{% url 'requests:admin-detail' lead.request.pk %}">{{ lead.lead_code }}</a>{% else %}{{ lead.lead_code }}{% endif %}</td>
+      <td style="white-space:nowrap">{{ lead.created_at|smartdate:CALENDAR }}</td>
+      <td>{{ lead.request.full_name|default:"—" }}</td>
+      <td>{{ lead.company|default:"—" }}</td>
+      <td>{{ lead.event_name|default:"—" }}</td>
+      <td>{% if lead.stage2_completed %}<span class="tag ok">{% trans "تکمیل" %}</span>{% else %}<span class="tag no">{% trans "ناقص" %}</span>{% endif %}</td>
+      <td>{{ lead.get_temperature_display|default:"—" }}</td>
+      <td>{{ lead.request.get_department_display|default:"—" }}</td>
+      <td>{{ lead.request.get_status_display|default:"—" }}</td>
+      <td>{{ lead.next_action|default:"—" }}</td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="10" class="rp-muted">{% trans "در این بازه درخواستی ثبت نشده است." %}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

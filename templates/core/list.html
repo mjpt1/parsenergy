@@ -1,6 +1,24 @@
 {% extends 'base.html' %}
-{% load i18n %}
+{% load i18n ux_tags %}
 {% block content %}
+{% comment %}Five different CRUD lists share this template; map each to its settings tab.{% endcomment %}
+{% if resource_key == 'parameters' %}{% include 'partials/settings_tabs.html' with active='parameters' %}
+{% elif resource_key == 'security' or resource_key == 'backups' %}{% include 'partials/settings_tabs.html' with active='security' %}
+{% elif resource_key == 'connections' or resource_key == 'protocols' %}{% include 'partials/settings_tabs.html' with active='connections' %}
+{% endif %}
+{% if resource_key == 'security' or resource_key == 'backups' %}
+<div class="hub-sublinks">
+  <a class="btn secondary" data-ajax="true" href="{% url 'core:security' %}">{% trans "تنظیمات امنیتی" %}</a>
+  <a class="btn secondary" data-ajax="true" href="{% url 'core:backups' %}">{% trans "بکاپ‌های دیتابیس" %}</a>
+  <a class="btn secondary" data-ajax="true" href="{% url 'core:logs' %}">{% trans "لاگ حسابرسی" %}</a>
+</div>
+{% elif resource_key == 'connections' or resource_key == 'protocols' %}
+<div class="hub-sublinks">
+  <a class="btn secondary" data-ajax="true" href="{% url 'core:connections' %}">{% trans "اتصالات API" %}</a>
+  <a class="btn secondary" data-ajax="true" href="{% url 'core:protocols' %}">{% trans "پروتکل‌ها" %}</a>
+  <a class="btn secondary" data-ajax="true" href="{% url 'core:inverter-api' %}">{% trans "API اینورترها" %}</a>
+</div>
+{% endif %}
 {% trans "لیست" as default_title %}
 <div class="panel">
   <div class="d-flex justify-content-between align-items-center mb-3">
@@ -20,11 +38,11 @@
         {% for obj in object_list %}
         <tr>
           <td>{{ forloop.counter }}</td>
-          <td>{{ obj }}</td>
+          <td>{{ obj }}{% if obj.description %}<div class="footer-note">{{ obj.description }}</div>{% endif %}</td>
           <td class="d-flex gap-2">
             {% if resource_key == 'parameters' %}
-              <a class="btn secondary" data-ajax="true" href="{% url 'core:parameters-edit' obj.id %}">{% trans "ویرایش" %}</a>
-              <a class="btn secondary" data-ajax="true" href="{% url 'core:parameters-delete' obj.id %}">{% trans "حذف" %}</a>
+              {% if request.user.role == 'technical' and obj|approval_param %}<span class="footer-note">{% trans "از «تنظیمات سرویس‌ها»" %}</span>{% else %}<a class="btn secondary" data-ajax="true" href="{% url 'core:parameters-edit' obj.id %}">{% trans "ویرایش" %}</a>{% endif %}
+              {% if request.user.role != 'technical' or not obj|sensitive_param and not obj|approval_param %}<a class="btn secondary" data-ajax="true" href="{% url 'core:parameters-delete' obj.id %}">{% trans "حذف" %}</a>{% endif %}
             {% elif resource_key == 'security' %}
               <a class="btn secondary" data-ajax="true" href="{% url 'core:security-edit' obj.id %}">{% trans "ویرایش" %}</a>
               <a class="btn secondary" data-ajax="true" href="{% url 'core:security-delete' obj.id %}">{% trans "حذف" %}</a>

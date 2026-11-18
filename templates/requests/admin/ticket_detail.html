@@ -13,6 +13,7 @@
   <div class="mb-3 d-flex gap-2 flex-wrap">
     <span class="badge">{{ ticket.get_status_display }}</span>
     <span class="badge warning">{{ ticket.get_priority_display }}</span>
+    <span class="badge">{% trans "بخش:" %} {{ ticket.get_department_display }}</span>
     {% if ticket.request_id %}<a class="badge" data-ajax="true" href="{% url 'requests:admin-detail' ticket.request_id %}">{% trans "درخواست" %} #{{ ticket.request_id }}</a>{% endif %}
   </div>
 
@@ -20,7 +21,7 @@
     {% for m in thread %}
     <div class="item" style="flex-direction:column;align-items:stretch">
       <div class="d-flex justify-content-between">
-        <strong>{% if m.is_staff_reply %}{% trans "پشتیبانی" %}{% else %}{% if m.author %}{{ m.author }}{% else %}{% trans "مشتری" %}{% endif %}{% endif %}</strong>
+        <strong>{% if m.author %}{{ m.author.get_full_name|default:m.author.username }}{% else %}{% trans "مشتری" %}{% endif %}{% if m.is_staff_reply %} <span class="badge">{% trans "کارشناس" %}</span>{% endif %}</strong>
         <small>{{ m.created_at|smartdatetime:CALENDAR }}</small>
       </div>
       <div style="white-space:pre-wrap">{{ m.body }}</div>
@@ -32,6 +33,8 @@
   </div>
 
   <h2 class="h6">{% trans "ارسال پاسخ" %}</h2>
+  {% trans "پیش‌نویس پاسخ با هوش مصنوعی" as ai_ticket_title %}
+  {% include 'analytics/_ai_box.html' with ai_task='ticket' ai_target=ticket.id ai_title=ai_ticket_title ai_fill='#id_body' %}
   <form method="post" action="{% url 'requests:admin-ticket-reply' ticket.id %}" enctype="multipart/form-data" class="mb-4">{% csrf_token %}
     <div class="mb-2">{{ reply_form.body }}</div>
     <div class="mb-2">{{ reply_form.attachment }}</div>

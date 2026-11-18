@@ -1,10 +1,111 @@
 {% extends 'base.html' %}
-{% load i18n calendar_tags %}
+{% load calendar_tags humanize i18n %}
 {% block content %}
+{% if req.exhibition %}
+{% comment %}
+  Shown only for leads captured at a stand. The marketer's own read of the
+  visitor is internal, so it follows the same rule as the customer's identity:
+  staff who are not allowed to see who the customer is do not see it either.
+{% endcomment %}
+<div class="panel">
+  <h2>🎪 {% trans "اطلاعات نمایشگاهی" %}</h2>
+  <table class="table">
+    <tr><th>{% trans "شناسهٔ سرنخ" %}</th><td><code>{{ req.exhibition.lead_code }}</code></td></tr>
+    <tr><th>{% trans "رویداد" %}</th><td>{{ req.exhibition.event_name|default:'—' }}</td></tr>
+    {% if not hide_customer_identity %}
+    <tr><th>{% trans "بازاریاب" %}</th><td>
+      {% if req.exhibition.marketer %}
+        {{ req.exhibition.marketer.get_full_name|default:req.exhibition.marketer.username }}
+      {% else %}{% trans "QR عمومی" %}{% endif %}</td></tr>
+    {% endif %}
+    <tr><th>{% trans "شرکت" %}</th><td>{{ req.exhibition.company|default:'—' }}</td></tr>
+    <tr><th>{% trans "سمت" %}</th><td>{{ req.exhibition.job_title|default:'—' }}</td></tr>
+    <tr><th>{% trans "حوزهٔ فعالیت" %}</th><td>{{ req.exhibition.business_field|default:'—' }}</td></tr>
+    <tr><th>{% trans "هدف" %}</th><td>
+      {% for label in req.exhibition.goal_labels %}<span class="badge">{{ label }}</span>
+      {% empty %}—{% endfor %}</td></tr>
+    <tr><th>{% trans "زمان تصمیم‌گیری / شروع پروژه" %}</th><td>{{ req.exhibition.get_timeline_display|default:'—' }}</td></tr>
+    <tr><th>{% trans "توان مورد تقاضا" %}</th><td>{{ req.exhibition.get_demand_power_display|default:'—' }}</td></tr>
+    <tr><th>{% trans "مرحلهٔ ۲" %}</th><td>
+      {% if req.exhibition.stage2_completed %}
+        <span class="status-ok">{% trans "تکمیل" %}</span>
+        — {{ req.exhibition.stage2_completed_at|smartdatetime:CALENDAR }}
+      {% else %}<span class="status-bad">{% trans "ناقص" %}</span>{% endif %}</td></tr>
+    {% if req.exhibition.area_note %}
+    <tr><th>{% trans "مساحت دقیق‌تر" %}</th><td>{{ req.exhibition.area_note }}</td></tr>
+    {% endif %}
+    {% if req.exhibition.shading_note %}
+    <tr><th>{% trans "موانع" %}</th><td>{{ req.exhibition.shading_note }}</td></tr>
+    {% endif %}
+    {% if req.exhibition.bill_file %}
+    <tr><th>{% trans "فایل قبض" %}</th><td>
+      <a href="{{ req.exhibition.bill_file.url }}" target="_blank" rel="noopener">{% trans "دانلود" %}</a></td></tr>
+    {% endif %}
+  </table>
+
+  {% if not hide_customer_identity %}
+  <h3 class="h6 mt-3">{% trans "ارزیابی داخلی بازاریاب" %}</h3>
+  {% if can_write_lead_note %}
+  {% comment %}Editable for the marketer who captured this lead (at any stage,
+  so handing it to sales does not cost them their own notes) and for
+  management. Everyone else sees the read-only table below.{% endcomment %}
+  <form method="post" action="{% url 'requests:admin-lead-note' req.id %}" class="lead-note">
+    {% csrf_token %}
+    <div class="row g-2">
+      <div class="col-md-4">
+        <label class="form-label" for="{{ lead_note_form.temperature.id_for_label }}">{% trans "کیفیت سرنخ" %}</label>
+        {{ lead_note_form.temperature }}
+      </div>
+      <div class="col-md-4">
+        <label class="form-label" for="{{ lead_note_form.next_action.id_for_label }}">{% trans "اقدام بعدی" %}</label>
+        {{ lead_note_form.next_action }}
+      </div>
+      <div class="col-md-4">
+        <label class="form-label" for="{{ lead_note_form.decision_role.id_for_label }}">{% trans "نقش در تصمیم‌گیری" %}</label>
+        {{ lead_note_form.decision_role }}
+      </div>
+      <div class="col-12">
+        <label class="form-label" for="{{ lead_note_form.marketer_impression.id_for_label }}">{% trans "برداشت شما از نیاز مشتری" %}</label>
+        {{ lead_note_form.marketer_impression }}
+      </div>
+      <div class="col-12">
+        <label class="form-label" for="{{ lead_note_form.notes.id_for_label }}">{% trans "یادداشت" %}</label>
+        {{ lead_note_form.notes }}
+      </div>
+    </div>
+    <button type="submit" class="btn mt-2">{% trans "ذخیرهٔ تحلیل" %}</button>
+    {% if req.exhibition.updated_at %}
+    <span class="text-muted ms-2" style="font-size:.85rem">
+      {% trans "آخرین ویرایش" %}: {{ req.exhibition.updated_at|smartdatetime:CALENDAR }}
+    </span>
+    {% endif %}
+  </form>
+  {% else %}
+  <table class="table">
+    <tr><th>{% trans "کیفیت سرنخ" %}</th><td>{{ req.exhibition.get_temperature_display|default:'—' }}</td></tr>
+    <tr><th>{% trans "اقدام بعدی" %}</th><td>{{ req.exhibition.next_action|default:'—' }}</td></tr>
+    <tr><th>{% trans "برداشت بازاریاب" %}</th><td>{{ req.exhibition.marketer_impression|default:'—' }}</td></tr>
+    <tr><th>{% trans "نقش در تصمیم‌گیری" %}</th><td>{{ req.exhibition.decision_role|default:'—' }}</td></tr>
+    <tr><th>{% trans "یادداشت" %}</th><td>{{ req.exhibition.notes|default:'—' }}</td></tr>
+  </table>
+  {% endif %}
+  {% endif %}
+</div>
+{% endif %}
+
 <div class="panel">
   <div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="h4 mb-0">{% trans "درخواست" %} #{{ req.id }} — {{ req.full_name }}</h1>
-    <a class="btn secondary" data-ajax="true" href="{% url 'requests:admin-list' %}">{% trans "بازگشت به لیست" %}</a>
+    <h1 class="h4 mb-0">
+      {% if hide_customer_identity %}
+        {% trans "درخواست" %} #{{ req.id }}
+      {% else %}
+        {% trans "درخواست" %} #{{ req.id }} — {{ req.full_name }}
+      {% endif %}
+    </h1>
+    <div class="d-flex gap-2 flex-wrap">
+      {% if can_edit_lead %}<a class="btn secondary" data-ajax="true" href="{% url 'requests:admin-lead-edit' req.id %}">{% trans "ویرایش اطلاعات" %}</a>{% endif %}
+      <a class="btn secondary" data-ajax="true" href="{% url 'requests:admin-list' %}">{% trans "بازگشت به لیست" %}</a>
+    </div>
   </div>
 
   {% if messages %}
@@ -13,51 +114,283 @@
     {% endfor %}
   {% endif %}
 
+  {% comment %}"Next step": what this person should do on this request, with a
+  button that jumps to it. The form it points at stays where it was.{% endcomment %}
+  {% if can_add_offer and not offers %}
+  <div class="next-step"><span><b>{% trans "قدم بعدی:" %}</b> {% trans "پیشنهاد فنی را برای این درخواست ثبت کنید." %}</span>
+    <a class="btn" href="#new-offer" data-no-ajax>{% trans "ثبت پیشنهاد فنی" %}</a></div>
+  {% elif can_refer_to_sales %}
+  <div class="next-step"><span><b>{% trans "قدم بعدی:" %}</b> {% trans "پیشنهاد ثبت شده است؛ درخواست را به فروش برگردانید." %}</span>
+    <a class="btn" href="#next-actions" data-no-ajax>{% trans "ارجاع به فروش" %}</a></div>
+  {% elif can_refer_marketing %}
+  <div class="next-step"><span><b>{% trans "قدم بعدی:" %}</b> {% trans "اطلاعات را بررسی و درخواست را به فروش ارجاع دهید." %}</span>
+    <a class="btn" href="#next-actions" data-no-ajax>{% trans "بررسی و ارجاع" %}</a></div>
+  {% elif can_refer_to_technical %}
+  <div class="next-step"><span><b>{% trans "قدم بعدی:" %}</b> {% trans "با مشتری تماس بگیرید و درخواست را برای ارزیابی به بخش فنی بفرستید." %}</span>
+    <a class="btn" href="#next-actions" data-no-ajax>{% trans "ارجاع به فنی" %}</a></div>
+  {% elif can_close_sales %}
+  <div class="next-step"><span><b>{% trans "قدم بعدی:" %}</b> {% trans "قرارداد و پرداخت را پیگیری کنید و فروش را تکمیل کنید." %}</span>
+    <a class="btn" href="#next-actions" data-no-ajax>{% trans "تکمیل فروش" %}</a></div>
+  {% endif %}
+
+  {# Plant step, at the top: a won request's next job is its plant, and a small #}
+  {# grey button in the action row below was easy to miss. #}
+  {% if req.plant_id and can_commission_plant %}
+  <div class="alert alert-success d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <span>{% trans "نیروگاه این درخواست ساخته شده است:" %} <strong>{{ req.plant.name }}</strong>
+      — {% blocktrans count n=req.plant.inverters.count %}{{ n }} اینورتر{% plural %}{{ n }} اینورتر{% endblocktrans %}</span>
+    <a class="btn" data-ajax="true" href="{% url 'plants:edit' req.plant_id %}">{% trans "تکمیل نیروگاه و اینورترها" %}</a>
+  </div>
+  {% elif can_commission_plant and req.department == 'done' %}
+  <div class="alert alert-warning d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <span><strong>{% trans "فروش تکمیل شده؛ نیروگاه هنوز ساخته نشده است." %}</strong>
+      {% trans "نیروگاه به نام مشتری ساخته می‌شود و در پنل او دیده می‌شود." %}</span>
+    <form method="post" action="{% url 'requests:admin-commission-plant' req.id %}" onsubmit="return confirm('{% trans "یک نیروگاه جدید برای این درخواست ساخته شود؟" %}')">{% csrf_token %}
+      <button type="submit" class="btn">{% trans "راه‌اندازی نیروگاه ⚡" %}</button>
+    </form>
+  </div>
+  {% endif %}
+
   <div class="table-responsive mb-4">
     <table class="table">
       <tbody>
+        {% if not hide_customer_identity %}
         <tr><th style="width:180px">{% trans "نام" %}</th><td>{{ req.full_name }}</td></tr>
         <tr><th>{% trans "موبایل" %}</th><td>{{ req.mobile }}</td></tr>
-        <tr><th>{% trans "استان" %}</th><td>{{ req.province }}</td></tr>
+        {% endif %}
+        <tr><th style="width:180px">{% trans "استان" %}</th><td>{{ req.province }}</td></tr>
         <tr><th>{% trans "شهر" %}</th><td>{{ req.city|default:'—' }}</td></tr>
         <tr><th>{% trans "توضیحات" %}</th><td>{{ req.description|default:'—'|linebreaksbr }}</td></tr>
         <tr><th>{% trans "وضعیت" %}</th><td>{{ req.get_status_display }}</td></tr>
+        {% if not hide_customer_identity %}
         <tr><th>{% trans "کاربر" %}</th><td>{% if req.user %}{{ req.user }}{% else %}{% trans "— (هنوز ثبت‌نام نشده)" %}{% endif %}</td></tr>
         <tr><th>{% trans "احراز هویت" %}</th><td>{% if req.identity_verified %}<span class="badge">{% trans "انجام‌شده" %}</span> — {{ req.national_id }}{% else %}<span class="badge warning">{% trans "انجام‌نشده" %}</span>{% endif %}</td></tr>
+        {% endif %}
         <tr><th>{% trans "تاریخ ثبت" %}</th><td>{{ req.created_at|smartdatetime:CALENDAR }}</td></tr>
       </tbody>
     </table>
   </div>
 
+  {% if awaiting_marketing %}
+  <div class="alert alert-warning">
+    <strong>{% trans "در انتظار بازاریابی" %}</strong> —
+    {% trans "این درخواست هنوز در صف بازاریابی است. شما آن را می‌بینید تا از قلم نیفتد، اما تا زمانی که بازاریابی آن را به فروش ارجاع ندهد امکان اقدام روی آن وجود ندارد." %}
+  </div>
+  {% endif %}
+
+  <h2 class="h6">{% trans "مرحله در قیف فروش" %}</h2>
+  <ol class="steps">
+    {% for step in funnel_steps %}
+    <li class="{% if step.state == 'done' %}done{% elif step.state == 'now' %}now{% endif %}"><b>{{ step.label }}</b>
+      <small>{% if step.state == 'now' %}{% trans "مرحلهٔ فعلی" %}{% elif step.state == 'stopped' %}{% trans "توقف در این مرحله" %}{% endif %}</small></li>
+    {% endfor %}
+  </ol>
+  {% if req.stop_reason %}
+  <div class="alert alert-warning">{{ req.get_status_display }} — <strong>{{ req.get_stop_reason_display }}</strong>{% if req.stop_note %}: {{ req.stop_note }}{% endif %}</div>
+  {% endif %}
+  <details class="mb-3">
+    <summary>{% trans "جزئیات مراحل" %}</summary>
+  <div class="table-responsive mt-2">
+    <table class="table">
+      <tbody>
+        <tr><th style="width:220px">{% trans "مرحلهٔ فعلی" %}</th>
+          <td><span class="badge">{{ req.get_department_display }}</span>
+            {% if req.sales_phase %} — {{ req.get_sales_phase_display }}{% endif %}
+            {% if req.crm_transferred %} <span class="badge">{% trans "CRM" %}</span>{% endif %}
+          </td></tr>
+        <tr><th>{% trans "اولویت" %}</th>
+          <td><span class="badge {% if req.priority == 'urgent' or req.priority == 'high' %}warning{% endif %}">{{ req.get_priority_display }}</span></td></tr>
+        <tr><th>{% trans "بررسی بازاریابی" %}</th><td>
+          {% if req.marketing_reviewed_at %}{{ req.marketing_reviewed_by|default:'—' }} — {{ req.marketing_reviewed_at|smartdatetime:CALENDAR }}
+          {% else %}<span class="badge warning">{% trans "انجام‌نشده" %}</span>{% endif %}</td></tr>
+        <tr><th>{% trans "صلاحیت / تریاژ فروش" %}</th><td>
+          {% if req.triaged_at %}{{ req.triaged_by|default:'—' }} — {{ req.triaged_at|smartdatetime:CALENDAR }}
+          {% else %}<span class="badge warning">{% trans "انجام‌نشده" %}</span>{% endif %}</td></tr>
+        <tr><th>{% trans "پیشنهاد فنی" %}</th><td>
+          {% if req.technical_completed_at %}{{ req.technical_completed_by|default:'—' }} — {{ req.technical_completed_at|smartdatetime:CALENDAR }}
+          {% else %}<span class="badge warning">{% trans "انجام‌نشده" %}</span>{% endif %}</td></tr>
+        <tr><th>{% trans "بستن قرارداد (فروش)" %}</th><td>
+          {% if req.sales_completed_at %}{{ req.sales_completed_by|default:'—' }} — {{ req.sales_completed_at|smartdatetime:CALENDAR }}
+          {% else %}<span class="badge warning">{% trans "انجام‌نشده" %}</span>{% endif %}</td></tr>
+        {% if req.technical_note %}<tr><th>{% trans "یادداشت فنی" %}</th><td>{{ req.technical_note|linebreaksbr }}</td></tr>{% endif %}
+        {% if req.plant_id %}<tr><th>{% trans "نیروگاه" %}</th><td><a data-ajax="true" href="{% url 'plants:edit' req.plant_id %}">{% trans "مشاهده/ویرایش نیروگاه ⚡" %}</a></td></tr>{% endif %}
+      </tbody>
+    </table>
+  </div>
+  </details>
+
+  {% if can_refer_marketing or can_refer_to_technical or can_hold or can_refer_to_sales or can_close_sales or can_commission_plant or can_start_commercial or can_start_operation %}
+  <div class="mb-4 d-flex gap-2 flex-wrap align-items-end" id="next-actions">
+    {% if can_refer_marketing %}
+    <form method="post" action="{% url 'requests:admin-marketing-refer' req.id %}">{% csrf_token %}
+      <button type="submit" class="btn">{% trans "تأیید درخواست و ارجاع به فروش ←" %}</button>
+    </form>
+    {% endif %}
+    {% if can_refer_to_technical %}
+    <form method="post" action="{% url 'requests:admin-refer-to-technical' req.id %}" class="d-flex gap-2 align-items-end">{% csrf_token %}
+      <div>
+        <label class="form-label">{% trans "اولویت" %}</label>
+        <select name="priority" class="form-select">
+          {% for value, label in priority_choices %}
+          <option value="{{ value }}" {% if req.priority == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button type="submit" class="btn">{% trans "ارجاع به فنی ←" %}</button>
+    </form>
+    {% endif %}
+    {% if can_hold %}
+    <form method="post" action="{% url 'requests:admin-hold' req.id %}">{% csrf_token %}
+      <button type="submit" class="btn secondary">{% trans "متوقف کردن" %}</button>
+    </form>
+    {% endif %}
+    {% if can_start_commercial %}
+    <form method="post" action="{% url 'requests:admin-funnel-advance' req.id %}">{% csrf_token %}
+      <input type="hidden" name="action" value="commercial">
+      <button type="submit" class="btn">{% trans "ارجاع برای پیشنهاد فنی و تجاری ←" %}</button>
+    </form>
+    {% endif %}
+    {% if can_start_operation %}
+    <form method="post" action="{% url 'requests:admin-funnel-advance' req.id %}">{% csrf_token %}
+      <input type="hidden" name="action" value="operation">
+      <button type="submit" class="btn">{% trans "شروع بهره‌برداری و نگهداری ←" %}</button>
+    </form>
+    {% endif %}
+    {% if can_refer_to_sales %}
+    <form method="post" action="{% url 'requests:admin-refer-to-sales' req.id %}" class="d-flex gap-2 align-items-end">{% csrf_token %}
+      <input type="text" name="technical_note" placeholder="{% trans 'یادداشت فنی (اختیاری)' %}" class="form-control" style="max-width:260px">
+      <button type="submit" class="btn">{% trans "ارجاع به فروش ←" %}</button>
+    </form>
+    {% endif %}
+    {% if can_close_sales %}
+    <form method="post" action="{% url 'requests:admin-close-sales' req.id %}" onsubmit="return confirm('{% trans "فروش تکمیل و پرونده به CRM منتقل شود؟" %}')">{% csrf_token %}
+      <button type="submit" class="btn">{% trans "تکمیل فروش و شروع اجرا ✓" %}</button>
+    </form>
+    {% endif %}
+    {% if can_commission_plant and not req.plant_id and req.department != 'marketing' and req.department != 'technical' %}
+    <form method="post" action="{% url 'requests:admin-commission-plant' req.id %}" onsubmit="return confirm('{% trans "یک نیروگاه جدید برای این درخواست ساخته شود؟" %}')">{% csrf_token %}
+      <button type="submit" class="btn secondary">{% trans "راه‌اندازی نیروگاه ⚡" %}</button>
+    </form>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <div class="case-log mb-4">
+    <h2 class="h6">{% trans "یادداشت‌ها و تاریخچهٔ پرونده" %}</h2>
+    <form method="post" action="{% url 'requests:admin-note-add' req.id %}" class="d-flex gap-2 align-items-start mb-3">{% csrf_token %}
+      <textarea name="body" class="form-control" rows="2" maxlength="2000" required placeholder="{% trans 'یادداشت این مرحله را بنویسید' %}" aria-label="{% trans 'یادداشت' %}"></textarea>
+      <button type="submit" class="btn" style="white-space:nowrap">{% trans "ثبت یادداشت" %}</button>
+    </form>
+    {% for item in stage_history %}
+    <div class="case-log-row">
+      <div><span class="badge{% if item.kind == 'stop' %} warning{% endif %}">{{ item.get_stage_display }}</span>
+        <small>{{ item.created_by|default:'سامانه' }} · {{ item.created_at|smartdatetime:CALENDAR }}</small></div>
+      <div>{{ item.body|linebreaksbr }}</div>
+    </div>
+    {% empty %}<p class="footer-note mb-0">{% trans "هنوز یادداشتی ثبت نشده است." %}</p>{% endfor %}
+  </div>
+  <style>.case-log-row{padding:10px 0;border-top:1px solid var(--pe-border,#e5e7eb);overflow-wrap:anywhere}.case-log-row small{opacity:.7;margin-inline-start:6px}</style>
+
+  {% if can_manage_stage %}
+  <details class="mb-4"><summary>{% trans "تغییر دستی مرحله" %}</summary>
+    <form method="post" action="{% url 'requests:admin-funnel-set' req.id %}" class="row g-2 align-items-end mt-1">{% csrf_token %}
+      <div class="col-12 col-md-4"><label class="form-label">{% trans "مرحله" %}</label>
+        <select name="stage" class="form-select">{% for value, label in funnel_choices %}<option value="{{ value }}" {% if value == req.funnel_stage %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+      <div class="col-12 col-md-5"><label class="form-label">{% trans "دلیل تغییر" %}</label><input name="note" class="form-control" maxlength="500" required></div>
+      <div class="col-12 col-md-3"><button class="btn secondary">{% trans "ثبت مرحله" %}</button></div>
+      <div class="col-12"><label><input type="checkbox" name="notify" value="1"> {% trans "برای مشتری پیامک شود" %}</label></div>
+    </form>
+  </details>
+  {% endif %}
+
+  {% if can_toggle_edit %}
+  <div class="mb-4 d-flex gap-2 align-items-center flex-wrap">
+    <span>{% trans "دسترسی ویرایش مشتری:" %}
+      {% if edit_unlocked %}<span class="badge">{% trans "باز" %}</span>{% else %}<span class="badge warning">{% trans "بسته" %}</span>{% endif %}
+    </span>
+    <form method="post" action="{% url 'requests:admin-toggle-edit' req.id %}">{% csrf_token %}
+      <button type="submit" class="btn secondary">
+        {% if edit_unlocked %}🔒 {% trans "بستن ویرایش" %}{% else %}🔓 {% trans "باز کردن ویرایش برای مشتری" %}{% endif %}
+      </button>
+    </form>
+  </div>
+  {% endif %}
+
+  {% if can_delete %}
+  <div class="mb-4 d-flex gap-2 align-items-center flex-wrap">
+    {% if has_paid_payment %}
+      <span class="text-muted small">{% trans "این درخواست پرداخت موفق دارد و قابل حذف نیست." %}</span>
+    {% else %}
+    <form method="post" action="{% url 'requests:admin-delete' req.id %}"
+          onsubmit="return confirm('{% trans "این درخواست و همهٔ پیشنهادها، قرارداد، پیامک‌ها و اطلاعات سرنخ آن برای همیشه حذف شود؟ این کار قابل بازگشت نیست." %}')">{% csrf_token %}
+      <button type="submit" class="btn secondary" style="color:#c62828;border-color:#c62828">🗑 {% trans "حذف درخواست" %}</button>
+    </form>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {% trans "تحلیل هوشمند این سرنخ" as ai_lead_title %}
+  {% include 'analytics/_ai_box.html' with ai_task='lead' ai_target=req.id ai_title=ai_lead_title %}
+
   <h2 class="h6">{% trans "مشخصات ارزیابی" %}</h2>
   <div class="table-responsive mb-4">
     <table class="table">
       <tbody>
+        {% if req.request_type %}<tr><th style="width:220px">{% trans "نوع درخواست" %}</th><td><strong>{{ req.get_request_type_display }}</strong></td></tr>{% endif %}
+        {% if req.partnership_type %}<tr><th>{% trans "نوع مشارکت" %}</th><td>{{ req.get_partnership_type_display }}</td></tr>{% endif %}
+        {% if not hide_customer_identity and req.investment_range %}<tr><th>{% trans "میزان سرمایه" %}</th><td>{{ req.get_investment_range_display }}</td></tr>{% endif %}
+        {% if not hide_customer_identity %}
         <tr><th style="width:220px">{% trans "نوع کاربر" %}</th><td>{{ req.get_user_type_display }}</td></tr>
-        <tr><th>{% trans "نوع پروژه" %}</th><td>{{ req.get_project_type_display|default:'—' }}</td></tr>
+        {% endif %}
+        {% if req.project_type %}<tr><th>{% trans "نوع پروژه" %}</th><td>{{ req.get_project_type_display }}</td></tr>{% endif %}
+        {% if not hide_customer_identity %}
         <tr><th>{% trans "نیاز به مشاورهٔ مالی؟" %}</th><td>{% if req.needs_financial_consult %}{% trans "بله" %}{% else %}{% trans "خیر" %}{% endif %}</td></tr>
-        <tr><th>{% trans "آدرس محل نصب" %}</th><td>{{ req.install_address|default:'—' }}</td></tr>
-        <tr><th>{% trans "مساحت تقریبی فضای نصب (متر مربع)" %}</th><td>{{ req.area_m2|default:'—' }}</td></tr>
+        {% endif %}
+        <tr><th style="width:220px">{% trans "آدرس محل نصب" %}</th><td>{{ req.install_address|default:'—' }}</td></tr>
+        <tr><th>{% trans "مساحت تقریبی فضای نصب" %}</th><td>{% if req.area_range %}{{ req.get_area_range_display }}{% else %}{{ req.area_m2|default:'—' }}{% endif %}</td></tr>
         <tr><th>{% trans "مشخصات محل نصب" %}</th><td>{{ req.get_install_location_display|default:'—' }}</td></tr>
         <tr><th>{% trans "نوع ساختمان" %}</th><td>{{ req.get_building_type_display|default:'—' }}</td></tr>
-        <tr><th>{% trans "سایه یا مانع؟" %}</th><td>{% if req.has_shading %}{% trans "بله" %}{% else %}{% trans "خیر" %}{% endif %}</td></tr>
-        <tr><th>{% trans "نوع مالکیت محل نصب" %}</th><td>{{ req.get_ownership_type_display|default:'—' }}</td></tr>
+        <tr><th>{% trans "سایه یا مانع؟" %}</th><td>{% if req.shade_status %}{{ req.get_shade_status_display }}{% elif req.has_shading %}{% trans "بله" %}{% else %}{% trans "خیر" %}{% endif %}</td></tr>
+        {% if req.ownership_type %}<tr><th>{% trans "نوع مالکیت محل نصب" %}</th><td>{{ req.get_ownership_type_display }}</td></tr>{% endif %}
         <tr><th>{% trans "فاصله تا شبکهٔ سراسری (متر)" %}</th><td>{{ req.grid_distance_m|default:'—' }}</td></tr>
         <tr><th>{% trans "تمایل به سیستم ذخیره‌سازی؟" %}</th><td>{{ req.get_storage_interest_display|default:'—' }}</td></tr>
         <tr><th>{% trans "شناسهٔ قبض برق" %}</th><td>{{ req.bill_id|default:'—' }}</td></tr>
+        {% if not hide_customer_identity and req.contact_method %}<tr><th>{% trans "روش تماس ترجیحی" %}</th><td>{{ req.get_contact_method_display }}</td></tr>{% endif %}
+        {% if not hide_customer_identity %}
+        <tr><th>{% trans "از کجا آمده" %}</th><td>{{ req.lead_source|default:'—' }}</td></tr>
+        {% if req.campaign_name %}<tr><th>{% trans "کمپین" %}</th><td>{{ req.campaign_name }}</td></tr>{% endif %}
+        {% if req.how_heard %}<tr><th>{% trans "نحوهٔ آشنایی" %}</th><td>{{ req.get_how_heard_display }}</td></tr>{% endif %}
+        {% endif %}
+        {% if req.latitude and req.longitude %}
+        <tr>
+          <th>{% trans "موقعیت روی نقشه" %}</th>
+          <td>
+            <a href="https://www.google.com/maps?q={{ req.latitude }},{{ req.longitude }}" target="_blank" rel="noopener">{{ req.latitude }}، {{ req.longitude }} ↗</a>
+            <div id="adminLocationMap" class="mt-2" style="height:280px;border-radius:12px;overflow:hidden;border:1px solid var(--border,#ccc)"
+                 data-lat="{{ req.latitude }}" data-lng="{{ req.longitude }}"></div>
+          </td>
+        </tr>
+        {% endif %}
       </tbody>
     </table>
   </div>
 
-  {% if can_cancel %}
-  <div class="mb-4">
-    <h2 class="h6">{% trans "عملیات" %}</h2>
-    <form method="post" action="{% url 'requests:admin-status' req.id %}">{% csrf_token %}
-      <input type="hidden" name="status" value="cancelled">
-      <button type="submit" class="btn secondary">{% trans "لغو درخواست" %}</button>
+  {% if can_stop %}
+  <details class="mb-4"><summary>{% trans "لغو یا بستن پرونده" %}</summary>
+    <form method="post" action="{% url 'requests:admin-status' req.id %}" class="row g-2 align-items-end mt-1"
+          onsubmit="return confirm('{% trans "این پرونده متوقف شود؟ این کار قابل بازگشت نیست." %}')">{% csrf_token %}
+      <div class="col-12 col-md-3"><label class="form-label">{% trans "نتیجه" %}</label>
+        <select name="status" class="form-select"><option value="closed">{% trans "از دست‌رفته" %}</option><option value="cancelled">{% trans "لغو شده" %}</option></select></div>
+      <div class="col-12 col-md-3"><label class="form-label">{% trans "دلیل" %}</label>
+        <select name="reason" class="form-select" required><option value="">{% trans "انتخاب کنید" %}</option>{% for value, label in stop_reasons %}<option value="{{ value }}">{{ label }}</option>{% endfor %}</select></div>
+      <div class="col-12 col-md-4"><label class="form-label">{% trans "توضیح" %}</label><input name="note" class="form-control" maxlength="1000"></div>
+      <div class="col-12 col-md-2"><button class="btn secondary">{% trans "ثبت" %}</button></div>
     </form>
-  </div>
+  </details>
   {% endif %}
+
+  {% include 'requests/admin/_project.html' %}
+  {% include 'requests/admin/_delivery.html' %}
 
   <h2 class="h6">{% trans "پیشنهادها" %} ({{ offer_count }}/{{ max_offers }})</h2>
   <div class="table-responsive mb-3">
@@ -67,15 +400,23 @@
         {% for offer in offers %}
         <tr>
           <td>{{ offer.title }}</td>
-          <td>{{ offer.amount }} {{ offer.currency }}</td>
+          <td>{% if offer.has_price %}{{ offer.amount|intcomma }} {{ offer.currency }}{% else %}<span class="badge warning">{% trans "منتظر تعیین مبلغ توسط فروش" %}</span>{% endif %}</td>
           <td>{{ offer.vat_percent }}٪</td>
-          <td>{{ offer.total_amount }} {{ offer.currency }}</td>
+          <td>{% if offer.has_price %}{{ offer.total_amount|intcomma }} {{ offer.currency }}{% else %}—{% endif %}</td>
           <td>{{ offer.valid_until|smartdatetime:CALENDAR|default:'—' }}</td>
           <td>{% if offer.is_active %}{% trans "بله" %}{% else %}{% trans "خیر" %}{% endif %}{% if offer.is_expired %} ({% trans "منقضی" %}){% endif %}</td>
           <td class="d-flex gap-2 flex-wrap">
+            {% if can_manage_offers %}
             <form method="post" action="{% url 'requests:admin-offer-toggle' offer.id %}" style="display:inline">{% csrf_token %}
               <button type="submit" class="btn secondary">{% if offer.is_active %}{% trans "غیرفعال‌سازی" %}{% else %}{% trans "فعال‌سازی" %}{% endif %}</button>
             </form>
+            {% endif %}
+            {% if can_set_price and offer.id != approved_offer_id %}
+            <form method="post" action="{% url 'requests:admin-offer-price' offer.id %}" class="d-flex gap-1">{% csrf_token %}
+              <input type="text" name="amount" inputmode="numeric" data-money="1" class="form-control form-control-sm" style="max-width:150px" placeholder="{% trans 'مبلغ (تومان)' %}" aria-label="{% trans 'مبلغ (تومان)' %}" required>
+              <button type="submit" class="btn secondary">{% trans "ثبت مبلغ" %}</button>
+            </form>
+            {% endif %}
             {% if can_issue_contract and offer.is_payable %}
             <form method="post" action="{% url 'requests:admin-offer-issue-contract' offer.id %}" style="display:inline">{% csrf_token %}
               <button type="submit" class="btn">{% trans "صدور قرارداد" %}</button>
@@ -91,19 +432,40 @@
   </div>
 
   {% if can_add_offer %}
-  <div class="mb-4">
-    <h2 class="h6">{% trans "ثبت پیشنهاد جدید" %}</h2>
-    <form method="post" action="{% url 'requests:admin-offer-add' req.id %}" class="d-flex gap-2 flex-wrap">{% csrf_token %}
-      <input type="text" name="title" placeholder="{% trans 'عنوان' %}" class="form-control" style="max-width:200px" required>
-      <input type="number" name="amount" placeholder="{% trans 'مبلغ (ریال)' %}" class="form-control" style="max-width:200px" required>
-      <input type="number" name="vat_percent" value="10" min="0" max="100" placeholder="{% trans 'ارزش افزوده (٪)' %}" class="form-control" style="max-width:160px">
-      <input type="datetime-local" name="valid_until" class="form-control" style="max-width:220px">
-      <input type="text" name="description" placeholder="{% trans 'توضیحات' %}" class="form-control" style="max-width:260px">
-      <button type="submit" class="btn">{% trans "افزودن پیشنهاد" %}</button>
+  <div class="mb-4" id="new-offer">
+    <h2 class="h6">{% trans "ثبت پیشنهاد فنی" %}</h2>
+    <p class="footer-note">{% trans "مبلغ را بخش فروش در مرحلهٔ مذاکره تعیین می‌کند." %}</p>
+    <form method="post" action="{% url 'requests:admin-offer-add' req.id %}" class="row g-3 align-items-end">{% csrf_token %}
+      <div class="col-12 col-md-3">
+        <label class="form-label">{% trans "عنوان پیشنهاد" %}</label>
+        <input type="text" name="title" class="form-control" required>
+      </div>
+      {% if can_enter_offer_price %}
+      <div class="col-12 col-md-3">
+        <label class="form-label">{% trans "مبلغ (تومان، اختیاری)" %}</label>
+        <input type="text" name="amount" inputmode="numeric" data-money="1" class="form-control" placeholder="{% trans 'مثلاً ۷۰٬۰۰۰٬۰۰۰' %}">
+      </div>
+      {% endif %}
+      <div class="col-6 col-md-2">
+        <label class="form-label">{% trans "ارزش افزوده (٪)" %}</label>
+        <input type="number" name="vat_percent" value="10" min="0" max="100" class="form-control">
+      </div>
+      <div class="col-6 col-md-2">
+        <label class="form-label">{% trans "اعتبار تا (اختیاری)" %}</label>
+        <input type="text" name="valid_until" inputmode="numeric" autocomplete="off" class="form-control" placeholder="{% trans 'مثلاً ۱۴۰۵/۰۹/۳۰' %}">
+      </div>
+      <div class="col-12 col-md-2">
+        <label class="form-label">{% trans "توضیحات (اختیاری)" %}</label>
+        <input type="text" name="description" class="form-control">
+      </div>
+      <div class="col-12">
+        <button type="submit" class="btn">{% trans "افزودن پیشنهاد" %}</button>
+      </div>
     </form>
   </div>
   {% endif %}
 
+  {% if not hide_customer_identity %}
   <h2 class="h6">{% trans "قرارداد" %}</h2>
   <div class="table-responsive mb-4">
     <table class="table">
@@ -111,9 +473,9 @@
       <tbody>
         <tr><th style="width:180px">{% trans "شماره" %}</th><td>{{ contract.contract_number }}</td></tr>
         <tr><th>{% trans "وضعیت" %}</th><td>{{ contract.get_status_display }}</td></tr>
-        <tr><th>{% trans "پیشنهاد" %}</th><td>{{ contract.offer.title }} — {{ contract.offer.amount }} {{ contract.offer.currency }}</td></tr>
-        <tr><th>{% trans "ارزش افزوده" %}</th><td>{{ contract.offer.vat_percent }}٪ ({{ contract.offer.vat_amount }} {{ contract.offer.currency }})</td></tr>
-        <tr><th>{% trans "مبلغ کل قابل پرداخت" %}</th><td>{{ contract.offer.total_amount }} {{ contract.offer.currency }}</td></tr>
+        <tr><th>{% trans "پیشنهاد" %}</th><td>{{ contract.offer.title }} — {{ contract.offer.amount|intcomma }} {{ contract.offer.currency }}</td></tr>
+        <tr><th>{% trans "ارزش افزوده" %}</th><td>{{ contract.offer.vat_percent }}٪ ({{ contract.offer.vat_amount|intcomma }} {{ contract.offer.currency }})</td></tr>
+        <tr><th>{% trans "مبلغ کل قابل پرداخت" %}</th><td><strong>{{ contract.offer.total_amount|intcomma }} {{ contract.offer.currency }}</strong></td></tr>
         <tr><th>{% trans "تأیید شده در" %}</th><td>{{ contract.approved_at|smartdatetime:CALENDAR|default:'—' }}</td></tr>
         <tr><th>{% trans "متن" %}</th><td>{{ contract.body|linebreaksbr }}</td></tr>
       </tbody>
@@ -157,9 +519,10 @@
         </tr>
         {% empty %}
         <tr><td colspan="4">{% trans "پیامکی ثبت نشده است." %}</td></tr>
-        {% endfor %}
+      {% endfor %}
       </tbody>
     </table>
   </div>
+  {% endif %}
 </div>
 {% endblock %}

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="Pars Energy">
+  <rect width="512" height="512" fill="#0b1218"/>
+  <g transform="translate(256 256) scale(0.78) translate(-256 -256)">
+    <circle cx="256" cy="256" r="168" fill="#16a34a"/>
+    <path d="M256 150c34 28 54 70 54 115 0 83-67 150-150 150-45 0-87-20-115-54 28 12 58 18 90 18 99 0 178-80 178-179 0-32-7-62-18-90z" fill="#dcfce7"/>
+    <text x="256" y="292" text-anchor="middle" font-size="96" font-family="Arial, sans-serif" fill="#0b1218">PE</text>
+  </g>
+</svg>

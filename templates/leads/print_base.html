@@ -1,0 +1,7 @@
+{% extends 'print/sheet.html' %}
+{% comment %}
+  A4 sheet for the panel reports. Same body as the on-screen page (the report
+  templates extend this when `?print=1`), so a printout can never disagree with
+  what the manager was looking at. Look and brand live in print/sheet.html.
+{% endcomment %}
+{% block autoprint %}<script>window.addEventListener('load', function () { setTimeout(function () { window.print(); }, 400); });</script>{% endblock %}

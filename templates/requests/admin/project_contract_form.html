@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block content %}
+<div class="panel" style="max-width:960px">
+  <h1 class="h4 mb-1">{% trans "قرارداد دوم" %} — {% trans "درخواست" %} #{{ req.id }}</h1>
+  <p class="footer-note">{% trans "این قرارداد خارج از سامانه امضا می‌شود؛ مشخصات، فایل و سه مرحلهٔ پرداخت آن را اینجا ثبت کنید." %}</p>
+  {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+  <form method="post" enctype="multipart/form-data" data-no-ajax="true">{% csrf_token %}
+    <div class="row g-3 mb-4">
+      {% for field in form.main_fields %}
+      <div class="col-12 {% if field.name != 'description' %}col-md-6{% endif %}">
+        <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}
+        {% if field.help_text %}<div class="footer-note">{{ field.help_text }}</div>{% endif %}
+        {% if field.errors %}<div class="text-danger small">{{ field.errors|striptags }}</div>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    <h2 class="h6">{% trans "برنامهٔ پرداخت" %}</h2>
+    {% for number, title, amount, due in rows %}
+    <div class="row g-2 mb-3">
+      <div class="col-12 col-md-4"><label class="form-label">{% trans "قسط" %} {{ number }}</label>{{ title }}{% if title.errors %}<div class="text-danger small">{{ title.errors|striptags }}</div>{% endif %}</div>
+      <div class="col-6 col-md-4"><label class="form-label">{% trans "مبلغ (تومان)" %}</label>{{ amount }}{% if amount.errors %}<div class="text-danger small">{{ amount.errors|striptags }}</div>{% endif %}</div>
+      <div class="col-6 col-md-4"><label class="form-label">{% trans "موعد پرداخت" %}</label>{{ due }}{% if due.errors %}<div class="text-danger small">{{ due.errors|striptags }}</div>{% endif %}</div>
+    </div>
+    {% endfor %}
+    <div class="d-flex gap-2">
+      <button class="btn">{% trans "ذخیره" %}</button>
+      <a class="btn secondary" data-ajax="true" href="{% url 'requests:admin-detail' req.id %}">{% trans "بازگشت" %}</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

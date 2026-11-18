@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% load calendar_tags i18n %}
+{% block content %}
+{% include 'partials/users_tabs.html' with active='users' %}
+
+{% if messages %}{% for message in messages %}
+  <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %}">{{ message }}</div>
+{% endfor %}{% endif %}
+
+<div class="panel">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <form method="get" class="d-flex gap-2 flex-wrap" style="margin:0">
+      <input type="search" name="q" value="{{ search_query }}" class="form-control form-control-sm"
+             style="min-width:200px" placeholder="{% trans 'جستجوی نام کاربری یا نام' %}">
+      <select name="role" class="form-select form-select-sm" style="min-width:150px">
+        <option value="">{% trans "همهٔ نقش‌ها" %}</option>
+        {% for value, label in role_choices %}
+        <option value="{{ value }}" {% if value == role_filter %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+      <button class="btn secondary" type="submit">{% trans "فیلتر" %}</button>
+      {% if search_query or role_filter %}
+      <a class="btn secondary" data-ajax="true" href="{% url 'accounts:staff-manage' %}">{% trans "پاک کردن" %}</a>
+      {% endif %}
+    </form>
+    <a class="btn" data-ajax="true" href="{% url 'accounts:staff-manage-create' %}">+ {% trans "کاربر جدید" %}</a>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table">
+      <thead><tr>
+        <th>{% trans "نام کاربری" %}</th>
+        <th>{% trans "نام" %}</th>
+        <th>{% trans "نقش" %}</th>
+        <th>{% trans "وضعیت" %}</th>
+        <th>{% trans "آخرین ورود" %}</th>
+        <th>{% trans "عملیات" %}</th>
+      </tr></thead>
+      <tbody>
+        {% for u in object_list %}
+        <tr>
+          <td>
+            {{ u.username }}
+            {% if u.is_superuser %}<span class="badge">{% trans "سوپرادمین" %}</span>{% endif %}
+            {% if u == request.user %}<span class="footer-note">({% trans "شما" %})</span>{% endif %}
+          </td>
+          <td>{{ u.get_full_name|default:'—' }}</td>
+          <td>{{ u.get_role_display }}</td>
+          <td>
+            {% if u.is_active %}<span class="status-ok">{% trans "فعال" %}</span>
+            {% else %}<span class="status-bad">{% trans "غیرفعال" %}</span>{% endif %}
+          </td>
+          <td>{{ u.last_login|smartdatetime:CALENDAR|default:'—' }}</td>
+          <td>
+            <div class="d-flex gap-2 flex-wrap">
+              <a class="btn secondary" data-ajax="true" href="{% url 'accounts:staff-manage-edit' u.id %}">{% trans "دسترسی‌ها" %}</a>
+              <a class="btn secondary" data-ajax="true" href="{% url 'accounts:staff-manage-password' u.id %}">{% trans "رمز" %}</a>
+              {% comment %}Self and, for non-superusers, superusers are read-only here —
+              the views enforce the same rules, these buttons just hide dead ends.{% endcomment %}
+              {% if u != request.user %}{% if not u.is_superuser or request.user.is_superuser %}
+              <form method="post" action="{% url 'accounts:staff-manage-active' u.id %}" style="display:inline">{% csrf_token %}
+                <button class="btn secondary" type="submit">{% if u.is_active %}{% trans "غیرفعال" %}{% else %}{% trans "فعال" %}{% endif %}</button>
+              </form>
+              <a class="btn secondary" data-ajax="true" href="{% url 'accounts:staff-manage-delete' u.id %}">{% trans "حذف" %}</a>
+              {% endif %}{% endif %}
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6">{% trans "کاربری یافت نشد." %}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if is_paginated %}
+  <div class="d-flex gap-2 mt-3">
+    {% if page_obj.has_previous %}
+    <a class="btn secondary" data-ajax="true" href="?page={{ page_obj.previous_page_number }}&q={{ search_query }}&role={{ role_filter }}">{% trans "قبلی" %}</a>
+    {% endif %}
+    <span class="footer-note">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}
+    <a class="btn secondary" data-ajax="true" href="?page={{ page_obj.next_page_number }}&q={{ search_query }}&role={{ role_filter }}">{% trans "بعدی" %}</a>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

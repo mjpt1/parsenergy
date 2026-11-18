@@ -1,0 +1,11 @@
+{% load i18n %}{% comment %}
+AI button + output. Params: ai_task, ai_target, ai_title, optional ai_fill (CSS
+selector of a textarea to put the answer into, e.g. a ticket reply box).
+{% endcomment %}
+<div class="panel mb-3" data-ai-box style="background:rgba(95,154,75,.07)">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <strong>✨ {{ ai_title }}</strong>
+    <button type="button" class="btn secondary" data-ai-task="{{ ai_task }}" data-ai-target="{{ ai_target }}"{% if ai_fill %} data-ai-fill="{{ ai_fill }}"{% endif %}>{% trans "بپرس از هوش مصنوعی" %}</button>
+  </div>
+  <div data-ai-output hidden style="white-space:pre-wrap;margin-top:10px;line-height:1.9"></div>
+</div>

@@ -1,0 +1,44 @@
+/* IRANSansX — the corporate typeface used on pars-energy.com.
+   Self-hosted (rather than hot-linked from the main site) so the portal keeps
+   its typography even if the WordPress uploads folder is reorganised. */
+
+@font-face {
+  font-family: 'IRANSansX';
+  src: url('../fonts/IRANSansX-Light.woff2') format('woff2');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'IRANSansX';
+  src: url('../fonts/IRANSansX-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'IRANSansX';
+  src: url('../fonts/IRANSansX-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'IRANSansX';
+  src: url('../fonts/IRANSansX-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+/* 800/900 requests fall back to Bold rather than a synthesised face. */
+@font-face {
+  font-family: 'IRANSansX';
+  src: url('../fonts/IRANSansX-Bold.woff2') format('woff2');
+  font-weight: 800 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --pe-font: 'IRANSansX', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}

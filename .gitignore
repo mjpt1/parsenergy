@@ -9,9 +9,15 @@ venv/
 .vscode/
 staticfiles/
 media/
+private_media/
 logs/*.log
 coverage.xml
 htmlcov/
 .pytest_cache/
 .mypy_cache/
 .DS_Store
+
+# deploy packages and editor backups
+*.tar.gz
+*.bak
+_t.txt

@@ -1,0 +1,16 @@
+{% comment %}
+  Everything about people lives behind these three tabs. Include it at the top
+  of each user-management screen, naming the tab that screen represents:
+
+      {% include 'partials/users_tabs.html' with active='users' %}
+{% endcomment %}
+{% load i18n %}
+<div class="hub">
+  <h1 class="hub-title">{% trans "مدیریت کاربران" %}</h1>
+  <p class="hub-sub">{% trans "ساخت و ویرایش کاربران، نقش‌ها و دسترسی‌ها." %}</p>
+  <nav class="hub-tabs">
+    <a class="hub-tab{% if active == 'users' %} is-active{% endif %}" data-ajax="true" href="{% url 'accounts:staff-manage' %}">👥 {% trans "کاربران" %}</a>
+    <a class="hub-tab{% if active == 'roles' %} is-active{% endif %}" data-ajax="true" href="{% url 'accounts:roles' %}">🧩 {% trans "نقش‌ها" %}</a>
+    <a class="hub-tab{% if active == 'permissions' %} is-active{% endif %}" data-ajax="true" href="{% url 'accounts:permissions' %}">🔑 {% trans "مجوزها" %}</a>
+  </nav>
+</div>

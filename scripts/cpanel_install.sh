@@ -4,6 +4,17 @@ set -eu
 APP_DIR="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
 cd "$APP_DIR"
 
+PYTHON_BIN="${PYTHON:-python}"
+if ! command -v "$PYTHON_BIN" >/dev/null 2>&1; then
+  if command -v python3 >/dev/null 2>&1; then
+    PYTHON_BIN="python3"
+  else
+    echo "Python was not found. Activate the cPanel Python App virtualenv first, then rerun this script." >&2
+    echo "Example: source ~/virtualenv/parsenergy/3.11/bin/activate" >&2
+    exit 1
+  fi
+fi
+
 if [ ! -f manage.py ]; then
   echo "manage.py not found. Run this script from the SolarOps app root." >&2
   exit 1
@@ -13,7 +24,7 @@ mkdir -p logs tmp media staticfiles
 
 if [ ! -f .env ]; then
   cp .env.cpanel.example .env
-  python - <<'PY'
+  "$PYTHON_BIN" - <<'PY'
 from pathlib import Path
 import secrets
 
@@ -27,12 +38,12 @@ else
   echo ".env already exists; leaving it unchanged."
 fi
 
-python -m pip install --upgrade pip
-python -m pip install -r requirements-cpanel.txt
+"$PYTHON_BIN" -m pip install --upgrade pip
+"$PYTHON_BIN" -m pip install -r requirements-cpanel.txt
 
-python manage.py migrate --noinput
-python scripts/build_en_catalog.py
-python manage.py collectstatic --noinput
+"$PYTHON_BIN" manage.py migrate --noinput
+"$PYTHON_BIN" scripts/build_en_catalog.py
+"$PYTHON_BIN" manage.py collectstatic --noinput
 
 touch tmp/restart.txt
 

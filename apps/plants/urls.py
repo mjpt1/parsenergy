@@ -1,8 +1,10 @@
 from django.urls import path
 from .views import (
+    PlantDashboardView,
     PlantListView, PlantCreateView, PlantUpdateView, PlantDeleteView,
     PlantGroupListView, PlantGroupCreateView, PlantGroupUpdateView, PlantGroupDeleteView, PlantGroupMembershipView,
-    InverterListView, InverterCreateView, InverterUpdateView, InverterDeleteView,
+    InverterListView, InverterCreateView, InverterUpdateView, InverterDeleteView, inverter_sync_now,
+    CloudAccountListView, CloudAccountCreateView, CloudAccountUpdateView,
     SensorListView, SensorCreateView, SensorUpdateView, SensorDeleteView,
     MeterListView, MeterCreateView, MeterUpdateView, MeterDeleteView,
     EquipmentListView, EquipmentCreateView, EquipmentUpdateView, EquipmentDeleteView,
@@ -10,9 +12,32 @@ from .views import (
     GatewayListView, GatewayCreateView, GatewayUpdateView, GatewayDeleteView,
 )
 
+from .revenue_views import (
+    BillDeleteView, BillSaveView, BillsView, InverterDetailView, MonitorDataView, MonitorView, ScreenDataView, ScreenView,
+    RevenueDataView, RevenueRateDeleteView, RevenueRateSaveView, RevenueView,
+    SectionCreateView, SectionDeleteView, SectionListView, SectionUpdateView,
+)
+
 app_name = 'plants'
 
 urlpatterns = [
+    path('dashboard/', PlantDashboardView.as_view(), name='dashboard'),
+    path('revenue/', RevenueView.as_view(), name='revenue'),
+    path('revenue/<int:pk>/data/', RevenueDataView.as_view(), name='revenue-data'),
+    path('revenue/<int:pk>/rate/', RevenueRateSaveView.as_view(), name='revenue-rate'),
+    path('revenue/rate/<int:pk>/delete/', RevenueRateDeleteView.as_view(), name='revenue-rate-delete'),
+    path('screen/', ScreenView.as_view(), name='screen'),
+    path('screen/<int:pk>/data/', ScreenDataView.as_view(), name='screen-data'),
+    path('monitor/', MonitorView.as_view(), name='monitor'),
+    path('monitor/<int:pk>/data/', MonitorDataView.as_view(), name='monitor-data'),
+    path('bills/', BillsView.as_view(), name='bills'),
+    path('bills/<int:pk>/save/', BillSaveView.as_view(), name='bill-save'),
+    path('bills/item/<int:pk>/delete/', BillDeleteView.as_view(), name='bill-delete'),
+    path('inverters/<int:pk>/', InverterDetailView.as_view(), name='inverter-detail'),
+    path('sections/', SectionListView.as_view(), name='sections'),
+    path('sections/create/', SectionCreateView.as_view(), name='section-create'),
+    path('sections/<int:pk>/edit/', SectionUpdateView.as_view(), name='section-edit'),
+    path('sections/<int:pk>/delete/', SectionDeleteView.as_view(), name='section-delete'),
     path('', PlantListView.as_view(), name='list'),
     path('create/', PlantCreateView.as_view(), name='create'),
     path('<int:pk>/edit/', PlantUpdateView.as_view(), name='edit'),
@@ -26,6 +51,10 @@ urlpatterns = [
     path('inverters/create/', InverterCreateView.as_view(), name='inverter-create'),
     path('inverters/<int:pk>/edit/', InverterUpdateView.as_view(), name='inverter-edit'),
     path('inverters/<int:pk>/delete/', InverterDeleteView.as_view(), name='inverter-delete'),
+    path('inverters/<int:pk>/sync/', inverter_sync_now, name='inverter-sync'),
+    path('cloud-accounts/', CloudAccountListView.as_view(), name='cloud-accounts'),
+    path('cloud-accounts/create/', CloudAccountCreateView.as_view(), name='cloud-account-create'),
+    path('cloud-accounts/<int:pk>/edit/', CloudAccountUpdateView.as_view(), name='cloud-account-edit'),
     path('sensors/', SensorListView.as_view(), name='sensors'),
     path('sensors/create/', SensorCreateView.as_view(), name='sensor-create'),
     path('sensors/<int:pk>/edit/', SensorUpdateView.as_view(), name='sensor-edit'),

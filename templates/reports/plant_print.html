@@ -1,0 +1,88 @@
+{% extends 'print/sheet.html' %}
+{% load calendar_tags i18n ux_tags %}
+{% block orientation %}portrait{% endblock %}
+{% block title %}{{ page_title }}{% endblock %}
+{% block extra_head %}
+<style>
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; }
+  .info { margin: 0; }
+  .info th { background: var(--g0); color: var(--g9); width: 38%; font-size: 8pt; padding: 1.8mm 2.5mm; border-top: 1px solid var(--line); }
+  .info tr:first-child th, .info tr:first-child td { border-top: 0; }
+  .chart { border: 1px solid var(--line); border-radius: 3mm; padding: 3mm 4mm 2mm; margin: 0 0 5mm; break-inside: avoid; }
+  .chart-h { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2mm; }
+  .chart-h b { color: var(--g9); font-size: 10pt; } .chart-h span { font-size: 7.8pt; color: var(--mut); }
+  .bars { display: flex; align-items: flex-end; gap: 1.6mm; height: 34mm; border-bottom: 1px solid var(--line); direction: ltr; }
+  .bar { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; height: 100%; }
+  .bar i { display: block; width: 100%; border-radius: 1.2mm 1.2mm 0 0; background: linear-gradient(180deg, #2fa35a, #0d5f33); min-height: .4mm; }
+  .bar em { font-style: normal; font-size: 6.5pt; color: var(--g9); font-weight: 700; margin-bottom: .6mm; white-space: nowrap; }
+  .days { display: flex; gap: 1.6mm; direction: ltr; margin-top: 1mm; }
+  .days span { flex: 1; text-align: center; font-size: 6.5pt; color: var(--mut); }
+</style>
+{% endblock %}
+{% block content %}
+<h1>{% trans "گزارش نیروگاه" %} {{ plant.name }}</h1>
+<p class="meta">{{ plant.location_name }} — {% trans "ظرفیت" %} {{ plant.capacity_kw|floatformat:"-2" }} kW</p>
+
+<div class="kpis">
+  <div class="kpi"><b>{{ energy_14d_text }}</b><span>{% trans "تولید ۱۴ روز اخیر (kWh)" %}</span></div>
+  <div class="kpi"><b>{{ plant.capacity_kw|floatformat:"-2" }}</b><span>{% trans "ظرفیت (kW)" %}</span></div>
+  <div class="kpi"><b>{% if latest %}{{ latest.power_kw|floatformat:"-1" }}{% else %}—{% endif %}</b><span>{% trans "آخرین توان ثبت‌شده (kW)" %}</span></div>
+  <div class="kpi"><b>{{ inverters|length }}</b><span>{% trans "اینورتر" %}</span></div>
+  <div class="kpi"><b class="{% if active_alerts %}badge-bad{% endif %}">{{ active_alerts }}</b><span>{% trans "هشدار فعال" %}</span></div>
+</div>
+
+<div class="chart">
+  <div class="chart-h"><b>{% trans "تولید روزانه — ۱۴ روز اخیر" %}</b><span>{% trans "واحد: کیلووات‌ساعت" %}</span></div>
+  <div class="bars">
+    {% for d in daily %}<div class="bar"><em>{% if d.kwh %}{{ d.text }}{% endif %}</em><i style="height:{{ d.pct }}%"></i></div>{% endfor %}
+  </div>
+  <div class="days">{% for d in daily %}<span>{{ d.day|smartdate:CALENDAR|slice:"5:" }}</span>{% endfor %}</div>
+</div>
+
+<div class="two">
+  <div>
+    <h2>{% trans "مشخصات نیروگاه" %}</h2>
+    <table class="info"><tbody>
+      <tr><th>{% trans "نام" %}</th><td>{{ plant.name }}</td></tr>
+      <tr><th>{% trans "کد" %}</th><td class="num">{{ plant.external_code }}</td></tr>
+      <tr><th>{% trans "محل" %}</th><td>{{ plant.location_name }}</td></tr>
+      <tr><th>{% trans "مختصات" %}</th><td class="num">{{ plant.latitude|floatformat:5 }}, {{ plant.longitude|floatformat:5 }}</td></tr>
+      <tr><th>{% trans "وضعیت اتصال" %}</th><td class="{% if plant.connection_status == 'online' %}badge-ok{% else %}badge-bad{% endif %}">{{ plant.get_connection_status_display }}</td></tr>
+      <tr><th>{% trans "پروتکل" %}</th><td>{{ plant.protocol }}</td></tr>
+      <tr><th>{% trans "آخرین گزارش" %}</th><td class="num">{% if latest %}{{ latest.created_at|smartdatetime:CALENDAR }}{% else %}—{% endif %}</td></tr>
+    </tbody></table>
+  </div>
+  <div>
+    <h2>{% trans "وضعیت پنل‌ها" %}</h2>
+    <table class="info"><tbody>
+      <tr><th>{% trans "تعداد پنل" %}</th><td>{{ modules_total }}</td></tr>
+      <tr><th>{% trans "هشدار دما" %}</th><td class="{% if modules_warn %}badge-bad{% endif %}">{{ modules_warn }}</td></tr>
+      <tr><th>{% trans "داغ" %}</th><td class="{% if modules_hot %}badge-bad{% endif %}">{{ modules_hot }}</td></tr>
+    </tbody></table>
+  </div>
+</div>
+
+<h2>{% trans "اینورترها" %}</h2>
+<table>
+  <thead><tr><th>{% trans "شماره سریال" %}</th><th>{% trans "مدل" %}</th><th>{% trans "سازنده" %}</th><th class="num">{% trans "توان (kW)" %}</th><th>{% trans "وضعیت" %}</th><th>{% trans "ارتباط" %}</th></tr></thead>
+  <tbody>
+    {% for inv in inverters %}
+    <tr><td class="num">{{ inv.serial_number }}</td><td>{{ inv.model_name }}</td><td>{{ inv.manufacturer }}</td>
+      <td class="num">{{ inv.rated_power_kw|floatformat:"-2" }}</td><td>{{ inv.status|fa }}</td>
+      <td class="{% if inv.online %}badge-ok{% else %}badge-bad{% endif %}">{% if inv.online %}{% trans "آنلاین" %}{% else %}{% trans "قطع" %}{% endif %}</td></tr>
+    {% empty %}<tr><td colspan="6">{% trans "اینورتری ثبت نشده است." %}</td></tr>{% endfor %}
+  </tbody>
+</table>
+
+<h2>{% trans "هشدارهای اخیر" %}</h2>
+<table>
+  <thead><tr><th>{% trans "قانون" %}</th><th>{% trans "پیام" %}</th><th>{% trans "شدت" %}</th><th>{% trans "وضعیت" %}</th><th>{% trans "زمان" %}</th></tr></thead>
+  <tbody>
+    {% for a in recent_alerts %}
+    <tr><td>{{ a.rule.name }}</td><td>{{ a.message }}</td><td>{{ a.severity|fa }}</td>
+      <td class="{% if a.acknowledged %}badge-ok{% else %}badge-bad{% endif %}">{% if a.acknowledged %}{% trans "بررسی‌شده" %}{% else %}{% trans "فعال" %}{% endif %}</td>
+      <td class="num">{{ a.created_at|smartdatetime:CALENDAR }}</td></tr>
+    {% empty %}<tr><td colspan="5">{% trans "هشداری ثبت نشده است." %}</td></tr>{% endfor %}
+  </tbody>
+</table>
+{% endblock %}

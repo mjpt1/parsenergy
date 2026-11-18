@@ -1,0 +1,149 @@
+{% load i18n %}<!doctype html>
+<html lang="{{ LANGUAGE_CODE }}" dir="{% if LANGUAGE_BIDI %}rtl{% else %}ltr{% endif %}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#faf9f5">
+  <title>{% trans "پارس انرژی" %} — {% trans "سامانهٔ نیروگاه خورشیدی" %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="/static/css/fonts.css">
+  <link rel="manifest" href="/pwa/manifest.json">
+  <style>
+    :root{
+      --green:#4b773c; --green-deep:#1c2434; --paper:#faf9f5; --card:#ffffff;
+      --line:#eceee4; --ink:#1c2434; --muted:#6c7563; --tint:#e8efe3;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:'IRANSansX',system-ui,sans-serif;background:var(--paper);color:var(--ink);min-height:100vh}
+    a{text-decoration:none;color:inherit}
+    .wrap{max-width:1180px;margin:0 auto;padding:0 28px}
+    header.top{display:flex;align-items:center;justify-content:space-between;padding:22px 28px;max-width:1180px;margin:0 auto}
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{width:46px;height:46px;border-radius:50%;background:var(--green);color:#fff;display:grid;place-items:center;font-weight:800;font-size:.95rem}
+    .brand h1{font-size:1.05rem;margin:0;font-weight:800}
+    .brand p{margin:2px 0 0;font-size:.78rem;color:var(--muted)}
+
+    .hero{position:relative;margin:8px 20px 0;border-radius:28px;overflow:hidden;min-height:440px;display:flex;align-items:flex-end;justify-content:flex-end}
+    .hero-art{position:absolute;inset:0;
+      background:
+        radial-gradient(650px 420px at 92% 6%,rgba(255,197,92,.9),rgba(255,197,92,0) 55%),
+        linear-gradient(180deg,#ffb15a 0%,#ff8a5c 22%,#e8724f 38%,#3a4a52 62%,#1c2434 100%)}
+    .hero-art .sun{position:absolute;top:9%;right:6%;width:72px;height:72px;border-radius:50%;
+      background:#fff3cf;box-shadow:0 0 100px 34px rgba(255,220,140,.6)}
+    .hero-art .panels{position:absolute;left:0;right:0;bottom:0;height:46%;
+      background:
+        repeating-linear-gradient(100deg,rgba(15,22,30,.94) 0 46px,rgba(35,48,60,.94) 46px 48px),
+        repeating-linear-gradient(10deg,transparent 0 78px,rgba(0,0,0,.25) 78px 80px);
+      -webkit-mask-image:linear-gradient(180deg,transparent,#000 22%);mask-image:linear-gradient(180deg,transparent,#000 22%)}
+    .hero-content{position:relative;z-index:2;padding:60px 44px 44px;color:#fff;max-width:640px}
+    .eyebrow{display:inline-block;font-size:.78rem;letter-spacing:.04em;background:rgba(255,255,255,.16);
+      border:1px solid rgba(255,255,255,.3);padding:5px 14px;border-radius:999px;margin-bottom:18px;backdrop-filter:blur(6px)}
+    .hero h2{font-size:clamp(1.6rem,3.4vw,2.4rem);line-height:1.5;margin:0 0 14px;font-weight:800;text-wrap:balance}
+    .hero h2 b{color:#ffd98a;font-weight:900}
+    .hero p{margin:0;color:rgba(255,255,255,.86);font-size:1rem;line-height:1.9;max-width:520px}
+
+    .cta-row{display:flex;gap:12px;margin-top:26px;flex-wrap:wrap}
+    .pill{display:inline-flex;align-items:center;gap:10px;background:var(--green);color:#fff;
+      padding:8px 22px 8px 10px;border-radius:999px;font-size:.92rem;font-weight:700;
+      box-shadow:0 10px 24px -8px rgba(75,119,60,.6);border:none;cursor:pointer;font-family:inherit}
+    .pill .ic{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.2);display:grid;place-items:center;font-size:15px}
+    .pill.ghost{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.4);box-shadow:none}
+
+    .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin:46px 20px 0}
+    @media (max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}}
+    @media (max-width:560px){.grid{grid-template-columns:1fr}}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:26px 22px;
+      display:flex;flex-direction:column;gap:10px;transition:transform .18s,box-shadow .18s}
+    .card:hover{transform:translateY(-4px);box-shadow:0 20px 34px -18px rgba(28,36,52,.25)}
+    .card .ic-badge{width:46px;height:46px;border-radius:14px;background:var(--tint);color:var(--green);
+      display:grid;place-items:center;font-size:20px}
+    .card.primary .ic-badge{background:var(--green);color:#fff}
+    .card h3{margin:4px 0 0;font-size:1rem;font-weight:800}
+    .card p{margin:0;color:var(--muted);font-size:.86rem;line-height:1.85;flex:1}
+    .card .go{color:var(--green);font-weight:700;font-size:.85rem}
+
+    section.about{margin:60px 20px 40px;background:var(--green-deep);color:#fff;border-radius:28px;
+      padding:44px;display:grid;grid-template-columns:1.1fr 1fr;gap:40px;align-items:center}
+    @media (max-width:900px){section.about{grid-template-columns:1fr}}
+    section.about h3{font-size:1.4rem;margin:0 0 14px;font-weight:800}
+    section.about p{color:#b9c0cc;line-height:1.95;margin:0;font-size:.92rem}
+    .contact-grid{display:grid;gap:14px}
+    .contact-grid .row{display:flex;align-items:center;gap:14px;background:rgba(255,255,255,.06);padding:14px 18px;border-radius:14px}
+    .contact-grid .row .ic{width:38px;height:38px;border-radius:50%;background:var(--green);display:grid;place-items:center;flex-shrink:0}
+    .contact-grid .row b{font-weight:700}
+    .contact-grid .row span{display:block;color:#9aa3b0;font-size:.78rem;margin-bottom:2px}
+    footer{text-align:center;color:#8b9186;font-size:.82rem;padding:0 20px 40px}
+  </style>
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <div class="logo">PE</div>
+      <div>
+        <h1>{% trans "پارس انرژی" %}</h1>
+        <p>{% trans "سامانهٔ مدیریت و پایش نیروگاه خورشیدی" %}</p>
+      </div>
+    </div>
+  </header>
+
+  <div class="hero">
+    <div class="hero-art"><div class="sun"></div><div class="panels"></div></div>
+    <div class="hero-content">
+      <span class="eyebrow">{% trans "پلتفرم مشترکان و پایش نیروگاه" %}</span>
+      <h2>{% trans "انرژی خورشیدی، راهکاری هوشمندانه برای" %} <b>{% trans "استقلال انرژی" %}</b> {% trans "و کسب درآمد پایدار" %}</h2>
+      <p>{% trans "درخواست نیروگاه خورشیدی خود را ثبت کنید، وضعیت درخواست و قرارداد را دنبال کنید، یا اگر از کارکنان مجموعه هستید وارد پنل مدیریت شوید." %}</p>
+      <div class="cta-row">
+        <a class="pill" href="{% url 'requests:submit' %}"><span class="ic">📝</span> {% trans "ثبت درخواست ارزیابی" %}</a>
+        <a class="pill ghost" href="{% url 'requests:otp-login' %}"><span class="ic">👤</span> {% trans "ورود مشتریان" %}</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <a class="card primary" href="{% url 'requests:submit' %}">
+      <div class="ic-badge">📝</div>
+      <h3>{% trans "ثبت درخواست / ارزیابی" %}</h3>
+      <p>{% trans "فرم ارزیابی نیروگاه خورشیدی را پر کنید تا کارشناسان ما درخواست شما را بررسی کنند و پیشنهاد قیمت ارائه دهند." %}</p>
+      <span class="go">{% trans "شروع کنید ←" %}</span>
+    </a>
+
+    <a class="card" href="{% url 'requests:otp-login' %}">
+      <div class="ic-badge">👤</div>
+      <h3>{% trans "ورود / ثبت‌نام مشتری" %}</h3>
+      <p>{% trans "ورود یا ثبت‌نام مشتریان فقط با شمارهٔ موبایل و کد پیامکی — برای پیگیری درخواست، پیشنهادها، قرارداد و پرداخت." %}</p>
+      <span class="go">{% trans "ورود / ثبت‌نام ←" %}</span>
+    </a>
+
+    <a class="card" href="{% url 'accounts:login' %}">
+      <div class="ic-badge">🔐</div>
+      <h3>{% trans "ورود کارکنان / مدیریت" %}</h3>
+      <p>{% trans "ورود کاربران بخش فروش، فنی و مدیریت به پنل داخلی برای رسیدگی به درخواست‌ها." %}</p>
+      <span class="go">{% trans "ورود کارکنان ←" %}</span>
+    </a>
+
+    <a class="card" href="#about">
+      <div class="ic-badge">ℹ️</div>
+      <h3>{% trans "دربارهٔ ما و تماس" %}</h3>
+      <p>{% trans "آشنایی کوتاه با پارس انرژی و راه‌های ارتباطی." %}</p>
+      <span class="go">{% trans "بیشتر بدانید ←" %}</span>
+    </a>
+  </div>
+
+  <section class="about" id="about">
+    <div>
+      <h3>{% trans "دربارهٔ پارس انرژی" %}</h3>
+      <p>{% trans "پارس انرژی ارائه‌دهندهٔ راهکارهای نیروگاه خورشیدی برای مشترکان خانگی، تجاری، صنعتی و کشاورزی است؛ از ارزیابی و طراحی تا اجرا، پایش و نگهداری." %}</p>
+    </div>
+    <div class="contact-grid">
+      <div class="row"><div class="ic">📞</div><div><span>{% trans "تلفن تماس" %}</span><b>021-22222922</b></div></div>
+      <div class="row"><div class="ic">✉️</div><div><span>{% trans "ایمیل" %}</span><b>info@pars-energy.com</b></div></div>
+      <div class="row"><div class="ic">🌐</div><div><span>{% trans "وب‌سایت" %}</span><b>pars-energy.com</b></div></div>
+    </div>
+  </section>
+
+  <footer>
+    © {% now "Y" %} {% trans "پارس انرژی" %} — {% trans "تمامی حقوق محفوظ است." %}
+  </footer>
+</body>
+</html>

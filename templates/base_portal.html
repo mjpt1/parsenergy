@@ -1,0 +1,292 @@
+{% load static i18n %}<!doctype html>
+{% comment %}
+  Customer-facing shell. Deliberately mirrors pars-energy.com (same logo, menu,
+  IRANSansX type and green footer) so a visitor moving from the marketing site
+  into the portal never feels handed off to a different company. Staff pages
+  keep the sidebar layout in base.html; nothing here has a sidebar.
+
+  Blocks: `portal_title` (hero heading), `portal_tabs` (optional tab row),
+  `content` (page body). Set `portal_bare` in a view's context to drop the
+  hero + tabs entirely — used by the evaluation wizard, which wants the whole
+  viewport for the form.
+{% endcomment %}
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#4b773c">
+  <title>{% block title %}{{ page_title|default:_("پنل کاربری") }} — {% trans "پارس انرژی" %}{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/fonts.css' %}">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.rtl.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="manifest" href="/pwa/manifest.json">
+  <link rel="icon" href="{% static 'img/pars-logo.webp' %}">
+  <style>
+    :root{
+      --green:#4b773c; --green-dark:#3d6231; --green-soft:#e8efe3;
+      --ink:#1c2434; --muted:#6b7280; --line:#e6e8e0; --paper:#f7f8f5;
+      /* Same depth and corner language as the staff dashboard, so moving
+         between the two does not feel like two different products. */
+      --r-lg:18px; --r-md:13px;
+      --sh-1:0 1px 2px rgba(28,36,52,.04), 0 8px 24px -16px rgba(28,36,52,.18);
+      --sh-2:0 1px 2px rgba(28,36,52,.05), 0 18px 40px -24px rgba(28,36,52,.28);
+      --ok:#16a34a; --warn:#d97706; --bad:#dc2626; --info:#0284c7;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;font-family:var(--pe-font);background:var(--paper);color:var(--ink);
+      font-size:14px;line-height:1.9;min-height:100vh;display:flex;flex-direction:column;
+    }
+    a{text-decoration:none;color:inherit}
+    .pt-wrap{max-width:1180px;margin:0 auto;padding:0 20px;width:100%}
+
+    /* ---------- header ---------- */
+    .pt-head{background:rgba(255,255,255,.92);backdrop-filter:saturate(180%) blur(12px);
+      border-bottom:1px solid var(--line);position:sticky;top:0;z-index:40}
+    .pt-head .pt-wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;height:84px}
+    .pt-logo{display:flex;align-items:center;gap:10px}
+    .pt-logo img{height:52px;width:auto;display:block}
+    .pt-nav{display:flex;align-items:center;gap:26px}
+    .pt-nav a{font-size:.93rem;font-weight:500;color:var(--ink);white-space:nowrap}
+    .pt-nav a:hover{color:var(--green)}
+    .pt-user{
+      display:inline-flex;align-items:center;gap:9px;background:var(--green);color:#fff;
+      padding:7px 8px 7px 18px;border-radius:999px;font-size:.88rem;font-weight:500;white-space:nowrap;
+    }
+    .pt-logout{background:transparent;border:1px solid rgba(255,255,255,.35);color:inherit;
+      border-radius:8px;padding:6px 12px;font-family:inherit;font-size:.85rem;cursor:pointer}
+    .pt-logout:hover{background:rgba(0,0,0,.06)}
+    .pt-user .av{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.22);display:grid;place-items:center;font-size:15px}
+    .pt-staff{
+      display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);
+      border-radius:999px;padding:8px 16px;font-size:.86rem;font-weight:500;
+      color:var(--ink);background:#fff;white-space:nowrap;transition:border-color .15s,color .15s;
+    }
+    .pt-staff:hover{border-color:var(--green);color:var(--green)}
+    .pt-burger{display:none;background:none;border:1px solid var(--line);border-radius:10px;padding:7px 11px;font-size:18px;cursor:pointer;color:var(--ink)}
+    @media (max-width:980px){
+      .pt-nav{display:none;position:absolute;inset-inline:0;top:84px;background:#fff;flex-direction:column;
+        align-items:stretch;gap:0;padding:8px 20px 14px;border-bottom:1px solid var(--line);box-shadow:0 12px 24px -18px rgba(0,0,0,.3)}
+      .pt-nav.open{display:flex}
+      .pt-nav a{padding:11px 0;border-bottom:1px solid var(--line)}
+      .pt-nav a:last-child{border-bottom:0}
+      .pt-burger{display:block}
+      .pt-head .pt-wrap{height:70px}
+      .pt-logo img{height:42px}
+    }
+
+    /* ---------- hero ---------- */
+    .pt-hero{
+      position:relative;color:#fff;text-align:center;padding:40px 20px 34px;
+      background:radial-gradient(760px 260px at 72% 0%, rgba(111,154,90,.55) 0%, transparent 62%),
+        linear-gradient(120deg,#3d6231,#22304a);
+    }
+    .pt-hero h1{margin:0 0 6px;font-size:clamp(1.35rem,2.6vw,1.85rem);font-weight:800;letter-spacing:-.02em}
+    .pt-crumb{font-size:.85rem;color:rgba(255,255,255,.82)}
+    .pt-crumb a:hover{color:#fff;text-decoration:underline}
+
+    /* ---------- tabs ---------- */
+    .pt-tabs{
+      display:flex;gap:4px;flex-wrap:wrap;justify-content:center;margin:-22px auto 22px;
+      background:#fff;border:1px solid var(--line);border-radius:999px;padding:5px;
+      box-shadow:var(--sh-2);width:fit-content;max-width:100%;position:relative;z-index:5;
+    }
+    .pt-tabs a{
+      padding:9px 22px;border-radius:999px;font-weight:500;font-size:.88rem;color:var(--muted);
+      transition:background .15s,color .15s;
+    }
+    .pt-tabs a:hover{color:var(--green);background:var(--green-soft)}
+    .pt-tabs a.active{background:var(--green);color:#fff;font-weight:700;
+      box-shadow:0 6px 16px -8px var(--green)}
+    @media (max-width:560px){.pt-head .pt-wrap{padding-inline:12px;gap:8px}.pt-head .d-flex{min-width:0}.pt-user{min-width:0;max-width:46vw;overflow:hidden;white-space:nowrap}}
+    @media (max-width:560px){.pt-tabs{border-radius:var(--r-lg)}.pt-tabs a{padding:9px 14px;font-size:.82rem}}
+
+    /* ---------- body ---------- */
+    .pt-body{flex:1;padding:8px 0 56px}
+    .pt-card,.pt-body .panel{
+      background:#fff;border:1px solid var(--line);border-radius:var(--r-lg);
+      padding:24px 22px;margin-bottom:16px;box-shadow:var(--sh-1);
+    }
+    .pt-card h2,.pt-card h3,.pt-body .panel h2,.pt-body .panel h3{
+      margin-top:0;font-weight:700;letter-spacing:-.01em}
+    .pt-body .table{margin-bottom:0;font-size:.88rem}
+    .pt-body .table th{
+      background:transparent;color:var(--muted);font-weight:600;font-size:.76rem;
+      letter-spacing:.02em;border-color:var(--line);padding:11px 14px;white-space:nowrap}
+    .pt-body .table td{border-color:var(--line);padding:11px 14px;vertical-align:middle}
+    .pt-body .table tbody tr{transition:background .15s}
+    .pt-body .table tbody tr:hover{background:var(--paper)}
+    .pt-body .badge{border-radius:999px;font-weight:600;padding:4px 11px;font-size:.74rem}
+    .pt-body .btn{border-radius:var(--r-md);font-weight:600;font-family:inherit;padding:10px 18px;
+      transition:transform .12s,box-shadow .2s}
+    .pt-body .btn:active{transform:scale(.985)}
+    .pt-body .btn-primary,.pt-body .btn:not(.btn-secondary):not(.btn-outline-secondary):not(.secondary){
+      background:var(--green);border-color:var(--green);color:#fff}
+    .pt-body .btn.secondary,.pt-body .btn-secondary{background:#fff;border:1px solid var(--line);color:var(--ink)}
+    .pt-body .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:42px;line-height:1.4}
+    .pt-body .btn[hidden]{display:none}
+    .pt-body .btn.btn-sm{min-height:34px;padding:5px 11px;font-size:.8rem;border-radius:8px}
+    .pt-body .btn:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+    .pt-body .btn:disabled{opacity:.5;cursor:not-allowed}
+    .pt-body .form-control,.pt-body .form-select{border-radius:var(--r-md);border-color:var(--line);padding:10px 14px;font-family:inherit}
+    .pt-body .form-control:focus,.pt-body .form-select:focus{border-color:var(--green);box-shadow:0 0 0 .2rem rgba(75,119,60,.15)}
+    .pt-body .form-label{font-weight:500;margin-bottom:6px}
+    .footer-note{color:var(--muted);font-size:.85rem}
+
+    /* ---------- footer ---------- */
+    .pt-foot{background:var(--green);color:#fff;margin-top:auto}
+    .pt-foot .pt-wrap{display:grid;grid-template-columns:1.4fr 1fr 1fr 1.1fr;gap:34px;padding-block:42px}
+    @media (max-width:900px){.pt-foot .pt-wrap{grid-template-columns:1fr 1fr}}
+    @media (max-width:560px){.pt-foot .pt-wrap{grid-template-columns:1fr}}
+    .pt-foot h4{font-size:1rem;font-weight:700;margin:0 0 14px}
+    .pt-foot a,.pt-foot p{color:rgba(255,255,255,.92);font-size:.88rem}
+    .pt-foot a{display:block;padding:4px 0}
+    .pt-foot a:hover{color:#fff;text-decoration:underline}
+    .pt-foot .intro{background:rgba(255,255,255,.08);border-radius:14px;padding:18px 18px 16px}
+    .pt-foot .intro img{height:44px;margin-bottom:10px}
+    .pt-foot .intro p{margin:0;line-height:2;font-size:.83rem;color:rgba(255,255,255,.85)}
+    .pt-copy{border-top:1px solid rgba(255,255,255,.18);text-align:center;padding:16px 20px;font-size:.82rem;color:rgba(255,255,255,.8)}
+    /* Customer request progress (requests/user/_progress.html). */
+    .req-progress{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px 18px;margin-bottom:18px}
+    .req-progress.your-turn{border-color:#d97706;box-shadow:0 0 0 3px rgba(217,119,6,.12)}
+    .cust-steps{display:flex;list-style:none;margin:0 0 10px;padding:0;gap:4px;counter-reset:cs}
+    .cust-steps li{flex:1 1 0;min-width:0;text-align:center;font-size:.78rem;color:var(--muted);position:relative;padding-top:30px;counter-increment:cs}
+    .cust-steps li::before{content:counter(cs, persian);position:absolute;top:0;left:50%;transform:translateX(-50%);width:24px;height:24px;line-height:24px;border-radius:50%;background:#e5e7e1;color:#6b7280;font-weight:700;font-size:.8rem}
+    .cust-steps li::after{content:'';position:absolute;top:11px;right:calc(50% + 14px);left:calc(-50% + 14px);height:2px;background:#e5e7e1}
+    .cust-steps li:last-child::after{display:none}
+    .cust-steps li.done::before{content:'✓';background:var(--green);color:#fff}
+    .cust-steps li.done::after{background:var(--green)}
+    .cust-steps li.now::before{background:#d97706;color:#fff}
+    .cust-steps li.now{color:var(--ink);font-weight:700}
+    .req-note{margin:0;font-size:.92rem}
+    @media (max-width:560px){.cust-steps li span{display:none}.cust-steps li.now span{display:block;font-size:.72rem}}
+  </style>
+  {% block head_extra %}{% endblock %}
+</head>
+<body {% block body_attributes %}{% endblock %}>
+
+<header class="pt-head">
+  <div class="pt-wrap">
+    <a class="pt-logo" href="https://pars-energy.com/">
+      <img src="{% static 'img/pars-logo.webp' %}" alt="{% trans 'پارس انرژی' %}">
+    </a>
+
+    <nav class="pt-nav" id="ptNav">
+      <a href="https://pars-energy.com/">{% trans "صفحه اصلی" %}</a>
+      <a href="https://pars-energy.com/dedicated-solar-power-plan-new/">{% trans "نیروگاه اختصاصی" %}</a>
+      <a href="https://pars-energy.com/coop-solar-power-plan-new/">{% trans "نیروگاه مشارکتی" %}</a>
+      <a href="https://pars-energy.com/home/news-and-announcements/">{% trans "اخبار و اطلاعیه" %}</a>
+      <a href="https://pars-energy.com/about-us/">{% trans "درباره ما" %}</a>
+      <a href="https://pars-energy.com/contact-us/">{% trans "ارتباط با ما" %}</a>
+    </nav>
+
+    <div class="d-flex align-items-center gap-2">
+      {% if request.user.is_authenticated %}
+      <a class="pt-user" href="{% if request.user.role == 'contractor' %}{% url 'requests:contractor-home' %}{% else %}{% url 'requests:my-list' %}{% endif %}">
+        <span class="av">👤</span>
+        {% trans "سلام" %}، {{ request.user.get_full_name|default:request.user.username }}
+      </a>
+      {% comment %}Without this the portal had no way out at all: a customer
+      could sign in and never sign out.{% endcomment %}
+      <form method="post" action="{% url 'accounts:logout' %}" style="margin:0">{% csrf_token %}
+        <button class="pt-logout" type="submit">{% trans "خروج" %}</button>
+      </form>
+      {% else %}
+      {% comment %}Two doors, both visible. Staff used to have no entrance at
+      all on the public side, so they typed their mobile into the customer
+      login — which quietly made them a second, customer account.{% endcomment %}
+      <a class="pt-staff" href="{% url 'accounts:login' %}">{% trans "ورود پرسنل" %}</a>
+      <a class="pt-user" href="{% url 'requests:otp-login' %}">
+        <span class="av">👤</span>{% trans "ورود / ثبت‌نام" %}
+      </a>
+      {% endif %}
+      <button class="pt-burger" type="button" id="ptBurger" aria-label="{% trans 'منو' %}">☰</button>
+    </div>
+  </div>
+</header>
+
+{% if not portal_bare %}
+<section class="pt-hero">
+  <h1>{% block portal_title %}{{ page_title|default:_("حساب من") }}{% endblock %}</h1>
+  <div class="pt-crumb">
+    <a href="https://pars-energy.com/">{% trans "خانه" %}</a>
+    <span>/</span>
+    <span>{% block portal_crumb %}{{ page_title|default:_("حساب من") }}{% endblock %}</span>
+  </div>
+</section>
+{% endif %}
+
+<main class="pt-body">
+  <div class="pt-wrap">
+    {% comment %}The account tab row belongs to a signed-in customer's own
+    pages. A login screen is neither, so it opts out with `portal_no_tabs`
+    rather than inheriting a nav for an account nobody is in yet.{% endcomment %}
+    {% if not portal_bare and not portal_no_tabs and request.user.is_authenticated %}
+    <nav class="pt-tabs">
+      {% block portal_tabs %}
+      {% if request.user.role == 'contractor' %}
+      <a href="{% url 'requests:contractor-home' %}" class="{% if portal_tab == 'contractor' %}active{% endif %}">{% trans "پروژه‌های من" %}</a>
+      <a href="{% url 'accounts:profile' %}" class="{% if portal_tab == 'profile' %}active{% endif %}">{% trans "پروفایل" %}</a>
+      {% else %}
+      <a href="{% url 'dashboard' %}" class="{% if portal_tab == 'dashboard' %}active{% endif %}">{% trans "داشبورد" %}</a>
+      <a href="{% url 'requests:my-list' %}" class="{% if portal_tab == 'requests' %}active{% endif %}">{% trans "درخواست‌ها" %}</a>
+      <a href="{% url 'requests:my-tickets' %}" class="{% if portal_tab == 'tickets' %}active{% endif %}">{% trans "تیکت‌ها" %}</a>
+      <a href="{% url 'accounts:profile' %}" class="{% if portal_tab == 'profile' %}active{% endif %}">{% trans "پروفایل" %}</a>
+      {% endif %}
+      {% endblock %}
+    </nav>
+    {% endif %}
+
+    {% if messages %}{% for message in messages %}
+      <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %} mt-3">{{ message }}</div>
+    {% endfor %}{% endif %}
+
+    {% block content %}{% endblock %}
+  </div>
+</main>
+
+<footer class="pt-foot">
+  <div class="pt-wrap">
+    <div class="intro">
+      <img src="{% static 'img/pars-logo.webp' %}" alt="{% trans 'پارس انرژی' %}">
+      <p>{% trans "پارس انرژی ارائه‌دهندهٔ راهکارهای نیروگاه خورشیدی برای مشترکان خانگی، تجاری، صنعتی و کشاورزی است؛ از ارزیابی و طراحی تا اجرا، پایش و نگهداری." %}</p>
+    </div>
+    <div>
+      <h4>{% trans "خدمات ما" %}</h4>
+      <a href="https://pars-energy.com/dedicated-solar-power-plan-new/">{% trans "نیروگاه خورشیدی اختصاصی" %}</a>
+      <a href="https://pars-energy.com/coop-solar-power-plan-new/">{% trans "نیروگاه خورشیدی مشارکتی" %}</a>
+      <a href="{% url 'requests:submit' %}">{% trans "فرم ارزیابی رایگان" %}</a>
+    </div>
+    <div>
+      <h4>{% trans "لینک‌های مفید" %}</h4>
+      <a href="https://pars-energy.com/about-us/">{% trans "درباره ما" %}</a>
+      <a href="https://pars-energy.com/contact-us/">{% trans "ارتباط با ما" %}</a>
+      <a href="https://pars-energy.com/home/news-and-announcements/">{% trans "اخبار و اطلاعیه" %}</a>
+      <a href="{% url 'accounts:login' %}">{% trans "ورود پرسنل" %}</a>
+    </div>
+    <div>
+      <h4>{% trans "تماس با ما" %}</h4>
+      <p style="margin:0 0 8px">📞 021-22222922</p>
+      <p style="margin:0">📍 {% trans "تهران، بلوار میرداماد، خیابان نیک رای، پلاک ۳" %}</p>
+    </div>
+  </div>
+  <div class="pt-copy">© {% now "Y" %} {% trans "پارس انرژی" %} — {% trans "تمامی حقوق محفوظ است." %}</div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="{% static 'js/main.js' %}"></script>
+<script src="/static/js/fa-digits.js" defer></script>
+<script src="{% static 'js/location-select.js' %}" defer></script>
+{% if AI_CHAT_ENABLED and not request.user.is_staff %}{% include 'analytics/_ai_chat.html' %}{% endif %}
+<script src="{% static 'js/ai.js' %}" defer></script>
+<script>
+  (function () {
+    var b = document.getElementById('ptBurger'), n = document.getElementById('ptNav');
+    if (b && n) b.addEventListener('click', function () { n.classList.toggle('open'); });
+  })();
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

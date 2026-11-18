@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<style>
+  .pf{max-width:1060px;margin-inline:auto}
+  .pf .pf-head{display:flex;justify-content:space-between;align-items:center;gap:20px;padding:24px 28px;border-radius:22px;margin-bottom:18px;
+    background:linear-gradient(120deg,#0b4d2a,#16793f 65%,#2fa35a);box-shadow:0 14px 34px -18px rgba(11,77,42,.7)}
+  .pf .pf-head h1{font-size:1.4rem;font-weight:800;margin:0 0 6px;color:#fff}
+  .pf .pf-head p{margin:0;color:#d5eedd;font-size:.9rem;line-height:1.9}
+  .pf .pf-cover{flex:none;display:flex;align-items:center;gap:12px;color:#d5eedd;font-size:.75rem;text-align:center;line-height:1.7}
+  .pf .pf-cover span{color:#d5eedd}
+  .pf .pf-cover img{width:70px;height:94px;object-fit:cover;border-radius:10px;border:2px solid rgba(255,255,255,.55);transform:rotate(-4deg);box-shadow:0 10px 22px rgba(0,0,0,.35)}
+
+  .pf .pf-card{background:var(--pe-panel);border:1px solid var(--pe-border);border-radius:20px;padding:22px 24px;margin-bottom:14px;
+    box-shadow:0 10px 30px -24px rgba(15,23,42,.45);transition:border-color .2s,box-shadow .2s}
+  .pf .pf-card:focus-within{border-color:var(--pe-accent);box-shadow:0 14px 34px -22px rgba(22,163,74,.55)}
+  .pf .pf-card-h{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+  .pf .pf-card-h b{flex:none;width:34px;height:34px;border-radius:11px;display:grid;place-items:center;font-size:.95rem;color:#fff;
+    background:linear-gradient(140deg,var(--pe-accent),var(--pe-accent-strong))}
+  .pf .pf-card-h h2{font-size:1.02rem;font-weight:800;margin:0}
+  .pf .pf-card-h p{margin:2px 0 0;font-size:.78rem;color:var(--pe-muted)}
+
+  .pf .pf-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:14px 16px}
+  .pf .pf-wide{grid-column:1/-1}
+  .pf .pf-f>label{display:block;font-size:.8rem;font-weight:700;margin-bottom:6px;color:var(--pe-text)}
+  .pf .pf-in{position:relative;display:flex;align-items:center}
+  .pf .pf-in .form-control,.pf .pf-in .form-select{height:46px;border-radius:12px;border:1.5px solid var(--pe-border);background-color:var(--pe-panel-alt);
+    color:var(--pe-text);font-size:.95rem;transition:border-color .15s,box-shadow .15s,background-color .15s}
+  .pf .pf-in .form-control:focus,.pf .pf-in .form-select:focus{border-color:var(--pe-accent);background-color:var(--pe-panel);box-shadow:0 0 0 4px rgba(34,197,94,.16)}
+  .pf .pf-in.has-unit .form-control{padding-left:74px;font-weight:700;letter-spacing:.3px}
+  .pf .pf-unit{position:absolute;left:10px;font-size:.7rem;font-weight:700;color:var(--pe-accent-strong);background:rgba(34,197,94,.12);border-radius:7px;padding:3px 8px;pointer-events:none}
+  .pf .pf-hint{font-size:.74rem;color:var(--pe-muted);margin-top:5px;min-height:1.1em}
+  .pf .pf-hint.live{color:var(--pe-accent-strong);font-weight:700}
+  .pf .pf-err{font-size:.76rem;color:var(--pe-danger);font-weight:700;margin-top:4px}
+  .pf .pf-err:empty{display:none}
+  .pf .pf-f.bad .form-control,.pf .pf-f.bad .form-select,.pf .pf-f.bad .pf-drop{border-color:var(--pe-danger)}
+
+  .pf .pf-months{display:grid;grid-template-columns:repeat(12,1fr);gap:8px;align-items:end;direction:rtl}
+  .pf .pf-m{display:flex;flex-direction:column;align-items:stretch;gap:6px;margin:0}
+  .pf .pf-m .pf-bar-box{height:74px;display:flex;align-items:flex-end;border-bottom:1px dashed var(--pe-border)}
+  .pf .pf-m i{display:block;width:100%;height:0;border-radius:7px 7px 0 0;background:linear-gradient(180deg,#2fa35a,#0d5f33);transition:height .25s ease}
+  .pf .pf-m input{width:100%;height:40px;text-align:center;border-radius:10px;border:1.5px solid var(--pe-border);background:var(--pe-panel-alt);color:var(--pe-text);font-weight:700;font-size:.85rem;padding:0 2px}
+  .pf .pf-m input:focus{outline:0;border-color:var(--pe-accent);box-shadow:0 0 0 4px rgba(34,197,94,.16)}
+  .pf .pf-m span{font-size:.7rem;text-align:center;color:var(--pe-muted)}
+  .pf .pf-sum{display:inline-flex;gap:6px;align-items:center;margin-top:12px;font-size:.8rem;border-radius:20px;padding:4px 14px;background:rgba(34,197,94,.12);color:var(--pe-accent-strong);font-weight:700}
+  .pf .pf-sum.warn{background:rgba(245,158,11,.16);color:#b45309}
+
+  .pf .pf-drop{position:relative;display:grid;place-items:center;height:190px;border:2px dashed var(--pe-border);border-radius:16px;background:var(--pe-panel-alt);
+    cursor:pointer;overflow:hidden;margin:0;transition:border-color .15s,background-color .15s}
+  .pf .pf-drop:hover,.pf .pf-drop:focus-within{border-color:var(--pe-accent);background:rgba(34,197,94,.06)}
+  .pf .pf-drop input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+  .pf .pf-drop img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .pf .pf-drop .pf-drop-t{text-align:center;font-size:.82rem;color:var(--pe-muted);line-height:2}
+  .pf .pf-drop .pf-drop-t svg{display:block;margin:0 auto 4px;width:34px;height:34px;stroke:var(--pe-accent)}
+  .pf .pf-drop.has .pf-drop-t{position:absolute;bottom:10px;inset-inline:auto 10px;background:rgba(255,255,255,.92);color:#0b4d2a;border-radius:9px;padding:0 12px;font-weight:700}
+  .pf .pf-drop.has .pf-drop-t svg{display:none}
+
+  .pf .pf-alert{border-radius:14px;padding:12px 16px;margin-bottom:14px;background:rgba(239,68,68,.1);color:var(--pe-danger);font-weight:700;font-size:.88rem}
+  .pf .pf-bar{position:sticky;bottom:14px;z-index:40;margin-top:18px;
+    display:flex;justify-content:space-between;align-items:center;gap:16px;padding:12px 14px 12px 22px;border-radius:18px;
+    background:var(--pe-panel);border:1px solid var(--pe-border);box-shadow:0 18px 44px -18px rgba(15,23,42,.5)}
+  .pf .pf-live{font-size:.82rem;color:var(--pe-muted)}
+  .pf .pf-live b{display:block;font-size:1.05rem;color:var(--pe-accent-strong)}
+  .pf .pf-go{border:0;border-radius:13px;height:48px;padding:0 30px;font-weight:800;font-size:.98rem;color:#fff;cursor:pointer;display:inline-flex;align-items:center;gap:10px;
+    background:linear-gradient(120deg,#0f6236,#2fa35a);box-shadow:0 10px 22px -10px rgba(22,121,63,.9);transition:transform .15s,filter .15s}
+  .pf .pf-go:hover{filter:brightness(1.08);transform:translateY(-1px)}
+  .pf .pf-go span{color:#fff}
+  .pf form[data-busy] .pf-go{pointer-events:none;filter:saturate(.5)}
+  .pf .pf-go::before{content:"";width:16px;height:16px;border-radius:50%;border:2.5px solid rgba(255,255,255,.4);border-top-color:#fff;display:none;animation:pf-spin .7s linear infinite}
+  .pf form[data-busy] .pf-go::before{display:block}
+  @keyframes pf-spin{to{transform:rotate(360deg)}}
+
+  .pf-view{position:fixed;inset:0;z-index:2000;display:flex;flex-direction:column;background:rgba(9,20,14,.72);backdrop-filter:blur(6px)}
+  .pf-view[hidden]{display:none}
+  .pf-view .pf-view-bar{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 20px;background:#0b4d2a}
+  .pf-view .pf-view-bar b{color:#fff;font-size:.95rem}
+  .pf-view .pf-view-bar button{border:0;border-radius:10px;height:40px;padding:0 18px;font-weight:800;font-size:.86rem;cursor:pointer;margin-inline-start:8px}
+  .pf-view [data-pf-print]{background:#fff;color:#0b4d2a}
+  .pf-view [data-pf-close]{background:rgba(255,255,255,.14);color:#fff}
+  .pf-view iframe{flex:1;width:100%;border:0;background:#d9dfdb}
+
+  @media (max-width:760px){
+    .pf .pf-months{grid-template-columns:repeat(4,1fr)}
+    .pf .pf-m .pf-bar-box{height:40px}
+    .pf .pf-cover{display:none}
+    .pf .pf-live{display:none}
+    .pf .pf-go{width:100%;justify-content:center}
+  }
+  @media (prefers-reduced-motion:reduce){.pf *{transition:none!important;animation-duration:0s!important}}
+</style>
+
+<div class="pf">
+  <header class="pf-head">
+    <div>
+      <h1>ساخت پیشنهاد تجاری اولیه</h1>
+      <p>اطلاعات پروژه را وارد کنید. پیشنهاد ۵ صفحه‌ای همین‌جا ساخته می‌شود و با یک دکمه PDF می‌گیرید.</p>
+    </div>
+    <div class="pf-cover"><span>عکس جلد<br>ثابت</span><img src="{% static 'img/proposal-cover.jpg' %}" alt=""></div>
+  </header>
+
+  <form method="post" enctype="multipart/form-data" data-proposal-form data-no-ajax="true">{% csrf_token %}
+    <div class="pf-alert" data-pf-alert {% if not form.non_field_errors %}hidden{% endif %}>{{ form.non_field_errors|striptags }}</div>
+
+    {% for title, hint, fields in form.sections %}
+    <section class="pf-card">
+      <div class="pf-card-h"><b>{{ forloop.counter }}</b><div><h2>{{ title }}</h2>{% if hint %}<p>{{ hint }}</p>{% endif %}</div></div>
+      <div class="pf-grid">
+        {% for field in fields %}
+        {% if field.name == 'monthly' %}
+        <div class="pf-f pf-wide{% if field.errors %} bad{% endif %}">
+          <label>{{ field.label }}</label>
+          {{ field }}
+          <div class="pf-months">
+            {% for month in form.months %}
+            <label class="pf-m"><div class="pf-bar-box"><i></i></div>
+              <input type="text" inputmode="decimal" dir="ltr" autocomplete="off" data-pf-month aria-label="{{ month }}" required>
+              <span>{{ month }}</span></label>
+            {% endfor %}
+          </div>
+          <div class="pf-sum" data-pf-sum hidden></div>
+          <div class="pf-err" data-err="{{ field.name }}">{{ field.errors|striptags }}</div>
+        </div>
+        {% elif field.name == 'layout' or field.name == 'site' %}
+        <div class="pf-f{% if field.errors %} bad{% endif %}" style="grid-column:span 2">
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          <label class="pf-drop">
+            <img alt="" hidden>
+            <span class="pf-drop-t"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16l4.5-4.5a2 2 0 012.8 0L16 16m-2-2l1.5-1.5a2 2 0 012.8 0L20 14M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>انتخاب تصویر یا رها کردن در این‌جا</span>
+            {{ field }}
+          </label>
+          <div class="pf-err" data-err="{{ field.name }}">{{ field.errors|striptags }}</div>
+        </div>
+        {% else %}
+        <div class="pf-f{% if field.name == 'site_desc' %} pf-wide{% endif %}{% if field.errors %} bad{% endif %}">
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          <div class="pf-in{% if field.field.unit %} has-unit{% endif %}"{% if field.field.money %} data-pf-money{% endif %}>
+            {{ field }}{% if field.field.unit %}<span class="pf-unit">{{ field.field.unit }}</span>{% endif %}
+          </div>
+          <div class="pf-hint">{{ field.help_text }}</div>
+          <div class="pf-err" data-err="{{ field.name }}">{{ field.errors|striptags }}</div>
+        </div>
+        {% endif %}
+        {% endfor %}
+      </div>
+    </section>
+    {% endfor %}
+
+    <div class="pf-bar">
+      <div class="pf-live">ارزش ناخالص انرژی سال اول<b data-pf-value>—</b></div>
+      <button class="pf-go" type="submit"><span>ساخت پیشنهاد</span></button>
+    </div>
+  </form>
+</div>
+
+<div class="pf-view" data-pf-view hidden>
+  <div class="pf-view-bar">
+    <b>پیش‌نمایش پیشنهاد</b>
+    <div><button type="button" data-pf-print>ذخیره PDF / چاپ</button><button type="button" data-pf-close>بازگشت به فرم</button></div>
+  </div>
+  <iframe title="پیش‌نمایش پیشنهاد"></iframe>
+</div>
+{% endblock %}

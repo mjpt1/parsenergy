@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+{% load calendar_tags i18n ux_tags %}
+{% block content %}
+<div class="panel">
+  <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <h1 class="h4 mb-0">{{ page_title }}</h1>
+    <a class="btn secondary" data-ajax="true" href="{% url 'requests:admin-list' %}">{% trans "لیست درخواست‌ها" %}</a>
+  </div>
+
+  {% include 'partials/todo.html' %}
+
+  <div class="d-flex gap-3 flex-wrap mb-4">
+    <div class="panel" style="flex:1;min-width:110px;text-align:center"><div class="h3 mb-0">{{ stats.total }}</div><div class="text-muted">{% trans "کل" %}</div></div>
+    {% if dashboard_role == 'marketing' or dashboard_role == 'admin' or dashboard_role == 'operations' %}
+    <div class="panel" style="flex:1;min-width:110px;text-align:center"><div class="h3 mb-0">{{ stats.new_leads }}</div><div class="text-muted">{% trans "درخواست جدید" %}</div></div>
+    {% endif %}
+    {% if dashboard_role == 'sales' or dashboard_role == 'admin' %}
+    <div class="panel" style="flex:1;min-width:110px;text-align:center"><div class="h3 mb-0">{{ stats.needs_contact }}</div><div class="text-muted">{% trans "نیازمند تماس" %}</div></div>
+    <div class="panel" style="flex:1;min-width:110px;text-align:center"><div class="h3 mb-0">{{ stats.in_negotiation }}</div><div class="text-muted">{% trans "مذاکره فعال" %}</div></div>
+    <div class="panel" style="flex:1;min-width:110px;text-align:center"><div class="h3 mb-0">{{ stats.offers_ready }}</div><div class="text-muted">{% trans "پیشنهاد آماده" %}</div></div>
+    {% endif %}
+    {% if dashboard_role == 'technical' or dashboard_role == 'admin' %}
+    <div class="panel" style="flex:1;min-width:110px;text-align:center"><div class="h3 mb-0">{{ stats.in_technical }}</div><div class="text-muted">{% trans "صف فنی" %}</div></div>
+    <div class="panel" style="flex:1;min-width:110px;text-align:center"><div class="h3 mb-0">{% if avg_proposal_hours %}{{ avg_proposal_hours|age }}{% else %}—{% endif %}</div><div class="text-muted">{% trans "میانگین زمان پیشنهاد فنی" %}</div></div>
+    {% endif %}
+    {% if dashboard_role == 'operations' or dashboard_role == 'admin' %}
+    <div class="panel" style="flex:1;min-width:110px;text-align:center"><div class="h3 mb-0">{{ stats.overdue }}</div><div class="text-muted">{% trans "دیرکرد (بیش از" %} {{ sla_hours }} {% trans "ساعت)" %}</div></div>
+    <div class="panel" style="flex:1;min-width:110px;text-align:center"><div class="h3 mb-0">{{ stats.unassigned_sales }}</div><div class="text-muted">{% trans "بدون مسئول" %}</div></div>
+    <div class="panel" style="flex:1;min-width:110px;text-align:center"><div class="h3 mb-0">{{ stats.crm_transferred }}</div><div class="text-muted">{% trans "منتقل به CRM" %}</div></div>
+    {% endif %}
+    {% if dashboard_role == 'technical' or dashboard_role == 'operations' or dashboard_role == 'admin' %}
+    <div class="panel" style="flex:1;min-width:110px;text-align:center"><div class="h3 mb-0" style="color:{% if fleet_stats.alerts %}#dc2626{% else %}#16a34a{% endif %}">{{ fleet_stats.alerts }}</div><div class="text-muted">{% trans "هشدار ناوگان" %}</div></div>
+    <div class="panel" style="flex:1;min-width:110px;text-align:center"><div class="h3 mb-0" style="color:{% if fleet_stats.hot_cells %}#dc2626{% else %}#16a34a{% endif %}">{{ fleet_stats.hot_cells }}</div><div class="text-muted">{% trans "پنل داغ" %}</div></div>
+    {% endif %}
+    <div class="panel" style="flex:1;min-width:110px;text-align:center"><div class="h3 mb-0">{{ stats.hold }}</div><div class="text-muted">{% trans "معلق" %}</div></div>
+    <div class="panel" style="flex:1;min-width:110px;text-align:center"><div class="h3 mb-0">{{ stats.closed }}</div><div class="text-muted">{% trans "از دست‌رفته" %}</div></div>
+  </div>
+
+  <div class="d-flex gap-3 flex-wrap mb-3">
+    <div class="panel" style="flex:1;min-width:110px;text-align:center"><div class="h5 mb-0">{{ stats.in_marketing }}</div><div class="text-muted">{% trans "بازاریابی" %}</div></div>
+    <div class="panel" style="flex:1;min-width:110px;text-align:center"><div class="h5 mb-0">{{ stats.in_sales_qualify }}</div><div class="text-muted">{% trans "صلاحیت فروش" %}</div></div>
+    <div class="panel" style="flex:1;min-width:110px;text-align:center"><div class="h5 mb-0">{{ stats.in_technical }}</div><div class="text-muted">{% trans "فنی" %}</div></div>
+    <div class="panel" style="flex:1;min-width:110px;text-align:center"><div class="h5 mb-0">{{ stats.in_negotiation }}</div><div class="text-muted">{% trans "مذاکره" %}</div></div>
+    <div class="panel" style="flex:1;min-width:110px;text-align:center"><div class="h5 mb-0">{{ stats.done }}</div><div class="text-muted">{% trans "تکمیل" %}</div></div>
+  </div>
+
+  <h2 class="h6 mb-2">{% if dashboard_role == 'marketing' or dashboard_role == 'sales' %}{% trans "نقشهٔ درخواست‌ها و نیروگاه‌ها" %}{% else %}{% trans "نقشه قرارگیری نیروگاه‌ها" %}{% endif %}</h2>
+  <div id="fleetMap" class="fleet-map"></div>
+  {{ map_points|json_script:"fleet-map-data" }}
+
+  {% if dashboard_role != 'technical' %}
+  <div class="d-flex gap-4 flex-wrap mb-4">
+    <div style="flex:1;min-width:240px">
+      <h2 class="h6">{% trans "از کجا آمده‌اند" %}</h2>
+      <table class="table"><thead><tr><th>{% trans "منبع" %}</th><th>{% trans "تعداد" %}</th></tr></thead>
+        <tbody>{% for row in by_source %}<tr><td>{{ row.lead_source }}</td><td>{{ row.n }}</td></tr>{% empty %}<tr><td colspan="2">{% trans "—" %}</td></tr>{% endfor %}</tbody>
+      </table>
+    </div>
+    <div style="flex:1;min-width:240px">
+      <h2 class="h6">{% trans "کمپین" %}</h2>
+      <table class="table"><thead><tr><th>{% trans "کمپین" %}</th><th>{% trans "تعداد" %}</th></tr></thead>
+        <tbody>{% for row in by_campaign %}<tr><td>{{ row.campaign_name }}</td><td>{{ row.n }}</td></tr>{% empty %}<tr><td colspan="2">{% trans "—" %}</td></tr>{% endfor %}</tbody>
+      </table>
+    </div>
+    <div style="flex:1;min-width:240px">
+      <h2 class="h6">{% trans "استان" %}</h2>
+      <table class="table"><thead><tr><th>{% trans "استان" %}</th><th>{% trans "تعداد" %}</th></tr></thead>
+        <tbody>{% for row in by_province %}<tr><td>{{ row.province }}</td><td>{{ row.n }}</td></tr>{% empty %}<tr><td colspan="2">{% trans "—" %}</td></tr>{% endfor %}</tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if fleet_alerts %}
+  <div class="mb-4">
+    <h2 class="h6">{% trans "هشدارهای فعال ناوگان" %}</h2>
+    <table class="table">
+      <thead><tr><th>{% trans "نیروگاه" %}</th><th>{% trans "پیام" %}</th><th>{% trans "شدت" %}</th><th>{% trans "زمان" %}</th></tr></thead>
+      <tbody>
+        {% for a in fleet_alerts %}
+        <tr>
+          <td>{{ a.rule.plant.name }}</td>
+          <td>{{ a.message|truncatechars:80 }}</td>
+          <td>{{ a.severity|fa }}</td>
+          <td>{{ a.created_at|smartdatetime:CALENDAR }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% if request.user.can_access_plants %}
+    <a class="btn secondary btn-sm" data-ajax="true" href="{% url 'plants:dashboard' %}">{% trans "باز کردن جزئیات پایش" %}</a>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <h2 class="h6 mb-2">{% trans "آخرین درخواست‌ها" %}</h2>
+  <table class="table mb-3">
+    <thead>
+      <tr>
+        <th>#</th>
+        {% if not hide_customer_identity %}<th>{% trans "مشتری" %}</th>{% endif %}
+        <th>{% trans "استان" %}</th>
+        <th>{% trans "مرحله" %}</th>
+        <th>{% trans "وضعیت" %}</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in recent_requests %}
+      <tr>
+        <td>{{ r.id }}</td>
+        {% if not hide_customer_identity %}<td>{{ r.full_name }}</td>{% endif %}
+        <td>{{ r.province }} / {{ r.city }}</td>
+        <td>{{ r.get_department_display }}</td>
+        <td>{{ r.get_status_display }}</td>
+        <td><a data-ajax="true" href="{% url 'requests:admin-detail' r.id %}">{% trans "جزئیات" %}</a></td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="6">{% trans "موردی نیست." %}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% include 'partials/pagination.html' %}
+
+</div>
+{% endblock %}

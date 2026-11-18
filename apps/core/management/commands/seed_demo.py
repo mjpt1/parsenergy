@@ -35,6 +35,29 @@ class Command(BaseCommand):
         if owner_created:
             owner_user.set_password('Owner12345!')
             owner_user.save()
+        else:
+            owner_user.set_password('Owner12345!')
+            owner_user.role = 'owner'
+            owner_user.save(update_fields=['password', 'role'])
+
+        role_accounts = (
+            ('mkt_test', 'marketing', 'Mkt12345!'),
+            ('sales_test', 'sales', 'Sales12345!'),
+            ('tech_test', 'technical', 'Tech12345!'),
+            ('ops_test', 'operations', 'Ops12345!'),
+            ('buyer1', 'customer', 'Buyer12345!'),
+        )
+        for username, role, password in role_accounts:
+            user, created = User.objects.get_or_create(
+                username=username,
+                defaults={'email': f'{username}@solarops.local', 'role': role},
+            )
+            user.role = role
+            user.set_password(password)
+            user.save()
+            self.stdout.write(self.style.SUCCESS(f'{role} login: {username} / {password}'))
+
+        buyer_user = User.objects.get(username='buyer1')
 
         plant, plant_created = Plant.objects.get_or_create(
             external_code='PLANT-001',
@@ -58,6 +81,11 @@ class Command(BaseCommand):
             plant=plant,
             user=owner_user,
             defaults={'access_level': 'owner', 'active': True},
+        )
+        PlantMembership.objects.get_or_create(
+            plant=plant,
+            user=buyer_user,
+            defaults={'access_level': 'viewer', 'active': True},
         )
 
         inverter, _ = Inverter.objects.get_or_create(
@@ -102,6 +130,15 @@ class Command(BaseCommand):
             },
         )
 
+        from apps.plants.layout import ensure_module_grid
+        created_modules = ensure_module_grid(plant, seed_temperatures=True)
+        self.stdout.write(self.style.SUCCESS(f'PV modules ready: +{created_modules} (total grid {plant.layout_rows}x{plant.layout_cols}).'))
+
         self.stdout.write(self.style.SUCCESS('Demo data created successfully.'))
         self.stdout.write(self.style.SUCCESS('Admin login: admin / Admin12345!'))
         self.stdout.write(self.style.SUCCESS('Owner login: owner1 / Owner12345!'))
+        self.stdout.write(self.style.SUCCESS('Buyer login: buyer1 / Buyer12345!'))
+        self.stdout.write(self.style.SUCCESS('Marketing: mkt_test / Mkt12345!'))
+        self.stdout.write(self.style.SUCCESS('Sales: sales_test / Sales12345!'))
+        self.stdout.write(self.style.SUCCESS('Technical: tech_test / Tech12345!'))
+        self.stdout.write(self.style.SUCCESS('Operations: ops_test / Ops12345!'))

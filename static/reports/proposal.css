@@ -1,0 +1,106 @@
+/* Pars Energy preliminary proposal: 5 A4 pages, printed to PDF by the browser. */
+@font-face { font-family: IRANSansX; src: url('../fonts/IRANSansX-Light.woff2') format('woff2'); font-weight: 300 }
+@font-face { font-family: IRANSansX; src: url('../fonts/IRANSansX-Regular.woff2') format('woff2'); font-weight: 400 }
+@font-face { font-family: IRANSansX; src: url('../fonts/IRANSansX-Medium.woff2') format('woff2'); font-weight: 500 }
+@font-face { font-family: IRANSansX; src: url('../fonts/IRANSansX-Bold.woff2') format('woff2'); font-weight: 700 800 }
+:root { --g9: #0b4d2a; --g8: #0f6236; --g7: #16793f; --g5: #2fa35a; --g1: #eaf5ee; --g0: #f4faf6;
+  --ink: #16211b; --mut: #5f6b64; --line: #e3e8e5; --card: #fff; --bg: #fbfcfb }
+@page { size: A4; margin: 0 }
+* { box-sizing: border-box; margin: 0; padding: 0 }
+body { font-family: IRANSansX, Tahoma, sans-serif; color: var(--ink); font-size: 9.6pt; line-height: 1.85;
+  -webkit-print-color-adjust: exact; print-color-adjust: exact; font-feature-settings: "ss01" }
+.page { width: 210mm; height: 297mm; position: relative; overflow: hidden; page-break-after: always; background: var(--bg); padding: 0 14mm }
+b { font-weight: 700 }
+
+/* header / footer */
+.hdr { display: flex; justify-content: space-between; align-items: center; padding: 10mm 0 5mm; border-bottom: 1px solid var(--line) }
+.brand { display: flex; flex-direction: column; align-items: center; gap: 1.5mm; color: var(--g8); font-size: 6.5pt; letter-spacing: 1.6px; font-weight: 700; direction: ltr }
+.mark { width: 11mm; height: 11mm } .mark circle { fill: var(--g8) } .mark path { stroke: #fff }
+.ref { font-size: 8pt; color: var(--mut); line-height: 1.7 } .ref b { color: var(--g8) } .ref span { direction: ltr; unicode-bidi: plaintext }
+main { padding-top: 6mm }
+footer { position: absolute; bottom: 8mm; left: 14mm; right: 14mm; display: flex; justify-content: space-between; font-size: 7.5pt; color: var(--mut); border-top: 1px solid var(--line); padding-top: 3mm }
+.pn { color: var(--g8); font-weight: 700 }
+
+/* type */
+.kicker { color: var(--g7); font-weight: 700; font-size: 8.5pt; letter-spacing: .2px; display: flex; align-items: center; gap: 2mm }
+.kicker::before { content: ""; width: 6mm; height: 2px; background: var(--g5); border-radius: 2px }
+h2 { font-size: 19pt; font-weight: 800; line-height: 1.45; margin: 1mm 0 2mm; letter-spacing: -.2px }
+.sub { color: var(--mut); font-size: 9.6pt; margin-bottom: 5mm; text-align: justify }
+h3 { font-size: 11.5pt; font-weight: 700; margin-bottom: 1.5mm } h4 { font-size: 9.5pt; margin: 2mm 0 1mm }
+.fine { font-size: 8pt; color: var(--mut); line-height: 1.8 }
+
+/* blocks */
+.intro { background: var(--card); border: 1px solid var(--line); border-right: 3px solid var(--g7); border-radius: 3mm; padding: 4mm 5mm; margin-bottom: 6mm; font-size: 9.4pt }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 3.5mm; padding: 5mm; margin-bottom: 4mm; box-shadow: 0 1px 0 rgba(10,60,30,.03), 0 6px 18px -12px rgba(10,60,30,.25) }
+.card.soft { background: var(--g0); border-color: #d5eadc }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; margin-bottom: 4mm } .two > * { margin-bottom: 0 }
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3mm; margin-bottom: 4mm }
+.stat { background: var(--card); border: 1px solid var(--line); border-radius: 3.5mm; padding: 4mm; display: flex; flex-direction: column; gap: .5mm }
+.stat span { font-size: 7.6pt; color: var(--mut) } .stat b { font-size: 15pt; font-weight: 800; color: var(--g8); line-height: 1.5 }
+.stat b small { font-size: 8pt; font-weight: 500; margin-right: 1mm; direction: ltr } .stat em { font-style: normal; font-size: 7.2pt; color: var(--mut) }
+.stat.hl { background: linear-gradient(160deg, var(--g8), var(--g9)); border: 0; color: #fff } .stat.hl span, .stat.hl em { color: #cfe8d8 } .stat.hl b { color: #fff }
+.photos { display: grid; grid-template-columns: 1fr 1fr; gap: 3mm; margin-bottom: 4mm }
+figure { position: relative; border-radius: 3.5mm; overflow: hidden; height: 52mm }
+figure img { width: 100%; height: 100%; object-fit: cover; display: block }
+figcaption { position: absolute; bottom: 3mm; right: 3mm; background: rgba(255,255,255,.92); border-radius: 2mm; padding: .6mm 3mm; font-size: 7.5pt; font-weight: 700; color: var(--g9) }
+.chips { display: flex; flex-wrap: wrap; gap: 2mm; margin: 3mm 0 2mm } .chips span { border: 1px solid #cfe3d6; background: var(--g0); color: var(--g8); border-radius: 20mm; padding: .6mm 4.5mm; font-size: 8.2pt; font-weight: 700 }
+.chips.docs span { direction: ltr; font-size: 7.6pt }
+.cta { background: var(--g0); border: 1px solid #d5eadc; border-radius: 3.5mm; padding: 4mm 5mm } .cta span { font-size: 7.8pt; color: var(--mut); display: block }
+.cta b { font-size: 12.5pt; color: var(--g8); display: block; margin: .5mm 0 } .cta p { font-size: 8.2pt; color: var(--mut) }
+.cta.slim { text-align: center; padding: 3.5mm } .cta.slim b { display: inline; font-size: 11pt }
+.cta.dark { background: linear-gradient(120deg, var(--g9), var(--g7)); border: 0; color: #fff } .cta.dark b { color: #fff } .cta.dark p { color: #cfe8d8 }
+
+/* page 3 */
+.specs { display: grid; grid-template-columns: 1fr 1fr; background: var(--card); border: 1px solid var(--line); border-radius: 3.5mm; overflow: hidden; margin-bottom: 4mm }
+.specs div { display: flex; justify-content: space-between; align-items: center; padding: 3.2mm 5mm; border-bottom: 1px solid var(--line) }
+.specs div:nth-child(odd) { border-left: 1px solid var(--line) } .specs div:nth-last-child(-n+2) { border-bottom: 0 }
+.specs span { color: var(--mut); font-size: 8.4pt } .specs b { color: var(--g8); font-size: 10.5pt; direction: ltr; unicode-bidi: plaintext }
+.ch-h { display: flex; justify-content: space-between; align-items: baseline } .ch-h span { font-size: 7.6pt; color: var(--mut) } .ch-h b { color: var(--g8) }
+.chart { width: 100%; margin-top: 2mm; font-family: IRANSansX }
+.chart .grid { stroke: #edf1ee; stroke-width: 1 } .chart .ax { font-size: 7px; fill: #9aa59f }
+.chart .bar { fill: url(#g); opacity: .82 } .chart .bar.peak { opacity: 1 }
+.chart .val { font-size: 7.6px; fill: var(--g9); font-weight: 700 } .chart .mon { font-size: 7.6px; fill: var(--mut) }
+
+/* page 4 */
+.money { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; margin-bottom: 4mm }
+.money > div { background: var(--card); border: 1px solid var(--line); border-radius: 3.5mm; padding: 6mm 5mm; display: flex; flex-direction: column; gap: 1mm }
+.money span { font-size: 8.2pt; color: var(--mut) } .money b { font-size: 21pt; font-weight: 800; color: var(--g8); letter-spacing: .3px }
+.money small { font-size: 8.5pt; color: var(--mut) } .money em { font-style: normal; font-size: 7.6pt; color: var(--mut); margin-top: 2mm; padding-top: 2mm; border-top: 1px dashed var(--line) }
+.money .hl { background: linear-gradient(160deg, var(--g8), var(--g9)); border: 0 } .money .hl * { color: #fff } .money .hl span, .money .hl small, .money .hl em { color: #cfe8d8 } .money .hl em { border-color: rgba(255,255,255,.2) }
+.facts { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 1.5mm 6mm; font-size: 8.6pt }
+.facts li { padding-right: 4mm; position: relative } .facts li::before { content: ""; position: absolute; right: 0; top: 2.3mm; width: 1.6mm; height: 1.6mm; border-radius: 50%; background: var(--g5) }
+.facts b { color: var(--g8) }
+.notice { border-right: 3px solid #c99a2e; background: #fdf8ec; border-radius: 2.5mm; padding: 3.5mm 5mm; font-size: 8.6pt }
+
+/* page 5 */
+.timeline { list-style: none; display: grid; grid-template-columns: repeat(6, 1fr); margin: 3mm 0 6mm; position: relative }
+.timeline::before { content: ""; position: absolute; top: 4mm; right: 8%; left: 8%; height: 2px; background: var(--line) }
+.timeline li { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 1.5mm; position: relative; font-size: 7.4pt; font-weight: 500; line-height: 1.5 }
+.timeline b { width: 8mm; height: 8mm; border-radius: 50%; display: grid; place-items: center; background: #fff; border: 2px solid var(--line); color: var(--mut); font-size: 9pt }
+.timeline li.on b { background: var(--g7); border-color: var(--g7); color: #fff; box-shadow: 0 0 0 3px #d6ecdd }
+.fee { background: var(--g0); border-radius: 2.5mm; padding: 3mm 4mm; margin: 2mm 0 } .fee span { font-size: 7.6pt; color: var(--mut); display: block } .fee b { font-size: 15pt; color: var(--g8) } .fee small { font-size: 8pt }
+.ticks { list-style: none; font-size: 8.4pt; margin: 1mm 0 2mm } .ticks li { padding-right: 5mm; position: relative }
+.ticks li::before { content: "✓"; position: absolute; right: 0; color: var(--g5); font-weight: 800 }
+
+/* cover */
+.cover { padding: 0; background: var(--g9); color: #fff }
+.cv-top { display: flex; justify-content: space-between; align-items: flex-start; padding: 14mm 16mm 0 }
+.cv-meta { font-size: 8pt; color: #bfe0cb; line-height: 2 } .cv-meta b { color: #fff; direction: ltr; unicode-bidi: plaintext }
+.brand.big { color: #fff; font-size: 8pt } .brand.big .mark { width: 17mm; height: 17mm } .brand.big circle { fill: #fff } .brand.big path { stroke: var(--g8) }
+.cv-title { padding: 18mm 16mm 0; position: relative; z-index: 2 }
+.eyebrow { direction: ltr; text-align: right; letter-spacing: 3px; font-size: 7.5pt; color: #9fd3b2; font-weight: 700 }
+h1 { font-size: 31pt; font-weight: 800; line-height: 1.35; margin: 3mm 0 6mm }
+.cv-client { font-size: 15pt; font-weight: 700; line-height: 1.6; border-right: 3px solid var(--g5); padding-right: 4mm } .cv-client span { font-weight: 400; color: #cfe8d8; font-size: 12pt }
+.cv-title p { color: #bfe0cb; margin-top: 5mm; font-size: 9.5pt }
+.cv-kpis { display: flex; gap: 4mm; margin-top: 8mm } .cv-kpis div { background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.14); border-radius: 3mm; padding: 3mm 5mm; font-size: 8pt; color: #cfe8d8; min-width: 36mm }
+.cv-kpis b { display: block; font-size: 17pt; color: #fff; line-height: 1.4 }
+.cv-photo { position: absolute; bottom: 0; left: 0; right: 0; height: 118mm; background-size: cover; background-position: center 30%;
+  clip-path: polygon(0 18%, 100% 0, 100% 100%, 0 100%) }
+.cv-photo::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(11,77,42,.55), rgba(11,77,42,0) 45%) }
+.brand img { height: 11mm } .brand.big img { height: 19mm; background: #fff; border-radius: 50%; padding: 1.5mm }
+
+/* screen-only toolbar */
+.toolbar { position: sticky; top: 0; z-index: 9; display: flex; gap: 8px; justify-content: center; padding: 10px; background: #0b4d2a }
+.toolbar button, .toolbar a { font: 700 13px IRANSansX, Tahoma; border: 0; border-radius: 8px; padding: 8px 18px; cursor: pointer; text-decoration: none; background: #fff; color: #0b4d2a }
+@media screen { body { background: #d9dfdb } .page { margin: 12px auto; box-shadow: 0 4px 20px rgba(0,0,0,.15) } }
+@media print { .toolbar { display: none } }

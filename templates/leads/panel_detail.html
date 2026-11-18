@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% load calendar_tags i18n %}
+{% block content %}
+<div class="d-flex gap-2 mb-3">
+  <a class="btn secondary" data-ajax="true" href="{% url 'leads:list' %}">← {% trans "بازگشت به فهرست" %}</a>
+</div>
+
+{% if messages %}{% for message in messages %}
+  <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %}">{{ message }}</div>
+{% endfor %}{% endif %}
+
+<div class="grid">
+  <div class="panel">
+    <h2 class="h5 mb-3">{% trans "اطلاعات مشتری" %} <code>{{ lead.lead_code }}</code></h2>
+    <table class="table">
+      <tr><th>{% trans "نام" %}</th><td>{{ lead.full_name }}</td></tr>
+      <tr><th>{% trans "موبایل" %}</th><td>{{ lead.mobile }}</td></tr>
+      <tr><th>{% trans "شرکت" %}</th><td>{{ lead.company|default:'—' }}</td></tr>
+      <tr><th>{% trans "سمت" %}</th><td>{{ lead.job_title|default:'—' }}</td></tr>
+      <tr><th>{% trans "حوزهٔ فعالیت" %}</th><td>{{ lead.business_field|default:'—' }}</td></tr>
+      <tr><th>{% trans "استان / شهر" %}</th><td>{{ lead.province|default:'—' }} {{ lead.city }}</td></tr>
+      <tr><th>{% trans "هدف" %}</th><td>
+        {% for label in lead.goal_labels %}<span class="badge">{{ label }}</span> {% empty %}—{% endfor %}
+      </td></tr>
+      <tr><th>{% trans "زمان اقدام" %}</th><td>{{ lead.get_timeline_display|default:'—' }}</td></tr>
+      <tr><th>{% trans "روش تماس" %}</th><td>{{ lead.get_contact_method_display|default:'—' }}</td></tr>
+      <tr><th>{% trans "رویداد" %}</th><td>{{ lead.event_name|default:'—' }}</td></tr>
+      {% if is_management %}
+      <tr><th>{% trans "بازاریاب" %}</th><td>
+        {% if lead.marketer %}{{ lead.marketer.get_full_name|default:lead.marketer.username }}
+        {% else %}{% trans "عمومی" %}{% endif %}</td></tr>
+      {% endif %}
+      <tr><th>{% trans "ثبت" %}</th><td>{{ lead.created_at|smartdatetime:CALENDAR }}</td></tr>
+    </table>
+  </div>
+
+  <div class="panel">
+    <h2 class="h5 mb-3">{% trans "اطلاعات پروژه" %}</h2>
+    {% if lead.stage2_completed %}
+    <table class="table">
+      <tr><th>{% trans "آدرس" %}</th><td>{{ lead.location_address|default:'—' }}</td></tr>
+      <tr><th>{% trans "مختصات" %}</th><td>
+        {% if lead.has_location %}{{ lead.latitude }}، {{ lead.longitude }}{% else %}—{% endif %}</td></tr>
+      <tr><th>{% trans "نوع محل" %}</th><td>
+        {{ lead.get_install_location_display|default:'—' }}
+        {% if lead.install_location_note %}({{ lead.install_location_note }}){% endif %}</td></tr>
+      <tr><th>{% trans "مساحت" %}</th><td>
+        {{ lead.get_area_range_display|default:'—' }}
+        {% if lead.area_note %}— {{ lead.area_note }}{% endif %}</td></tr>
+      <tr><th>{% trans "سایه‌اندازی" %}</th><td>
+        {{ lead.get_shading_display|default:'—' }}
+        {% if lead.shading_note %}<br><span class="footer-note">{{ lead.shading_note }}</span>{% endif %}</td></tr>
+      <tr><th>{% trans "شناسهٔ قبض" %}</th><td>{{ lead.bill_id|default:'—' }}</td></tr>
+      <tr><th>{% trans "فایل قبض" %}</th><td>
+        {% if lead.bill_file %}<a href="{{ lead.bill_file.url }}" target="_blank" rel="noopener">{% trans "دانلود" %}</a>
+        {% else %}—{% endif %}</td></tr>
+      <tr><th>{% trans "تکمیل" %}</th><td>{{ lead.stage2_completed_at|smartdatetime:CALENDAR }}</td></tr>
+    </table>
+    {% else %}
+    <p class="footer-note">{% trans "مشتری هنوز مرحلهٔ دوم را تکمیل نکرده است." %}</p>
+    {% endif %}
+  </div>
+</div>
+
+<div class="panel">
+  {% comment %}Internal only — the spec is explicit that the customer never sees this.{% endcomment %}
+  <h2 class="h5 mb-1">{% trans "ارزیابی داخلی" %}</h2>
+  <p class="footer-note mb-3">{% trans "این اطلاعات داخلی پارس انرژی است و برای مشتری نمایش داده نمی‌شود." %}</p>
+  <form method="post">{% csrf_token %}
+    <div class="grid">
+      <div>
+        <label class="form-label">{{ form.temperature.label }}</label>
+        {{ form.temperature }}
+        <label class="form-label mt-3">{{ form.next_action.label }}</label>
+        {{ form.next_action }}
+        <label class="form-label mt-3">{{ form.decision_role.label }}</label>
+        {{ form.decision_role }}
+      </div>
+      <div>
+        <label class="form-label">{{ form.marketer_impression.label }}</label>
+        {{ form.marketer_impression }}
+        <label class="form-label mt-3">{{ form.notes.label }}</label>
+        {{ form.notes }}
+      </div>
+    </div>
+    <button class="btn mt-3" type="submit">{% trans "ذخیره" %}</button>
+  </form>
+</div>
+{% endblock %}

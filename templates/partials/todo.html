@@ -1,0 +1,20 @@
+{% load i18n %}
+{% comment %}"Today's tasks" — the first thing on every staff dashboard (apps/requests/todo.py).{% endcomment %}
+{% if todo is not None %}
+<section class="todo-box" aria-labelledby="todoTitle">
+  <h2 id="todoTitle" class="todo-title">{% trans "کارهای امروز" %}</h2>
+  {% if todo %}
+  <div class="todo-list">
+    {% for t in todo %}
+    <a class="todo-item {{ t.tone }}" data-ajax="true" href="{{ t.url }}">
+      <b class="todo-n">{{ t.n }}</b>
+      <span class="todo-text"><strong>{{ t.text }}</strong>{% if t.hint %}<small>{{ t.hint }}</small>{% endif %}</span>
+      <span class="todo-go" aria-hidden="true">←</span>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="todo-empty">{% trans "کاری منتظر شما نیست. همه‌چیز به‌روز است." %}</p>
+  {% endif %}
+</section>
+{% endif %}

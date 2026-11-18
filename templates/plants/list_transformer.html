@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load i18n calendar_tags %}
+{% load i18n calendar_tags ux_tags %}
 {% block content %}
 {% trans "بله,خیر" as yesno_str %}
 <div class="panel">
@@ -30,7 +30,7 @@
           <td>{{ transformer.plant.name }}</td>
           <td>{{ transformer.name }}</td>
           <td>{{ transformer.capacity_kva }}</td>
-          <td>{{ transformer.status }}</td>
+          <td>{{ transformer.status|fa }}</td>
           <td>{{ transformer.online|yesno:yesno_str }}</td>
           <td>{{ transformer.manufacturer|default:'-' }}</td>
           <td>{{ transformer.last_seen_at|smartdatetime:CALENDAR|default:'-' }}</td>

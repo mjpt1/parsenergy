@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% load i18n calendar_tags %}
+{% block content %}
+<div class="panel mb-3">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <h1 class="h4 mb-0">{{ contractor.get_full_name|default:contractor.username }}</h1>
+    <a class="btn secondary" data-ajax="true" href="{% url 'requests:contractors' %}">{% trans "بازگشت" %}</a>
+  </div>
+  {% if messages %}{% for message in messages %}<div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %}">{{ message }}</div>{% endfor %}{% endif %}
+  <p class="footer-note">{% trans "موبایل" %}: <span dir="ltr">{{ contractor.phone_number|default:'—' }}</span>{% if avg_rating %} · {% trans "میانگین امتیاز" %}: {{ avg_rating|floatformat:1 }}/۵{% endif %}</p>
+  <form method="post" class="row g-3">{% csrf_token %}
+    {% for field in form %}<div class="col-12 col-md-6"><label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% if field.errors %}<div class="text-danger small">{{ field.errors|striptags }}</div>{% endif %}</div>{% endfor %}
+    {% if can_edit %}<div class="col-12"><button class="btn">{% trans "ذخیره" %}</button></div>{% endif %}
+  </form>
+</div>
+<div class="panel">
+  <h2 class="h6">{% trans "سوابق کاری" %}</h2>
+  <div class="table-responsive"><table class="table mb-0">
+    <thead><tr><th>{% trans "پرونده" %}</th><th>{% trans "شرح کار" %}</th><th>{% trans "بازه" %}</th><th>{% trans "وضعیت" %}</th><th>{% trans "امتیاز" %}</th><th>{% trans "ارزیابی" %}</th></tr></thead>
+    <tbody>{% for job in history %}
+      <tr><td><a data-ajax="true" href="{% url 'requests:admin-detail' job.request_id %}">#{{ job.request_id }}</a><div class="footer-note">{{ job.request.province }}</div></td><td>{{ job.scope }}</td>
+        <td>{{ job.start_date|smartdate:CALENDAR|default:'—' }} — {{ job.end_date|smartdate:CALENDAR|default:'—' }}</td><td>{{ job.get_status_display }}</td><td>{{ job.rating|default:'—' }}</td><td>{{ job.review_note|default:'—' }}</td></tr>
+    {% empty %}<tr><td colspan="6">{% trans "سابقه‌ای ثبت نشده است." %}</td></tr>{% endfor %}</tbody>
+  </table></div>
+</div>
+{% endblock %}

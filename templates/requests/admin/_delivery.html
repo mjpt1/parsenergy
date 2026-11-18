@@ -1,0 +1,66 @@
+{% load i18n humanize calendar_tags %}
+{% if insurance_gap %}<div class="alert alert-warning">{% blocktrans with phase=insurance_gap %}برای مرحلهٔ «{{ phase }}» بیمه‌نامهٔ معتبری ثبت نشده است.{% endblocktrans %}</div>{% endif %}
+
+<section class="pj-box" id="project-equipment">
+  <div class="pj-head">
+    <h2 class="h6 mb-0">{% trans "فهرست تجهیزات پروژه" %}</h2>
+    <div class="d-flex gap-2 flex-wrap">
+      {% if can_manage_equipment %}<a class="btn secondary btn-sm" data-ajax="true" href="{% url 'requests:equipment-add' req.id %}">{% trans "افزودن تجهیز" %}</a>{% endif %}
+      {% if equipment_items %}<a class="btn secondary btn-sm" target="_blank" rel="noopener" href="{% url 'requests:equipment-document' req.id %}">{% trans "چاپ / PDF" %}</a>
+      <a class="btn secondary btn-sm" data-no-ajax href="{% url 'requests:equipment-document' req.id %}?format=excel">{% trans "اکسل" %}</a>{% endif %}
+    </div>
+  </div>
+  <div class="table-responsive"><table class="table mb-0">
+    <thead><tr><th>{% trans "تجهیز" %}</th><th>{% trans "برند / مدل" %}</th><th>{% trans "سریال" %}</th><th>{% trans "تعداد" %}</th><th>{% trans "گارانتی تا" %}</th><th>{% trans "مشتری" %}</th><th></th></tr></thead>
+    <tbody>{% for item in equipment_items %}
+      <tr><td>{{ item.name }}<div class="footer-note">{{ item.get_category_display }}{% if item.supplier %} · {{ item.supplier }}{% endif %}</div></td>
+        <td>{{ item.model_name|default:'—' }}</td><td dir="ltr">{{ item.serial_number|default:'—' }}</td>
+        <td>{{ item.quantity|floatformat:"-2" }} {{ item.unit }}</td><td>{{ item.warranty_until|smartdate:CALENDAR|default:'—' }}</td>
+        <td>{% if item.visible_to_customer %}{% trans "نمایش" %}{% else %}{% trans "مخفی" %}{% endif %}</td>
+        <td>{% if can_manage_equipment %}<div class="d-flex gap-1"><a class="btn secondary btn-sm" data-ajax="true" href="{% url 'requests:equipment-edit' item.id %}">{% trans "ویرایش" %}</a>
+          <form method="post" action="{% url 'requests:equipment-delete' item.id %}" onsubmit="return confirm('{% trans "این تجهیز حذف شود؟" %}')">{% csrf_token %}<button class="btn secondary btn-sm">{% trans "حذف" %}</button></form></div>{% endif %}</td></tr>
+    {% empty %}<tr><td colspan="7">{% trans "تجهیزی ثبت نشده است." %}</td></tr>{% endfor %}</tbody>
+  </table></div>
+</section>
+
+{% if can_see_insurance %}
+<section class="pj-box" id="project-insurance">
+  <div class="pj-head">
+    <h2 class="h6 mb-0">{% trans "بیمه‌نامه‌ها" %}</h2>
+    {% if can_manage_insurance %}<a class="btn secondary btn-sm" data-ajax="true" href="{% url 'requests:insurance-add' req.id %}">{% trans "ثبت بیمه‌نامه" %}</a>{% endif %}
+  </div>
+  <div class="table-responsive"><table class="table mb-0">
+    <thead><tr><th>{% trans "دوره" %}</th><th>{% trans "نوع" %}</th><th>{% trans "بیمه‌گر و شماره" %}</th><th>{% trans "اعتبار" %}</th><th>{% trans "سرمایهٔ بیمه (تومان)" %}</th><th></th></tr></thead>
+    <tbody>{% for policy in insurances %}
+      <tr><td>{{ policy.get_phase_display }}</td><td>{{ policy.get_kind_display }}</td><td>{{ policy.insurer }}<div class="footer-note" dir="ltr">{{ policy.policy_number }}</div></td>
+        <td {% if policy.is_expired or policy.expires_soon %}class="pj-late"{% endif %}>{{ policy.start_date|smartdate:CALENDAR }} — {{ policy.end_date|smartdate:CALENDAR }}{% if policy.is_expired %} · {% trans "منقضی" %}{% elif policy.expires_soon %} · {% trans "نزدیک انقضا" %}{% endif %}</td>
+        <td>{{ policy.coverage_amount|default_if_none:'—'|intcomma }}</td>
+        <td><div class="d-flex gap-1 flex-wrap">{% if policy.file %}<a class="btn secondary btn-sm" data-no-ajax href="{% url 'requests:insurance-file' policy.id %}">{% trans "فایل" %}</a>{% endif %}
+          {% if can_manage_insurance %}<a class="btn secondary btn-sm" data-ajax="true" href="{% url 'requests:insurance-edit' policy.id %}">{% trans "ویرایش" %}</a>
+          <form method="post" action="{% url 'requests:insurance-delete' policy.id %}" onsubmit="return confirm('{% trans "این بیمه‌نامه و فایل آن حذف شود؟" %}')">{% csrf_token %}<button class="btn secondary btn-sm">{% trans "حذف" %}</button></form>{% endif %}</div></td></tr>
+    {% empty %}<tr><td colspan="6">{% trans "بیمه‌نامه‌ای ثبت نشده است." %}</td></tr>{% endfor %}</tbody>
+  </table></div>
+</section>
+{% endif %}
+
+<section class="pj-box" id="project-contractors">
+  <div class="pj-head">
+    <h2 class="h6 mb-0">{% trans "پیمانکاران پروژه" %}</h2>
+    {% if can_assign_contractor %}<a class="btn secondary btn-sm" data-ajax="true" href="{% url 'requests:contractor-assign' req.id %}">{% trans "اتصال پیمانکار" %}</a>{% endif %}
+  </div>
+  {% for job in contractor_assignments %}
+  <div class="py-2 border-top">
+    <strong>{% if request.user.can_manage_contractors %}<a data-ajax="true" href="{% url 'requests:contractor-detail' job.contractor_id %}">{{ job.contractor.get_full_name|default:job.contractor.username }}</a>{% else %}{{ job.contractor.get_full_name|default:job.contractor.username }}{% endif %}</strong>
+    <span class="badge {% if job.status == 'active' %}warning{% endif %}">{{ job.get_status_display }}</span>
+    <div>{{ job.scope }}</div>
+    <small class="footer-note">{{ job.start_date|smartdate:CALENDAR|default:'—' }} — {{ job.end_date|smartdate:CALENDAR|default:'—' }}{% if job.rating %} · {% trans "امتیاز" %} {{ job.rating }}/۵{% endif %}{% if job.review_note %} · {{ job.review_note }}{% endif %}</small>
+    {% if can_assign_contractor and job.status == 'active' %}
+    <form method="post" action="{% url 'requests:contractor-finish' job.id %}" class="pj-form">{% csrf_token %}
+      <select class="form-select form-select-sm" name="status" aria-label="{% trans 'نتیجه' %}"><option value="done">{% trans "پایان کار" %}</option><option value="cancelled">{% trans "لغو همکاری" %}</option></select>
+      <select class="form-select form-select-sm" name="rating" aria-label="{% trans 'امتیاز' %}"><option value="">{% trans "امتیاز" %}</option>{% for n in rating_choices %}<option value="{{ n }}">{{ n }}</option>{% endfor %}</select>
+      <input class="form-control form-control-sm" name="note" maxlength="1000" placeholder="{% trans 'ارزیابی یا دلیل لغو' %}" aria-label="{% trans 'توضیح' %}">
+      <button class="btn secondary btn-sm">{% trans "ثبت نتیجه" %}</button>
+    </form>{% endif %}
+  </div>
+  {% empty %}<p class="footer-note mb-0">{% trans "پیمانکاری به این پرونده وصل نشده است." %}</p>{% endfor %}
+</section>

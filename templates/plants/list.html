@@ -1,11 +1,11 @@
 {% extends 'base.html' %}
-{% load i18n %}
+{% load i18n ux_tags %}
 {% block content %}
 <div class="panel">
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h1 class="h4 mb-0">{% trans "نیروگاه‌ها" %}</h1>
     <div class="d-flex gap-2 flex-wrap">
-      <a class="btn secondary" data-ajax="true" href="{% url 'plants:create' %}">{% trans "افزودن نیروگاه" %}</a>
+      {% if request.user.can_edit_plants %}<a class="btn secondary" data-ajax="true" href="{% url 'plants:create' %}">{% trans "افزودن نیروگاه" %}</a>{% endif %}
       <a class="btn secondary" data-ajax="true" href="{% url 'plants:groups' %}">{% trans "مدیریت گروه‌ها" %}</a>
     </div>
   </div>
@@ -17,12 +17,14 @@
         <tr>
           <td>{{ plant.name }}</td>
           <td>{{ plant.external_code }}</td>
-          <td>{{ plant.owner.username }}</td>
-          <td>{{ plant.connection_status }}</td>
-          <td>{{ plant.capacity_kw }}</td>
+          <td>{{ plant.owner.get_full_name|default:plant.owner.username }}</td>
+          <td>{{ plant.get_connection_status_display }}</td>
+          <td>{{ plant.capacity_kw|floatformat:"-2" }}</td>
           <td class="d-flex gap-2">
-            <a class="btn secondary" data-ajax="true" href="{% url 'plants:edit' plant.id %}">{% trans "ویرایش" %}</a>
-            <a class="btn secondary" data-ajax="true" href="{% url 'plants:delete' plant.id %}">{% trans "حذف" %}</a>
+            <a class="btn secondary" data-ajax="true" href="{% url 'plants:screen' %}?plant={{ plant.id }}">{% trans "نمای زنده" %}</a>
+            <a class="btn secondary" data-ajax="true" href="{% url 'plants:monitor' %}?plant={{ plant.id }}">{% trans "پایش کامل" %}</a>
+            {% if request.user.can_edit_plants %}<a class="btn secondary" data-ajax="true" href="{% url 'plants:edit' plant.id %}">{% trans "ویرایش" %}</a>{% endif %}
+            {% if request.user.can_edit_plants %}<a class="btn secondary" data-ajax="true" href="{% url 'plants:delete' plant.id %}">{% trans "حذف" %}</a>{% endif %}
           </td>
         </tr>
         {% empty %}

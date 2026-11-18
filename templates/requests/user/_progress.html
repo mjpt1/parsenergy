@@ -1,0 +1,11 @@
+{% load i18n ux_tags %}
+{% with p=req|customer_progress %}
+<div class="req-progress{% if p.your_turn %} your-turn{% endif %}">
+  {% if p.steps %}
+  <ol class="cust-steps">
+    {% for s in p.steps %}<li class="{{ s.state }}"><span>{{ s.label }}</span></li>{% endfor %}
+  </ol>
+  {% endif %}
+  <p class="req-note">{% if p.your_turn %}<b>{% trans "نوبت شماست:" %}</b> {% endif %}{{ p.note }}</p>
+</div>
+{% endwith %}

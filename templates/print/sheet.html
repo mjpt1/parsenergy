@@ -1,0 +1,111 @@
+{% load i18n static calendar_tags %}<!doctype html>
+{% comment %}
+  Shared A4 report sheet. Every PDF in the panel goes through the browser's
+  "Save as PDF" from a page that extends this, so Persian is shaped and laid
+  out right-to-left correctly (reportlab cannot). Reports put their own <h1>
+  and body in `content`; this file owns the brand, the type and the tables.
+{% endcomment %}
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <title>{% block title %}{{ page_title|default:_("گزارش") }}{% endblock %} — {% trans "پارس انرژی" %}</title>
+  <link rel="stylesheet" href="{% static 'css/fonts.css' %}">
+  <style>
+    @page { size: A4 {% block orientation %}landscape{% endblock %}; margin: 11mm 11mm 15mm;
+      @bottom-center { content: "صفحه " counter(page) " از " counter(pages); font: 8pt 'IRANSansX', Tahoma; color: #8a948d; } }
+    :root { --g9: #0b4d2a; --g8: #0f6236; --g7: #16793f; --g5: #2fa35a; --g1: #eaf5ee; --g0: #f5faf6;
+      --ink: #17221b; --mut: #64706a; --line: #dfe6e1; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; }
+    body { font-family: 'IRANSansX', Tahoma, sans-serif; color: var(--ink); font-size: 9pt; line-height: 1.75;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact; background: #fff; }
+    .sheet { max-width: 277mm; margin: 0 auto; }
+
+    /* brand band */
+    .rp-head { display: flex; justify-content: space-between; align-items: center; gap: 6mm;
+      padding: 4mm 6mm; border-radius: 4mm; color: #fff; margin-bottom: 5mm;
+      background: linear-gradient(115deg, var(--g9), var(--g7) 70%, var(--g5)); }
+    .rp-brand { display: flex; align-items: center; gap: 3.5mm; }
+    .rp-brand img { width: 13mm; height: 13mm; border-radius: 50%; background: #fff; padding: 1mm; object-fit: contain; }
+    .rp-brand b { display: block; font-size: 12.5pt; font-weight: 800; letter-spacing: -.2px; }
+    .rp-brand span { font-size: 7.5pt; color: #cdebd8; letter-spacing: 1.5px; direction: ltr; display: block; text-align: right; }
+    .rp-stamp { text-align: left; font-size: 7.8pt; color: #d5eedd; line-height: 1.9; }
+    .rp-stamp b { color: #fff; font-weight: 700; }
+
+    /* report title: the report's own <h1> */
+    h1 { font-size: 16pt; font-weight: 800; margin: 0 0 1mm; color: var(--g9); letter-spacing: -.3px; }
+    h1::before { content: ""; display: inline-block; width: 2.2mm; height: 6mm; border-radius: 1mm;
+      background: var(--g5); margin-left: 2.5mm; vertical-align: -1mm; }
+    h2, h3 { font-size: 11pt; color: var(--g9); margin: 5mm 0 2mm; break-after: avoid; }
+    .meta, .rp-muted { font-size: 8.5pt; color: var(--mut); margin: 0 0 4mm; }
+    .meta { display: inline-block; background: var(--g0); border: 1px solid var(--line); border-radius: 20mm; padding: .5mm 4mm; }
+
+    /* figure cards (both class sets used by the reports) */
+    .kpis, .rp-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(30mm, 1fr)); gap: 3mm; margin: 0 0 5mm; }
+    .kpi, .rp-kpi { border: 1px solid var(--line); border-radius: 3mm; padding: 2.5mm 4mm; background: #fff;
+      border-top: 1mm solid var(--g5); break-inside: avoid; }
+    .kpi b, .rp-kpi b { display: block; font-size: 15pt; font-weight: 800; color: var(--g8); line-height: 1.5; }
+    .kpi span, .rp-kpi span { font-size: 7.8pt; color: var(--mut); }
+    .kpis .kpi:first-child, .rp-kpis .rp-kpi:first-child { background: linear-gradient(160deg, var(--g8), var(--g9)); border-color: transparent; }
+    .kpis .kpi:first-child *, .rp-kpis .rp-kpi:first-child * { color: #fff; }
+
+    /* tables */
+    table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 8.3pt; margin: 0 0 5mm;
+      border: 1px solid var(--line); border-radius: 3mm; overflow: hidden; }
+    thead { display: table-header-group; }
+    /* `.sheet` prefix: report pages bring their own on-screen table styles. */
+    .sheet table thead th { background: var(--g8); color: #fff; font-weight: 700; font-size: 8pt; padding: 2.2mm 2.5mm; text-align: right; white-space: nowrap; border: 0; }
+    .sheet table tbody td { padding: 1.8mm 2.5mm; border-top: 1px solid var(--line); border-bottom: 0; text-align: right; vertical-align: top; }
+    .sheet table tbody tr:nth-child(even) td { background: var(--g0); }
+    tbody tr { break-inside: avoid; }
+    .sheet table tfoot td { font-weight: 800; background: var(--g1); border-top: 1.5px solid var(--g5); padding: 2mm 2.5mm; }
+    td.num, th.num { text-align: left; direction: ltr; font-variant-numeric: tabular-nums; }
+    td[colspan] { text-align: center; color: var(--mut); padding: 6mm; }
+    .sum { width: auto; min-width: 50%; }
+    .rp-bar-pct { display: inline-block; height: 1.6mm; border-radius: 1mm; background: var(--g5); vertical-align: middle; margin-inline-start: 2mm; }
+    .badge-ok { color: var(--g7); font-weight: 700; } .badge-bad { color: #b42318; font-weight: 700; }
+    a { color: inherit; text-decoration: none; }
+
+    .rp-foot { display: flex; justify-content: space-between; gap: 6mm; margin-top: 4mm; padding-top: 2.5mm;
+      border-top: 1px solid var(--line); font-size: 7.5pt; color: var(--mut); }
+
+    /* screen-only toolbar */
+    .noprint { position: sticky; top: 0; z-index: 9; display: flex; gap: 8px; align-items: center; justify-content: center;
+      padding: 10px; margin: 0 0 6mm; background: var(--g9); border-radius: 0 0 12px 12px; }
+    .noprint button, .noprint a { font: 700 10pt 'IRANSansX', Tahoma; border: 0; border-radius: 8px; padding: 7px 18px;
+      cursor: pointer; background: #fff; color: var(--g9); text-decoration: none; }
+    .noprint a { background: rgba(255,255,255,.15); color: #fff; }
+    .noprint span { color: #cdebd8; font-size: 8.5pt; }
+    .rp-screen-only { display: none !important; }
+    @media screen { body { background: #e7ece9; padding: 0 0 10mm; } .sheet { background: #fff; padding: 9mm; border-radius: 3mm;
+      box-shadow: 0 6px 24px rgba(10, 50, 25, .12); } }
+    @media print { .noprint { display: none; } .sheet { max-width: none; } }
+  </style>
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+  <div class="noprint">
+    <button type="button" onclick="window.print()">{% trans "ذخیره PDF / چاپ" %}</button>
+    <a href="javascript:history.back()">{% trans "بازگشت" %}</a>
+    <span>{% trans "در پنجرهٔ چاپ، مقصد را «Save as PDF» بگذارید." %}</span>
+  </div>
+  <div class="sheet">
+    <header class="rp-head">
+      <div class="rp-brand">
+        <img src="{% static 'img/pars-logo.webp' %}" alt="">
+        <div><b>{% trans "پارس انرژی" %}</b><span>PARS ENERGY</span></div>
+      </div>
+      <div class="rp-stamp">
+        {% trans "تاریخ تهیه" %}: <b>{% if generated_at %}{{ generated_at|smartdatetime:CALENDAR }}{% else %}{% now "Y/m/d H:i" %}{% endif %}</b><br>
+        {% trans "تهیه‌کننده" %}: <b>{{ request.user.get_full_name|default:request.user.username }}</b>
+      </div>
+    </header>
+    {% block content %}{% endblock %}
+    <footer class="rp-foot">
+      <span>{% trans "این گزارش به‌صورت خودکار از سامانهٔ پارس انرژی تهیه شده است." %}</span>
+      <span>pars-tida.ir</span>
+    </footer>
+  </div>
+  {% block autoprint %}{% endblock %}
+</body>
+</html>

@@ -1,5 +1,6 @@
 from django.urls import path, include
-from .views import admin_dashboard_data, owner_dashboard_data, set_calendar
+from .views import (admin_dashboard_data, map_tile, owner_dashboard_data,
+                    reverse_geocode, set_calendar)
 from .management_views import (
     SystemParameterListView, SystemParameterCreateView, SystemParameterUpdateView, SystemParameterDeleteView,
     SecuritySettingListView, SecuritySettingCreateView, SecuritySettingUpdateView, SecuritySettingDeleteView,
@@ -8,7 +9,7 @@ from .management_views import (
     ProtocolAdapterListView, ProtocolAdapterCreateView, ProtocolAdapterUpdateView, ProtocolAdapterDeleteView,
     DatabaseBackupListView, DatabaseBackupCreateView, DatabaseBackupUpdateView, DatabaseBackupDeleteView,
     AuditLogListView, ServerHealthListView,
-    AISettingsView, IntegrationSettingsView,
+    AISettingsView, IntegrationSettingsView, SettingApprovalListView, SettingApprovalDecideView,
 )
 
 app_name = 'core'
@@ -17,6 +18,8 @@ urlpatterns = [
     path('dashboard/admin-data/', admin_dashboard_data, name='admin-dashboard-data'),
     path('dashboard/owner-data/', owner_dashboard_data, name='owner-dashboard-data'),
     path('set-calendar/', set_calendar, name='set-calendar'),
+    path('geocode/reverse/', reverse_geocode, name='reverse-geocode'),
+    path('tiles/<int:z>/<int:x>/<int:y>.png', map_tile, name='map-tile'),
     path('parameters/', SystemParameterListView.as_view(), name='parameters'),
     path('parameters/create/', SystemParameterCreateView.as_view(), name='parameters-create'),
     path('parameters/<int:pk>/edit/', SystemParameterUpdateView.as_view(), name='parameters-edit'),
@@ -42,5 +45,7 @@ urlpatterns = [
     path('health/', ServerHealthListView.as_view(), name='health'),
     path('ai/settings/', AISettingsView.as_view(), name='ai-settings'),
     path('integrations/settings/', IntegrationSettingsView.as_view(), name='integration-settings'),
+    path('integrations/approvals/', SettingApprovalListView.as_view(), name='setting-approvals'),
+    path('integrations/approvals/<int:pk>/<str:decision>/', SettingApprovalDecideView.as_view(), name='setting-approval-decide'),
     path('vpp/', include(('apps.vpp.urls', 'vpp'), namespace='vpp')),
 ]

@@ -75,6 +75,16 @@ class RequestSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['user', 'status', 'status_display', 'created_at', 'updated_at']
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        request = self.context.get('request')
+        user = getattr(request, 'user', None) if request is not None else None
+        from . import repositories
+        if user is not None and repositories.is_identity_restricted(user):
+            for field in ('full_name', 'mobile', 'user'):
+                data.pop(field, None)
+        return data
+
 
 # --- input serializers (actions) ---
 
@@ -92,7 +102,7 @@ class SelectOfferSerializer(serializers.Serializer):
 
 
 class ApproveContractSerializer(serializers.Serializer):
-    code = serializers.CharField(max_length=8)
+    code = serializers.CharField(max_length=16)
 
 
 class OtpRequestSerializer(serializers.Serializer):
@@ -102,5 +112,5 @@ class OtpRequestSerializer(serializers.Serializer):
 
 class OtpVerifySerializer(serializers.Serializer):
     mobile = serializers.CharField(max_length=20)
-    code = serializers.CharField(max_length=8)
+    code = serializers.CharField(max_length=16)
     purpose = serializers.ChoiceField(choices=PUBLIC_OTP_PURPOSES)

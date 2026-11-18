@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% load i18n calendar_tags %}
+{% block content %}
+<div class="panel">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h4 mb-0">{{ page_title }}</h1>
+    <a class="btn secondary" data-ajax="true" href="{% url 'requests:admin-list' %}">{% trans "همهٔ درخواست‌ها" %}</a>
+  </div>
+
+  <div class="d-flex gap-3 flex-wrap mb-4">
+    <div class="panel" style="flex:1;min-width:130px;text-align:center">
+      <div class="h3 mb-0">{{ stats.total }}</div><div class="text-muted">{% trans "کل" %}</div>
+    </div>
+    <div class="panel" style="flex:1;min-width:130px;text-align:center">
+      <div class="h3 mb-0">{{ stats.in_marketing }}</div><div class="text-muted">{% trans "بازاریابی" %}</div>
+    </div>
+    <div class="panel" style="flex:1;min-width:130px;text-align:center">
+      <div class="h3 mb-0">{{ stats.in_technical }}</div><div class="text-muted">{% trans "صف فنی" %}</div>
+    </div>
+    <div class="panel" style="flex:1;min-width:130px;text-align:center">
+      <div class="h3 mb-0">{{ stats.in_sales }}</div><div class="text-muted">{% trans "صف فروش" %}</div>
+    </div>
+    <div class="panel" style="flex:1;min-width:130px;text-align:center">
+      <div class="h3 mb-0">{{ stats.done }}</div><div class="text-muted">{% trans "تکمیل‌شده" %}</div>
+    </div>
+    <div class="panel" style="flex:1;min-width:130px;text-align:center">
+      <div class="h3 mb-0">{{ stats.crm }}</div><div class="text-muted">{% trans "CRM" %}</div>
+    </div>
+  </div>
+
+  <div class="d-flex gap-4 flex-wrap mb-4">
+    <div style="flex:1;min-width:280px">
+      <h2 class="h6">{% trans "کارکرد بخش فروش (به‌تفکیک کاربر)" %}</h2>
+      <table class="table"><thead><tr><th>{% trans "کاربر" %}</th><th>{% trans "تعداد تکمیل‌شده" %}</th></tr></thead>
+        <tbody>
+          {% for row in sales_by_user %}<tr><td>{{ row.sales_completed_by__username }}</td><td>{{ row.n }}</td></tr>
+          {% empty %}<tr><td colspan="2">{% trans "موردی نیست." %}</td></tr>{% endfor %}
+        </tbody></table>
+    </div>
+    <div style="flex:1;min-width:280px">
+      <h2 class="h6">{% trans "کارکرد بخش فنی (به‌تفکیک کاربر)" %}</h2>
+      <table class="table"><thead><tr><th>{% trans "کاربر" %}</th><th>{% trans "تعداد تکمیل‌شده" %}</th></tr></thead>
+        <tbody>
+          {% for row in technical_by_user %}<tr><td>{{ row.technical_completed_by__username }}</td><td>{{ row.n }}</td></tr>
+          {% empty %}<tr><td colspan="2">{% trans "موردی نیست." %}</td></tr>{% endfor %}
+        </tbody></table>
+    </div>
+  </div>
+
+  {% if overdue_only %}
+  <div class="alert alert-warning d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <span>{% blocktrans with hours=sla_hours %}فقط درخواست‌هایی که بیش از {{ hours }} ساعت در یک مرحله مانده‌اند.{% endblocktrans %}</span>
+    <a class="btn secondary btn-sm" data-ajax="true" href="{% url 'requests:admin-tracking' %}">{% trans "نمایش همه" %}</a>
+  </div>
+  {% endif %}
+  <form method="get" class="d-flex gap-2 flex-wrap mb-3">
+    {% if overdue_only %}<input type="hidden" name="overdue" value="1">{% endif %}
+    <select name="department" class="form-select" style="max-width:200px">
+      <option value="">{% trans "همه دپارتمان‌ها" %}</option>
+      {% for value, label in department_choices %}
+        <option value="{{ value }}" {% if current_department == value %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="btn">{% trans "فیلتر" %}</button>
+  </form>
+
+  <div class="table-responsive">
+    <table class="table">
+      <thead><tr>
+        <th>#</th><th>{% trans "نام" %}</th><th>{% trans "مرحله" %}</th>
+        <th>{% trans "فروش" %}</th><th>{% trans "فنی" %}</th><th>{% trans "تاریخ ثبت" %}</th><th></th>
+      </tr></thead>
+      <tbody>
+        {% for req in requests %}
+        <tr>
+          <td>{{ req.id }}</td>
+          <td>{{ req.full_name }}</td>
+          <td>
+            {% if req.department == 'marketing' %}<span class="badge warning">{% trans "بازاریابی" %}</span>
+            {% elif req.department == 'sales' %}<span class="badge warning">{% trans "فروش" %}</span>
+            {% elif req.department == 'technical' %}<span class="badge">{% trans "فنی" %}</span>
+            {% else %}<span class="badge">{% trans "تکمیل‌شده" %}</span>{% endif %}
+          </td>
+          <td>{% if req.sales_completed_at %}✓ {{ req.sales_completed_by|default:'—' }}{% else %}<span class="text-muted">{% trans "—" %}</span>{% endif %}</td>
+          <td>{% if req.technical_completed_at %}✓ {{ req.technical_completed_by|default:'—' }}{% else %}<span class="text-muted">{% trans "—" %}</span>{% endif %}</td>
+          <td>{{ req.created_at|smartdatetime:CALENDAR }}</td>
+          <td><a class="btn secondary" data-ajax="true" href="{% url 'requests:admin-detail' req.id %}">{% trans "جزئیات" %}</a></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7">{% trans "درخواستی یافت نشد." %}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% include 'partials/pagination.html' %}
+</div>
+{% endblock %}

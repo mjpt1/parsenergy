@@ -29,7 +29,7 @@ html[data-theme="dark"] {
 }
 
 body {
-	font-family: 'Vazirmatn', system-ui, -apple-system, Segoe UI, sans-serif;
+	font-family: 'IRANSansX', system-ui, -apple-system, Segoe UI, sans-serif;
 	background: var(--pe-bg);
 	color: var(--pe-text);
 }
@@ -163,6 +163,11 @@ html[data-theme="light"] .btn-outline-light:hover {
 	display: grid;
 	grid-template-columns: 280px 1fr;
 	min-height: 100vh;
+}
+
+/* Anonymous pages (login, OTP) render without the app menu. */
+.panel-body .app.no-sidebar {
+	grid-template-columns: 1fr;
 }
 
 .panel-body .sidebar {
@@ -695,3 +700,177 @@ html[data-theme="dark"] .panel-body .bar {
 		padding: 16px;
 	}
 }
+
+/* PV module / cell heat-map layout */
+.layout-wrap {
+	display: grid;
+	grid-template-columns: 1fr minmax(200px, 240px);
+	gap: 14px;
+}
+@media (max-width: 800px) {
+	.layout-wrap { grid-template-columns: 1fr; }
+}
+.cell-grid {
+	display: grid;
+	gap: 4px;
+	background: #0f172a;
+	padding: 10px;
+	border-radius: 12px;
+	direction: ltr;
+}
+.cell-grid .cell {
+	aspect-ratio: 1;
+	border-radius: 3px;
+	cursor: pointer;
+	border: 1px solid rgba(255, 255, 255, 0.12);
+}
+.cell-grid .cell:hover { outline: 2px solid #fff; z-index: 1; }
+.cell-grid .cell.ok { background: #22c55e; }
+.cell-grid .cell.warn { background: #f59e0b; }
+.cell-grid .cell.hot { background: #ef4444; box-shadow: 0 0 8px rgba(239, 68, 68, 0.5); }
+.cell-grid .cell.offline { background: #64748b; }
+.cell-grid .cell.idle { background: #38bdf8; }
+.cell-grid .cell.pending { background: repeating-linear-gradient(45deg, #94a3b8 0 3px, #cbd5e1 3px 6px); }
+.pv-sections { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; min-width: 0; }
+.pv-section-head { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; margin-bottom: 8px; }
+.pv-section-head small { opacity: .75; }
+.pv-blocks { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
+.pv-blocks .cell-grid { gap: 2px; }
+.pv-blocks .cell-grid.small-block { width: fit-content; }
+.cell-grid .cell.fault {
+	background: #7f1d1d;
+	background-image: repeating-linear-gradient(45deg, transparent, transparent 3px, rgba(0,0,0,.2) 3px, rgba(0,0,0,.2) 6px);
+}
+.cell-legend {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+	margin-top: 10px;
+	font-size: 0.78rem;
+	color: var(--pe-muted);
+}
+.cell-legend i {
+	display: inline-block;
+	width: 12px;
+	height: 12px;
+	border-radius: 3px;
+	margin-left: 4px;
+	vertical-align: middle;
+}
+.cell-legend i.ok { background: #22c55e; }
+.cell-legend i.warn { background: #f59e0b; }
+.cell-legend i.hot { background: #ef4444; }
+.cell-legend i.offline { background: #64748b; }
+.cell-legend i.idle { background: #38bdf8; }
+.cell-legend i.pending { background: repeating-linear-gradient(45deg, #94a3b8 0 2px, #cbd5e1 2px 4px); }
+.cell-legend i.fault { background: #7f1d1d; }
+.cell-detail .mini-stat,
+.mini-stat {
+	display: flex;
+	justify-content: space-between;
+	gap: 8px;
+	padding: 8px 0;
+	border-bottom: 1px solid var(--pe-border);
+	font-size: 0.86rem;
+}
+.cell-detail .mini-stat:last-child,
+.mini-stat:last-child { border-bottom: 0; }
+.fleet-map {
+	height: 260px;
+	border-radius: 12px;
+	overflow: hidden;
+	border: 1px solid var(--pe-border);
+	margin-bottom: 1rem;
+}
+.fleet-map.tall { height: 320px; }
+
+/* Admin hubs: one page per area, tabs instead of a long sidebar list. */
+.panel-body .hub {
+	margin-bottom: 18px;
+}
+
+.panel-body .hub-title {
+	margin: 0 0 4px;
+	font-size: 1.25rem;
+	font-weight: 700;
+}
+
+.panel-body .hub-sub {
+	margin: 0 0 14px;
+	font-size: .86rem;
+	color: var(--pe-muted);
+}
+
+.panel-body .hub-tabs {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	border-bottom: 1px solid var(--pe-border);
+	padding-bottom: 10px;
+}
+
+.panel-body .hub-tab {
+	display: inline-block;
+	padding: 8px 14px;
+	border: 1px solid var(--pe-border);
+	border-radius: 10px;
+	font-size: .88rem;
+	text-decoration: none;
+	color: inherit;
+	background: var(--pe-panel);
+	white-space: nowrap;
+}
+
+.panel-body .hub-tab:hover {
+	border-color: var(--pe-accent-strong);
+}
+
+.panel-body .hub-tab.is-active {
+	background: var(--pe-accent-strong);
+	border-color: var(--pe-accent-strong);
+	color: #fff;
+	font-weight: 600;
+}
+
+.panel-body .hub-sublinks {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin: 0 0 18px;
+}
+
+/* Forms rendered without Bootstrap classes (inverter, plant and other staff forms). */
+.panel input:not([type=checkbox]):not([type=radio]):not([type=hidden]):not([type=file]):not(.form-control):not(.form-select),
+.panel select:not(.form-select):not(.form-control),
+.panel textarea:not(.form-control) {
+  display: block; width: 100%; min-height: 42px; padding: 8px 12px; font: inherit; color: inherit;
+  background: var(--pe-panel, #fff); border: 1px solid var(--pe-border, #d7dde5); border-radius: 10px;
+}
+.panel input:not([type=checkbox]):not([type=radio]):not(.form-control):focus,
+.panel select:not(.form-select):focus,
+.panel textarea:not(.form-control):focus { outline: 2px solid rgba(75, 119, 60, .35); outline-offset: 1px; }
+.panel input[type=checkbox]:not(.form-check-input) { width: 18px; height: 18px; accent-color: #4b773c; }
+
+/* Buttons: one size, one shape and clear states everywhere in the panel. */
+.panel-body .btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	min-height: 42px;
+	padding: 9px 16px;
+	border-radius: 10px;
+	font-size: 0.9rem;
+	line-height: 1.4;
+	box-shadow: none;
+	white-space: nowrap;
+	transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+}
+.panel-body .btn[hidden] { display: none; }
+.panel-body .btn.filter-toggle { display: none; }
+.panel-body .btn:hover { background: var(--pe-accent-strong); color: #fff; }
+.panel-body .btn.secondary:hover { background: transparent; border-color: var(--pe-accent); color: var(--pe-accent); }
+.panel-body .btn:focus-visible { outline: 2px solid var(--pe-accent); outline-offset: 2px; }
+.panel-body .btn:disabled, .panel-body .btn[aria-disabled="true"] { opacity: 0.5; cursor: not-allowed; }
+.panel-body .btn.btn-sm { min-height: 34px; padding: 5px 11px; border-radius: 8px; font-size: 0.8rem; }
+@media (max-width: 640px) { .panel-body .btn { white-space: normal; } }

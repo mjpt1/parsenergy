@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% load calendar_tags i18n %}
+{% block content %}
+<style>
+  .tr-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:18px}
+  .tr-kpis .panel{text-align:center;margin:0}
+  .tr-kpis .h3{margin:0}
+  .tr-bar{height:10px;border-radius:6px;background:var(--brand,#5f9a4b);min-width:2px}
+  .tr-row{display:grid;grid-template-columns:150px 1fr 70px;gap:10px;align-items:center;padding:6px 0;border-bottom:1px solid rgba(127,127,127,.15)}
+  .tr-days{display:flex;align-items:flex-end;gap:3px;height:140px;padding-top:8px;overflow-x:auto}
+  .tr-days div{flex:1;min-width:6px;background:var(--brand,#5f9a4b);border-radius:3px 3px 0 0;opacity:.85}
+  .tr-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+  .tr-periods a{margin-inline-end:6px}
+  .tr-snippet{direction:ltr;text-align:left;font-size:.8rem;white-space:pre-wrap;background:rgba(127,127,127,.1);padding:10px;border-radius:8px}
+  @media (max-width:600px){.tr-row{grid-template-columns:110px 1fr 50px}}
+</style>
+<div class="panel">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <h1 class="h4 mb-0">{{ page_title }}</h1>
+    <div class="tr-periods">
+      {% for p in periods %}
+        <a class="btn {% if p == days %}{% else %}secondary{% endif %}" data-ajax="true" href="?days={{ p }}">{{ p }} {% trans "روز" %}</a>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="tr-kpis">
+    <div class="panel"><div class="h3">{{ total }}</div><div class="text-muted">{% trans "ورود به سایت" %}</div></div>
+    <div class="panel"><div class="h3">{{ visitors }}</div><div class="text-muted">{% trans "بازدیدکنندهٔ یکتا" %}</div></div>
+    <div class="panel"><div class="h3">{{ new_visitors }}</div><div class="text-muted">{% trans "بازدیدکنندهٔ جدید" %}</div></div>
+    <div class="panel"><div class="h3">{{ requests_count }}</div><div class="text-muted">{% trans "درخواست ثبت‌شده" %}</div></div>
+    <div class="panel"><div class="h3">{{ conversion }}٪</div><div class="text-muted">{% trans "نرخ تبدیل" %}</div></div>
+  </div>
+
+  {% trans "خلاصهٔ هوشمند این دوره برای مدیریت" as ai_traffic_title %}
+  {% include 'analytics/_ai_box.html' with ai_task='traffic' ai_target=days ai_title=ai_traffic_title %}
+
+  <h2 class="h6">{% trans "از کجا آمده‌اند" %}</h2>
+  <div class="mb-4">
+    {% for row in by_source %}
+      <div class="tr-row"><span>{{ row.label }}</span><div class="tr-bar" style="width:{{ row.pct }}%"></div><span>{{ row.n }} <small class="text-muted">({{ row.people }})</small></span></div>
+    {% empty %}<p class="text-muted">{% trans "هنوز بازدیدی ثبت نشده." %}</p>{% endfor %}
+    <small class="text-muted">{% trans "عدد داخل پرانتز: تعداد افراد یکتا" %}</small>
+  </div>
+
+  <h2 class="h6">{% trans "ورود روزانه" %}</h2>
+  <div class="tr-days mb-4" aria-label="{% trans 'ورود روزانه' %}">
+    {% for d in daily %}<div style="height:{{ d.h }}%" title="{{ d.day|smartdate:CALENDAR }}: {{ d.n }}"></div>{% endfor %}
+  </div>
+
+  <div class="tr-grid mb-4">
+    <div>
+      <h2 class="h6">{% trans "صفحه‌های ورود" %}</h2>
+      <table class="table"><tbody>
+        {% for label, n in top_pages %}<tr><td>{{ label }}</td><td>{{ n }}</td></tr>
+        {% empty %}<tr><td>—</td></tr>{% endfor %}
+      </tbody></table>
+    </div>
+    <div>
+      <h2 class="h6">{% trans "سایت‌های معرّف" %}</h2>
+      <table class="table"><tbody>
+        {% for r in referrers %}<tr><td class="ltr">{{ r.referrer_host }}</td><td>{{ r.n }}</td></tr>
+        {% empty %}<tr><td>—</td></tr>{% endfor %}
+      </tbody></table>
+    </div>
+    <div>
+      <h2 class="h6">{% trans "دستگاه" %}</h2>
+      <table class="table"><tbody>
+        {% for d in devices %}<tr><td>{% if d.device == 'mobile' %}{% trans "موبایل" %}{% elif d.device == 'tablet' %}{% trans "تبلت" %}{% else %}{% trans "کامپیوتر" %}{% endif %}</td><td>{{ d.n }}</td></tr>
+        {% empty %}<tr><td>—</td></tr>{% endfor %}
+      </tbody></table>
+    </div>
+    <div>
+      <h2 class="h6">{% trans "کمپین‌ها (UTM)" %}</h2>
+      <table class="table"><tbody>
+        {% for c in campaigns %}<tr><td class="ltr">{{ c.utm_source }} / {{ c.utm_campaign }}</td><td>{{ c.n }}</td></tr>
+        {% empty %}<tr><td>—</td></tr>{% endfor %}
+      </tbody></table>
+    </div>
+    <div>
+      <h2 class="h6">{% trans "درخواست‌ها بر اساس منبع" %}</h2>
+      <table class="table"><tbody>
+        {% for r in lead_sources %}<tr><td>{{ r.label }}</td><td>{{ r.n }}</td></tr>
+        {% empty %}<tr><td>—</td></tr>{% endfor %}
+      </tbody></table>
+    </div>
+  </div>
+
+  {% if request.user.is_admin_role %}
+  <details>
+    <summary>{% trans "ثبت بازدیدهای سایت pars-energy.com" %}</summary>
+    <p class="text-muted mt-2">{% trans "این کد را یک بار در قالب سایت pars-energy.com (قبل از </body>) قرار دهید تا بازدیدهای آن سایت هم اینجا شمرده شود." %}</p>
+    <div class="tr-snippet">&lt;script&gt;(function(){var i=new Image(1,1);i.src="https://pars-tida.ir/analytics/t.gif?p="+encodeURIComponent(location.pathname+location.search)+"&amp;r="+encodeURIComponent(document.referrer)+"&amp;utm_source="+encodeURIComponent(new URLSearchParams(location.search).get("utm_source")||"")+"&amp;utm_campaign="+encodeURIComponent(new URLSearchParams(location.search).get("utm_campaign")||"");})();&lt;/script&gt;</div>
+  </details>
+  {% endif %}
+</div>
+{% endblock %}

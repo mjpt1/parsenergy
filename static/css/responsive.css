@@ -1,0 +1,160 @@
+/* =====================================================================
+   Responsive layout fixes. The app shell is a 280px sidebar + content
+   grid; below 1100px the sidebar used to stack on top of the content and
+   break the layout. Here it becomes an off-canvas drawer toggled by the
+   hamburger button, so the app stays usable at any window size.
+   Loaded after main.css.
+   ===================================================================== */
+
+/* The off-canvas sidebar sits just off the right edge; never let that create
+   a horizontal scrollbar. */
+body { overflow-x: hidden; }
+
+/* --- Desktop (> 1100px): keep the existing collapsible sidebar --- */
+@media (min-width: 1101px) {
+	.panel-body .app.nav-collapsed {
+		grid-template-columns: 1fr;
+	}
+	.panel-body .app.nav-collapsed .sidebar {
+		display: none;
+	}
+}
+
+/* --- Tablet / phone / small app window (<= 1100px): drawer --- */
+@media (max-width: 1100px) {
+	.panel-body .app {
+		grid-template-columns: 1fr;
+	}
+	.panel-body .sidebar {
+		position: fixed;
+		top: 0;
+		right: 0;
+		height: 100vh;
+		width: 280px;
+		max-width: 85vw;
+		z-index: 1200;
+		transform: translateX(100%);
+		transition: transform 0.25s ease;
+		overflow-y: auto;
+		border-left: none;
+		border-right: 1px solid var(--pe-border);
+	}
+	.panel-body .app.nav-open .sidebar {
+		transform: translateX(0);
+		box-shadow: -12px 0 32px rgba(0, 0, 0, 0.4);
+	}
+	/* Dim the content behind an open drawer (tap to close, handled in JS). */
+	.panel-body .app.nav-open::before {
+		content: '';
+		position: fixed;
+		inset: 0;
+		z-index: 1100;
+		background: rgba(0, 0, 0, 0.45);
+	}
+	.panel-body .main {
+		padding: 18px;
+	}
+	/* Wide tables scroll horizontally instead of stretching the page. */
+	.panel-body .table-responsive,
+	.panel-body .table {
+		display: block;
+		width: 100%;
+		max-width: 100%;
+		overflow-x: auto;
+		-webkit-overflow-scrolling: touch;
+	}
+}
+
+/* Fluid summary/stat rows: let cards wrap instead of overflowing. */
+.panel-body .d-flex.flex-wrap > .panel {
+	min-width: 0;
+}
+
+/* --- Laptop (901–1100px): keep the menu on screen in a narrower column ---
+   Most office laptops report 1024–1100px; hiding the whole menu behind the
+   hamburger there meant staff never saw it. Only below 900px does it become
+   a drawer. */
+@media (min-width: 901px) and (max-width: 1100px) {
+	.panel-body .app {
+		grid-template-columns: 240px 1fr;
+	}
+	.panel-body .app.nav-collapsed {
+		grid-template-columns: 1fr;
+	}
+	.panel-body .app.nav-collapsed .sidebar {
+		display: none;
+	}
+	.panel-body .sidebar {
+		position: sticky;
+		top: 0;
+		width: auto;
+		max-width: none;
+		transform: none;
+		box-shadow: none;
+		z-index: auto;
+	}
+	.panel-body .app.nav-open::before {
+		content: none;
+	}
+}
+
+/* Wide dashboard tables scroll inside their own card. */
+.exec-card-body.flush {
+	overflow-x: auto;
+	-webkit-overflow-scrolling: touch;
+}
+
+/* --- Phone: one slim, always reachable header ---
+   Profile and sign-out are both in the drawer, so the header keeps only the
+   menu button, the page name and the theme switch. */
+@media (max-width: 640px) {
+	.panel-body .main {
+		padding: 10px 12px 20px;
+	}
+	#panelContent:not([data-exec]) > .topbar {
+		position: sticky;
+		top: 6px;
+		z-index: 900;
+		flex-direction: row;
+		align-items: center;
+		gap: 10px;
+		padding: 8px 10px;
+		margin-bottom: 12px;
+		border-radius: 14px;
+		box-shadow: 0 4px 14px rgba(15, 23, 42, 0.12);
+	}
+	#panelContent:not([data-exec]) > .topbar .title {
+		flex: 1;
+		min-width: 0;
+	}
+	#panelContent:not([data-exec]) > .topbar .title h2 {
+		font-size: 1rem;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+	#panelContent:not([data-exec]) > .topbar .title span,
+	#panelContent:not([data-exec]) > .topbar .top-actions a,
+	#panelContent:not([data-exec]) > .topbar .top-actions form {
+		display: none !important;
+	}
+	#panelContent:not([data-exec]) > .topbar .top-actions {
+		flex: 0 0 auto;
+		flex-wrap: nowrap;
+	}
+	#panelContent:not([data-exec]) > .topbar .top-actions .btn {
+		width: auto;
+		padding: 6px 10px;
+		font-size: 0.78rem;
+		white-space: nowrap;
+		box-shadow: none;
+	}
+	/* Buttons in a row keep their own width instead of stacking full-width. */
+	.panel-body .d-flex .btn {
+		width: auto;
+	}
+	/* In-page jumps must not land under the sticky header. */
+	.panel-body [id] {
+		scroll-margin-top: 70px;
+	}
+}

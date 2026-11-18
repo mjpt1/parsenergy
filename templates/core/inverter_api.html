@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% load i18n %}
 {% block content %}
+{% include 'partials/settings_tabs.html' with active='connections' %}
 {% trans "ثبت API اینورترها" as default_title %}
 <div class="panel">
   <div class="d-flex justify-content-between align-items-center mb-3">

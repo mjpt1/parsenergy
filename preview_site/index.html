@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>پارس انرژی — نیروگاه خورشیدی، از ارزیابی تا بهره‌برداری</title>
+<meta name="description" content="پارس انرژی نیروگاه خورشیدی اختصاصی و مشارکتی را از ارزیابی و طراحی تا اجرا، پایش و نگهداری اجرا می‌کند؛ با پایش برخط تولید و پشتیبانی ۱۲ ماهه.">
+<meta name="theme-color" content="#0f1a14">
+<link rel="icon" href="assets/img/pars-logo.webp">
+<link rel="preload" as="font" type="font/woff2" href="assets/fonts/IRANSansX-Regular.woff2" crossorigin>
+<link rel="preload" as="font" type="font/woff2" href="assets/fonts/IRANSansX-Bold.woff2" crossorigin>
+<link rel="stylesheet" href="assets/css/site.css">
+</head>
+<body>
+
+<!-- ======================================================= chrome -->
+<a class="skip" href="#main">رفتن به محتوا</a>
+
+<header class="nav" id="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="#top">
+      <img src="assets/img/pars-logo.webp" alt="پارس انرژی" width="40" height="41" fetchpriority="high">
+      <span><b>پارس انرژی</b><i>توسعهٔ انرژی خورشیدی</i></span>
+    </a>
+    <nav class="links" id="links">
+      <a href="#services">خدمات</a>
+      <a href="#calc">برآورد سرمایه</a>
+      <a href="#how">مسیر اجرا</a>
+      <a href="#live">تولید زنده</a>
+      <a href="#trust">چرا ما</a>
+    </nav>
+    <div class="nav-cta">
+      <a class="btn btn-ghost" href="https://pars-tida.ir/accounts/login/">ورود</a>
+      <a class="btn btn-solid" href="https://pars-tida.ir/requests/submit/">ارزیابی رایگان</a>
+    </div>
+    <button class="burger" id="burger" aria-label="منو" aria-expanded="false"><span></span><span></span><span></span></button>
+  </div>
+</header>
+
+<main id="main">
+
+<!-- ========================================================= hero -->
+<section class="hero" id="top">
+  <canvas class="hero-canvas" id="scene" aria-hidden="true"></canvas>
+  <div class="hero-veil"></div>
+  <div class="wrap hero-in">
+    <p class="eyebrow" data-rise>از ارزیابی تا بهره‌برداری — یک تیم، یک قرارداد</p>
+    <h1 data-rise data-rise-d="1">
+      برق خودتان را <em>تولید</em> کنید،<br>
+      مازادش را <em>بفروشید</em>.
+    </h1>
+    <p class="lede" data-rise data-rise-d="2">
+      نیروگاه خورشیدی روی بام یا زمین شما؛ پایدار در برابر خاموشی، مصون از جریمهٔ
+      پرمصرف، و با درآمد مستمر از فروش برق به شبکه.
+    </p>
+    <div class="hero-cta" data-rise data-rise-d="3">
+      <a class="btn btn-solid btn-lg" href="https://pars-tida.ir/requests/submit/">فرم ارزیابی رایگان</a>
+      <a class="btn btn-line btn-lg" href="#calc">چقدر برمی‌گردد؟</a>
+    </div>
+    <dl class="hero-stats" data-rise data-rise-d="4">
+      <div><dt id="statPlants">—</dt><dd>نیروگاه تحت پایش</dd></div>
+      <div><dt id="statCap">—</dt><dd>کیلووات ظرفیت نصب‌شده</dd></div>
+      <div><dt>۱۲ ماه</dt><dd>پشتیبانی رایگان</dd></div>
+    </dl>
+  </div>
+  <div class="scroll-hint" aria-hidden="true"><span></span></div>
+</section>
+
+<!-- ========================================================= live -->
+<section class="live" id="live">
+  <div class="wrap">
+    <div class="live-grid">
+      <article class="live-card" data-rise>
+        <header><span class="pulse"></span>تولید لحظه‌ای ناوگان</header>
+        <p class="live-val"><span id="liveKw">—</span><small>kW</small></p>
+        <p class="live-sub">مجموع توان خروجی نیروگاه‌های تحت پایش پارس انرژی</p>
+      </article>
+      <article class="live-card" data-rise data-rise-d="1">
+        <header>انرژی امروز</header>
+        <p class="live-val"><span id="liveToday">—</span><small>kWh</small></p>
+        <p class="live-sub">از ابتدای امروز تا این لحظه</p>
+      </article>
+      <article class="live-card" data-rise data-rise-d="2">
+        <header>قیمت برق — بورس انرژی</header>
+        <p class="live-val"><span id="livePrice">—</span><small>ریال/kWh</small></p>
+        <p class="live-sub" id="priceMeta">در حال دریافت…</p>
+      </article>
+    </div>
+    <p class="live-note" id="liveNote" hidden></p>
+  </div>
+</section>
+
+<!-- ======================================================= problem -->
+<section class="why" id="why">
+  <div class="wrap">
+    <h2 class="h-sec" data-rise>چرا همین حالا؟</h2>
+    <p class="sub-sec" data-rise data-rise-d="1">
+      سه فشاری که هر کسب‌وکار پرمصرف امسال با آن روبه‌روست — و یک پاسخ مشترک دارند.
+    </p>
+    <div class="why-grid">
+      <article class="why-card" data-rise>
+        <span class="why-ic" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="m13 2-9 12h7l-1 8 9-12h-7z"/></svg>
+        </span>
+        <h3>خاموشی‌های برنامه‌ای</h3>
+        <p>قطعی برق یعنی خط تولید متوقف، سردخانه گرم و سفارش عقب‌افتاده. نیروگاه در محل مصرف، برق را مستقل از شبکه تأمین می‌کند.</p>
+      </article>
+      <article class="why-card" data-rise data-rise-d="1">
+        <span class="why-ic" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>
+        </span>
+        <h3>قبض‌هایی که هر سال سنگین‌تر می‌شوند</h3>
+        <p>تعرفهٔ مشترکان پرمصرف پلکانی است؛ هر پله گران‌تر. برق خورشیدی مصرف شبکه را از پله‌های بالا پایین می‌کشد.</p>
+      </article>
+      <article class="why-card" data-rise data-rise-d="2">
+        <span class="why-ic" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M12 3 4 6v6c0 5 3.4 8.6 8 10 4.6-1.4 8-5 8-10V6z"/><path d="M12 8v5M12 16h.01"/></svg>
+        </span>
+        <h3>الزام‌ها و جریمه‌های قانونی</h3>
+        <p>صنایع و مشترکان بزرگ موظف به تأمین بخشی از برق خود از منابع تجدیدپذیرند. نیروگاه، تکلیف را به دارایی تبدیل می‌کند.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ====================================================== services -->
+<section class="svc" id="services">
+  <div class="wrap">
+    <h2 class="h-sec" data-rise>دو مسیر، یک نتیجه</h2>
+    <p class="sub-sec" data-rise data-rise-d="1">بسته به اینکه فضا و بودجه دارید یا نه، یکی از این دو مدل برای شما ساخته شده است.</p>
+
+    <div class="svc-grid">
+      <article class="svc-card is-primary" data-rise>
+        <span class="tag">پرطرفدار</span>
+        <h3>نیروگاه خورشیدی اختصاصی</h3>
+        <p class="svc-lede">نیروگاه روی ملک خودتان، با مالکیت صددرصدی و برق مصرفی در همان محل.</p>
+        <ul class="ticks">
+          <li>تأمین برق پایدار و مستقل، بدون نگرانی از خاموشی</li>
+          <li>فروش برق مازاد به شبکه و درآمد مستمر</li>
+          <li>پیشگیری از جریمه‌های قانونی</li>
+          <li>افزایش ارزش ملک و اعتبار برند</li>
+        </ul>
+        <a class="btn btn-solid w-full" href="https://pars-tida.ir/requests/submit/">ارزیابی رایگان این مدل</a>
+      </article>
+
+      <article class="svc-card" data-rise data-rise-d="1">
+        <h3>نیروگاه خورشیدی مشارکتی</h3>
+        <p class="svc-lede">بدون نیاز به فضا یا بودجهٔ کامل؛ سهم شما در یک نیروگاه بزرگ‌تر و اقتصادی‌تر.</p>
+        <ul class="ticks">
+          <li>بدون نیاز به طراحی و اجرای انفرادی</li>
+          <li>هزینهٔ تولید کمتر به دلیل مقیاس بزرگ‌تر</li>
+          <li>ساختار مالکیت شفاف و قابل توسعه</li>
+          <li>بهره‌برداری و نگهداری کامل توسط تیم متخصص</li>
+        </ul>
+        <a class="btn btn-line w-full" href="https://pars-tida.ir/requests/submit/">ارزیابی رایگان این مدل</a>
+      </article>
+    </div>
+
+    <div class="cmp" data-rise>
+      <table>
+        <caption class="sr-only">مقایسهٔ نیروگاه اختصاصی و مشارکتی</caption>
+        <thead>
+          <tr><th scope="col">ویژگی</th><th scope="col">اختصاصی</th><th scope="col">مشارکتی</th></tr>
+        </thead>
+        <tbody>
+          <tr><th scope="row">مناسب برای</th><td>دارندگان فضا و بودجهٔ کافی</td><td>بدون فضای مناسب یا بودجهٔ کامل</td></tr>
+          <tr><th scope="row">محل احداث</th><td>ملک اختصاصی متقاضی</td><td>ملک متقاضی یا موقعیت بهینهٔ دیگر</td></tr>
+          <tr><th scope="row">مصرف برق در محل</th><td class="yes">بله</td><td>بسته به محل اجرای پروژه</td></tr>
+          <tr><th scope="row">مالکیت پروژه</th><td>انحصاری، در اختیار کارفرما</td><td>در قالب قرارداد مشارکت</td></tr>
+          <tr><th scope="row">بهره‌برداری و نگهداری</th><td>متقاضی یا پیمانکار منتخب</td><td class="yes">تیم متخصص پارس انرژی</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ==================================================== calculator -->
+<section class="calc" id="calc">
+  <div class="wrap calc-in">
+    <div class="calc-copy" data-rise>
+      <h2 class="h-sec">برآورد سریع سرمایه و بازگشت</h2>
+      <p class="sub-sec">
+        فضای قابل استفاده و قبض ماهانه‌تان را بگذارید تا مرتبهٔ بزرگی پروژه را ببینید.
+        این یک <b>برآورد اولیه</b> است، نه پیشنهاد قیمت — عدد دقیق بعد از بازدید فنی و
+        بررسی انشعاب به‌دست می‌آید.
+      </p>
+      <div class="calc-fields">
+        <label>
+          <span>فضای قابل استفاده <i>(متر مربع)</i></span>
+          <input type="range" id="area" min="50" max="5000" step="50" value="600">
+          <output id="areaOut"></output>
+        </label>
+        <label>
+          <span>قبض برق ماهانه <i>(میلیون تومان)</i></span>
+          <input type="range" id="bill" min="1" max="500" step="1" value="40">
+          <output id="billOut"></output>
+        </label>
+      </div>
+      <p class="calc-assume">
+        مبنای محاسبه: هر کیلووات حدود ۷ متر مربع فضا و نزدیک به ۱۶۰۰ کیلووات‌ساعت
+        تولید سالانه در اقلیم ایران. درصد پوشش مصرف بر اساس همین دو ورودی برآورد می‌شود.
+      </p>
+    </div>
+    <div class="calc-out" data-rise data-rise-d="1">
+      <div class="calc-row"><span>ظرفیت پیشنهادی</span><b><span id="outKw">—</span> <small>کیلووات</small></b></div>
+      <div class="calc-row"><span>تولید سالانه</span><b><span id="outKwh">—</span> <small>کیلووات‌ساعت</small></b></div>
+      <div class="calc-row"><span>پوشش مصرف فعلی</span><b><span id="outCover">—</span> <small>درصد</small></b></div>
+      <div class="calc-row is-main"><span>تعداد پنل تقریبی</span><b><span id="outPanels">—</span> <small>عدد</small></b></div>
+      <a class="btn btn-solid w-full" href="https://pars-tida.ir/requests/submit/">عدد دقیق را می‌خواهم</a>
+      <p class="calc-fine">کارشناس ما پس از ثبت فرم، با بررسی قبض و موقعیت، طرح و قیمت نهایی را ارائه می‌کند.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ========================================================== how -->
+<section class="how" id="how">
+  <div class="wrap">
+    <h2 class="h-sec" data-rise>مسیر اجرا، شفاف از روز اول</h2>
+    <p class="sub-sec" data-rise data-rise-d="1">هر مرحله مسئول مشخص و زمان مشخص دارد؛ وضعیت پروژه را در پنل خودتان دنبال می‌کنید.</p>
+    <ol class="steps">
+      <li data-rise><b>۱</b><h3>ارزیابی رایگان</h3><p>فرم را پر می‌کنید؛ مصرف، فضا و موقعیت بررسی می‌شود.</p></li>
+      <li data-rise data-rise-d="1"><b>۲</b><h3>بازدید و طراحی فنی</h3><p>بازدید محل، طراحی چیدمان و محاسبهٔ دقیق تولید.</p></li>
+      <li data-rise data-rise-d="2"><b>۳</b><h3>پیشنهاد قیمت و قرارداد</h3><p>پیشنهاد شفاف، قرارداد و تأیید با کد پیامکی.</p></li>
+      <li data-rise data-rise-d="3"><b>۴</b><h3>اجرا و اتصال به شبکه</h3><p>نصب توسط تیم مجرب و هماهنگی مجوزها تا اتصال.</p></li>
+      <li data-rise data-rise-d="4"><b>۵</b><h3>پایش و نگهداری</h3><p>تولید نیروگاه را برخط می‌بینید؛ هشدار خرابی خودکار است.</p></li>
+    </ol>
+  </div>
+</section>
+
+<!-- ======================================================== trust -->
+<section class="trust" id="trust">
+  <div class="wrap">
+    <h2 class="h-sec" data-rise>چرا پارس انرژی</h2>
+    <div class="trust-grid">
+      <article data-rise><h3>۱۲ ماه پشتیبانی رایگان</h3><p>پس از تحویل، یک سال کامل پشتیبانی بدون هزینه.</p></article>
+      <article data-rise data-rise-d="1"><h3>تیم نصب مجرب</h3><p>اجرا با تیم داخلی، نه پیمانکار دست‌چندم.</p></article>
+      <article data-rise data-rise-d="2"><h3>ضمانت اصالت تجهیزات</h3><p>تنها برندهای شناخته‌شده، با گارانتی رسمی.</p></article>
+      <article data-rise data-rise-d="3"><h3>پایش برخط</h3><p>تولید، خطا و راندمان نیروگاه را هر لحظه می‌بینید.</p></article>
+    </div>
+
+    <p class="brands-t" data-rise>تجهیزات از برندهای مرجع جهانی</p>
+    <ul class="brands" data-rise data-rise-d="1">
+      <li>Growatt</li><li>Canadian&nbsp;Solar</li><li>Trina&nbsp;Solar</li>
+      <li>Jinko&nbsp;Solar</li><li>JA&nbsp;Solar</li><li>AE&nbsp;Solar</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ========================================================== cta -->
+<section class="cta">
+  <div class="wrap cta-in" data-rise>
+    <h2>ببینیم ملک شما چقدر برق می‌دهد</h2>
+    <p>ارزیابی رایگان است و تعهدی ایجاد نمی‌کند. چند دقیقه وقت می‌برد.</p>
+    <div class="cta-btns">
+      <a class="btn btn-solid btn-lg" href="https://pars-tida.ir/requests/submit/">شروع ارزیابی رایگان</a>
+      <a class="btn btn-ghost btn-lg" href="tel:+982122222922">۰۲۱-۲۲۲۲۲۹۲۲</a>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="foot">
+  <div class="wrap foot-in">
+    <div>
+      <img src="assets/img/pars-logo.webp" alt="" width="46" height="47">
+      <p>پارس انرژی، ارائه‌دهندهٔ راهکارهای نیروگاه خورشیدی برای مشترکان خانگی، تجاری، صنعتی و کشاورزی — از ارزیابی و طراحی تا اجرا، پایش و نگهداری.</p>
+    </div>
+    <div>
+      <h4>خدمات</h4>
+      <a href="#services">نیروگاه اختصاصی</a>
+      <a href="#services">نیروگاه مشارکتی</a>
+      <a href="https://pars-tida.ir/requests/submit/">فرم ارزیابی رایگان</a>
+    </div>
+    <div>
+      <h4>دسترسی</h4>
+      <a href="#calc">برآورد سرمایه</a>
+      <a href="#live">تولید زنده</a>
+      <a href="https://pars-tida.ir/accounts/login/">ورود پرسنل</a>
+    </div>
+    <div>
+      <h4>تماس</h4>
+      <a href="tel:+982122222922">۰۲۱-۲۲۲۲۲۹۲۲</a>
+      <p>تهران، بلوار میرداماد، خیابان نیک‌رای، پلاک ۳</p>
+    </div>
+  </div>
+  <p class="foot-copy">© <span id="yr"></span> پارس انرژی — تمامی حقوق محفوظ است.</p>
+</footer>
+
+<script type="module" src="assets/js/main.js"></script>
+</body>
+</html>

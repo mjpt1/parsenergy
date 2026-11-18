@@ -1,0 +1,42 @@
+{% extends 'base_portal.html' %}
+{% load i18n %}
+{% comment %}
+  The fork after stage one. The lead is already saved by the time this renders,
+  so neither choice can lose it — "later" just texts the visitor their own
+  resume link.
+{% endcomment %}
+{% block content %}
+<style>
+  .lead-done{max-width:520px;margin:0 auto;text-align:center}
+  .lead-done .card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:28px 20px}
+  .tick{width:62px;height:62px;border-radius:50%;background:#e8f5e9;color:var(--green);
+    display:flex;align-items:center;justify-content:center;font-size:2rem;margin:0 auto 14px}
+  .code{font-family:monospace;font-size:1.15rem;background:var(--paper);border:1px solid var(--line);
+    border-radius:8px;padding:8px 16px;display:inline-block;margin:6px 0 18px;direction:ltr}
+  .lead-done .btn-main,.lead-done .btn-alt{display:block;width:100%;padding:14px;border-radius:12px;
+    font-size:1rem;font-weight:700;font-family:inherit;cursor:pointer;margin-bottom:10px;border:0}
+  .lead-done .btn-main{background:var(--green);color:#fff;text-decoration:none}
+  .lead-done .btn-alt{background:#fff;border:1px solid var(--line);color:var(--ink)}
+</style>
+<div class="lead-done">
+  <div class="card">
+    <div class="tick">✓</div>
+    <h1 style="font-size:1.2rem;margin:0 0 4px">{% trans "اطلاعات شما ثبت شد" %}</h1>
+    <p style="color:var(--muted);font-size:.9rem;margin:0">{% trans "شمارهٔ سرنخ شما" %}</p>
+    <div class="code">{{ lead.lead_code }}</div>
+
+    {% if messages %}{% for message in messages %}
+      <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %}">{{ message }}</div>
+    {% endfor %}{% endif %}
+
+    <p style="font-size:.92rem;color:var(--muted);margin:0 0 16px">
+      {% trans "آیا الان وقت دارید اطلاعات پروژه را تکمیل کنید؟ با این کار می‌توانیم برآورد دقیق‌تری برای شما آماده کنیم." %}
+    </p>
+
+    <a class="btn-main" href="{{ continue_url }}">{% trans "بله، همین حالا ادامه می‌دهم" %}</a>
+    <form method="post" action="{% url 'leads:send-resume-link' lead.resume_token %}">{% csrf_token %}
+      <button class="btn-alt" type="submit">{% trans "بعداً تکمیل می‌کنم — لینک را برایم پیامک کن" %}</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

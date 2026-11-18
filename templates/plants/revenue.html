@@ -1,0 +1,71 @@
+{% extends base_template %}
+{% load i18n %}
+{% block content %}
+<div class="panel mb-3">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <h1 class="h4 mb-0">{% trans "درآمد نیروگاه" %}</h1>
+    {% if plants|length > 1 %}
+    <form method="get" class="d-flex gap-2 align-items-center">
+      <label for="revPlant" class="mb-0">{% trans "نیروگاه" %}</label>
+      <select id="revPlant" name="plant" class="form-select" onchange="this.form.submit()">
+        {% for item in plants %}<option value="{{ item.pk }}" {% if item.pk == plant.pk %}selected{% endif %}>{{ item.name }}</option>{% endfor %}
+      </select>
+      <noscript><button class="btn secondary">{% trans "نمایش" %}</button></noscript>
+    </form>
+    {% elif plant %}<strong>{{ plant.name }}</strong>{% endif %}
+  </div>
+  {% if plant %}{% include 'plants/_plant_tabs.html' %}{% endif %}
+  {% if not plant %}
+    <p class="footer-note mb-0">{% trans "نیروگاهی برای نمایش وجود ندارد." %}</p>
+  {% elif revenue.has_rate %}
+    {% include 'plants/_revenue_panel.html' %}
+  {% else %}
+    <p class="footer-note mb-0">{% trans "نرخ خرید برق این نیروگاه هنوز ثبت نشده است، پس درآمد قابل محاسبه نیست." %}</p>
+  {% endif %}
+</div>
+
+{% if plant and revenue.has_rate %}
+<div class="panel mb-3">
+  <h2 class="h6">{% trans "بازهٔ دلخواه" %}</h2>
+  <form method="get" class="row g-2 align-items-end">
+    <input type="hidden" name="plant" value="{{ plant.pk }}">
+    <div class="col-6 col-md-3"><label class="form-label" for="revFrom">{% trans "از تاریخ" %}</label>
+      <input id="revFrom" class="form-control" name="from" dir="ltr" inputmode="numeric" placeholder="۱۴۰۵/۰۸/۰۱" value="{{ range_from }}"></div>
+    <div class="col-6 col-md-3"><label class="form-label" for="revTo">{% trans "تا تاریخ" %}</label>
+      <input id="revTo" class="form-control" name="to" dir="ltr" inputmode="numeric" placeholder="{{ today_text }}" value="{{ range_to }}"></div>
+    <div class="col-12 col-md-3"><button class="btn">{% trans "محاسبه" %}</button></div>
+  </form>
+  {% if range_error %}<div class="alert alert-danger mt-3 mb-0">{{ range_error }}</div>{% endif %}
+  {% if custom %}
+  <div class="mt-3"><strong>{{ custom.toman_text }} {% trans "تومان" %}</strong>
+    <span class="footer-note">{{ custom.label }} · {{ custom.kwh_text }} {% trans "کیلووات‌ساعت" %}</span>
+    {% if custom.unpriced_text %}<div class="footer-note">{% blocktrans with kwh=custom.unpriced_text %}{{ kwh }} کیلووات‌ساعت پیش از تاریخ شروع نرخ بوده و در مبلغ حساب نشده است.{% endblocktrans %}</div>{% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+
+{% if plant and can_set_rate %}
+<div class="panel mb-3">
+  <h2 class="h6">{% trans "نرخ خرید برق" %}</h2>
+  <p class="footer-note">{% trans "هر نرخ از تاریخ خودش به بعد اعمال می‌شود و درآمد روزهای قبل را تغییر نمی‌دهد. ثبت دوباره با همان تاریخ، نرخ آن تاریخ را اصلاح می‌کند." %}</p>
+  <form method="post" action="{% url 'plants:revenue-rate' plant.pk %}" class="row g-2 align-items-end mb-3">
+    {% csrf_token %}
+    <div class="col-6 col-md-3"><label class="form-label" for="rateValue">{% trans "نرخ (ریال برای هر کیلووات‌ساعت)" %}</label>
+      <input id="rateValue" class="form-control" name="rate" dir="ltr" inputmode="decimal" required></div>
+    <div class="col-6 col-md-3"><label class="form-label" for="rateFrom">{% trans "شروع اعمال" %}</label>
+      <input id="rateFrom" class="form-control" name="valid_from" dir="ltr" inputmode="numeric" value="{{ today_text }}" required></div>
+    <div class="col-12 col-md-3"><button class="btn">{% trans "ثبت نرخ" %}</button></div>
+  </form>
+  {% if rates %}
+  <div class="table-responsive"><table class="table mb-0">
+    <thead><tr><th>{% trans "از تاریخ" %}</th><th>{% trans "نرخ (ریال)" %}</th><th></th></tr></thead>
+    <tbody>{% for rate in rates %}
+      <tr><td>{{ rate.from_text }}</td><td>{{ rate.obj.rate_rial_per_kwh|floatformat:"-2" }}</td>
+        <td><form method="post" action="{% url 'plants:revenue-rate-delete' rate.obj.pk %}">{% csrf_token %}<button class="btn secondary btn-sm">{% trans "حذف" %}</button></form></td></tr>
+    {% endfor %}</tbody>
+  </table></div>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}

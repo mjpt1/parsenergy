@@ -1,0 +1,149 @@
+{% extends 'base_portal.html' %}
+{% load i18n %}
+{% block content %}
+<div class="panel" style="max-width:760px">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h4 mb-0">{{ page_title }}</h1>
+    <a class="btn secondary" data-ajax="true" href="{% url 'requests:my-detail' req.id %}">{% trans "بازگشت" %}</a>
+  </div>
+
+  {% if messages %}{% for message in messages %}
+    <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %}">{{ message }}</div>
+  {% endfor %}{% endif %}
+  {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+  {% if form.errors %}<div class="alert alert-danger">{% trans "لطفاً خطاهای مشخص‌شده را برطرف کنید." %}</div>{% endif %}
+
+  <p class="footer-note">{% trans "می‌توانید همین فرم چندمرحله‌ای را ویرایش کنید؛ شماره موبایل و کد ملی (احراز هویت) ثابت‌اند و دوباره پرسیده نمی‌شوند." %}</p>
+
+  <div class="mb-3">
+    <div class="d-flex justify-content-between mb-1"><span id="wizardLabel">{% trans "نوع درخواست" %}</span></div>
+    <div class="bar"><span id="wizardBar" style="width:20%"></span></div>
+  </div>
+
+  <form method="post" id="evalForm">{% csrf_token %}
+
+    <fieldset class="wizard-step" data-step-label="{% trans 'نوع درخواست' %}">
+      <div class="mb-3">
+        <label class="form-label d-block">{{ form.request_type.label }}</label>
+        {{ form.request_type }}
+        {% if form.request_type.errors %}<div class="text-danger small">{{ form.request_type.errors|striptags }}</div>{% endif %}
+      </div>
+    </fieldset>
+
+    <fieldset class="wizard-step" data-step-label="{% trans 'مشخصات و موقعیت' %}" hidden>
+      <div class="mb-3">
+        <label class="form-label d-block">{{ form.user_type.label }}</label>
+        {{ form.user_type }}
+      </div>
+      <div class="mb-3">
+        <label class="form-label">{{ form.full_name.label }}</label>
+        {{ form.full_name }}
+        {% if form.full_name.errors %}<div class="text-danger small">{{ form.full_name.errors|striptags }}</div>{% endif %}
+      </div>
+      <div class="mb-3">
+        <label class="form-label">{% trans "استان" %}</label>
+        <select name="province" id="id_province" class="form-select" required>
+          <option value="">{% trans "انتخاب کنید" %}</option>
+          {% for p in provinces %}<option value="{{ p }}" {% if form.province.value == p %}selected{% endif %}>{{ p }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">{% trans "شهر" %}</label>
+        <select name="city" id="id_city" class="form-select" data-selected="{{ form.city.value|default:'' }}"></select>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">{{ form.install_address.label }}</label>
+        {{ form.install_address }}
+      </div>
+      <div class="mb-3">
+        <label class="form-label d-block">{% trans "موقعیت روی نقشه (اختیاری)" %}</label>
+        <p class="footer-note mb-2">{% trans "روی نقشه کلیک کنید تا محل دقیق پروژه مشخص شود." %}</p>
+        <div id="locationMap" style="height:300px;border-radius:12px;overflow:hidden;border:1px solid var(--border,#ccc)"></div>
+        <div class="d-flex gap-2 mt-2 align-items-center flex-wrap">
+          <button type="button" class="btn secondary btn-sm" id="useMyLocation">{% trans "موقعیت فعلی من" %}</button>
+          <span class="footer-note" id="mapCoords">{% trans "موقعیتی انتخاب نشده است." %}</span>
+        </div>
+        {{ form.latitude }}{{ form.longitude }}
+      </div>
+    </fieldset>
+
+    <fieldset class="wizard-step" data-when="partnership" data-step-label="{% trans 'جزئیات مشارکت' %}" hidden>
+      <div class="mb-3">
+        <label class="form-label d-block">{{ form.partnership_type.label }}</label>
+        {{ form.partnership_type }}
+        {% if form.partnership_type.errors %}<div class="text-danger small">{{ form.partnership_type.errors|striptags }}</div>{% endif %}
+      </div>
+      <div class="mb-3" data-when="partnership_investment">
+        <label class="form-label d-block">{{ form.investment_range.label }}</label>
+        {{ form.investment_range }}
+        {% if form.investment_range.errors %}<div class="text-danger small">{{ form.investment_range.errors|striptags }}</div>{% endif %}
+      </div>
+    </fieldset>
+
+    <fieldset class="wizard-step" data-when="dedicated partnership_space" data-step-label="{% trans 'مشخصات فنی محل' %}" hidden>
+      <div class="mb-3">
+        <label class="form-label d-block">{{ form.install_location.label }}</label>
+        {{ form.install_location }}
+        {% if form.install_location.errors %}<div class="text-danger small">{{ form.install_location.errors|striptags }}</div>{% endif %}
+      </div>
+      <div class="mb-3">
+        <label class="form-label d-block">{{ form.area_range.label }}</label>
+        {{ form.area_range }}
+        {% if form.area_range.errors %}<div class="text-danger small">{{ form.area_range.errors|striptags }}</div>{% endif %}
+      </div>
+      <div class="mb-3">
+        <label class="form-label d-block">{{ form.shade_status.label }}</label>
+        {{ form.shade_status }}
+        {% if form.shade_status.errors %}<div class="text-danger small">{{ form.shade_status.errors|striptags }}</div>{% endif %}
+      </div>
+      <div class="mb-3">
+        <label class="form-label">{{ form.building_type.label }}</label>
+        {{ form.building_type }}
+      </div>
+      <div class="mb-3">
+        <label class="form-label">{{ form.bill_id.label }}</label>
+        {{ form.bill_id }}
+        {% if form.bill_id.errors %}<div class="text-danger small">{{ form.bill_id.errors|striptags }}</div>{% endif %}
+      </div>
+    </fieldset>
+
+    <fieldset class="wizard-step" data-when="dedicated" data-step-label="{% trans 'گزینه‌های تکمیلی' %}" hidden>
+      <div class="mb-3">
+        <label class="form-label d-block">{{ form.needs_financial_consult.label }}</label>
+        {{ form.needs_financial_consult }}
+      </div>
+      <div class="mb-3">
+        <label class="form-label d-block">{{ form.storage_interest.label }}</label>
+        {{ form.storage_interest }}
+        {% if form.storage_interest.errors %}<div class="text-danger small">{{ form.storage_interest.errors|striptags }}</div>{% endif %}
+      </div>
+      <div class="mb-3">
+        <label class="form-label">{{ form.grid_distance_m.label }}</label>
+        {{ form.grid_distance_m }}
+        {% if form.grid_distance_m.errors %}<div class="text-danger small">{{ form.grid_distance_m.errors|striptags }}</div>{% endif %}
+      </div>
+    </fieldset>
+
+    <fieldset class="wizard-step" data-step-label="{% trans 'توضیحات و تماس' %}" hidden>
+      <div class="mb-3">
+        <label class="form-label">{{ form.description.label }}</label>
+        {{ form.description }}
+        {% if form.description.errors %}<div class="text-danger small">{{ form.description.errors|striptags }}</div>{% endif %}
+      </div>
+      <div class="mb-3">
+        <label class="form-label d-block">{{ form.contact_method.label }}</label>
+        {{ form.contact_method }}
+        {% if form.contact_method.errors %}<div class="text-danger small">{{ form.contact_method.errors|striptags }}</div>{% endif %}
+      </div>
+    </fieldset>
+
+    <div class="d-flex gap-2 mt-3">
+      <button type="button" class="btn secondary" id="wizardPrev" hidden>{% trans "قبلی" %}</button>
+      <button type="button" class="btn" id="wizardNext">{% trans "بعدی" %}</button>
+      <button type="submit" class="btn" id="wizardSubmit" hidden>{% trans "ذخیرهٔ تغییرات" %}</button>
+    </div>
+  </form>
+
+  {{ cities|json_script:"cities-data" }}
+</div>
+{% endblock %}

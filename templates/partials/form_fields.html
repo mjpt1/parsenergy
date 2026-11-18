@@ -1,0 +1,33 @@
+{% load i18n ux_tags %}
+<style>
+  .ff-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr));gap:16px 20px}
+  .ff .form-label{display:block;font-weight:700;margin-bottom:6px}
+  .ff .req{color:#dc2626;margin-inline-start:3px}
+  .ff-help{font-size:.78rem;color:var(--pe-muted,#666);margin-top:4px}
+  .ff-err{font-size:.8rem;color:#dc2626;font-weight:700;margin-top:4px}
+  .ff-wide{grid-column:1/-1}
+  .ff-check{display:flex;flex-wrap:wrap;align-items:center;gap:8px;align-self:end;min-height:40px}
+  .ff-check .form-label{margin:0;font-weight:600}
+  .ff-check .form-check-input{margin:0}
+  .ff-check .ff-help,.ff-check .ff-err{flex-basis:100%;margin:0}
+  .ff-multi>div:not(.ff-help):not(.ff-err){display:flex;flex-wrap:wrap;gap:8px 20px}
+  .ff-multi label:not(.form-label){display:inline-flex;align-items:center;gap:6px;font-weight:500}
+  .ff.has-err .form-control,.ff.has-err .form-select{border-color:#dc2626}
+</style>
+{% if form.errors %}<div class="alert alert-danger" role="alert">{% trans "لطفاً موارد مشخص‌شده را اصلاح کنید." %}{% for e in form.non_field_errors %}<div>{{ e }}</div>{% endfor %}</div>{% endif %}
+{% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+<div class="ff-grid">
+  {% for field in form.visible_fields %}{% with kind=field|field_kind %}
+  <div class="ff{% if kind == 'check' %} ff-check{% elif kind == 'multi' %} ff-multi ff-wide{% elif kind == 'area' %} ff-wide{% endif %}{% if field.errors %} has-err{% endif %}">
+    {% if kind == 'check' %}
+      {{ field|styled }}<label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+    {% elif kind == 'multi' %}
+      <span class="form-label">{{ field.label }}{% if field.field.required %}<span class="req">*</span>{% endif %}</span>{{ field|styled }}
+    {% else %}
+      <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required and not field.field.disabled %}<span class="req" title="{% trans 'الزامی' %}">*</span>{% endif %}</label>{{ field|styled }}
+    {% endif %}
+    {% if field.help_text %}<div class="ff-help">{{ field.help_text }}</div>{% endif %}
+    {% for e in field.errors %}<div class="ff-err">{{ e }}</div>{% endfor %}
+  </div>
+  {% endwith %}{% endfor %}
+</div>

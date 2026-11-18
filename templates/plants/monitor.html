@@ -1,0 +1,41 @@
+{% extends base_template %}
+{% load i18n %}
+{% block content %}
+<style>
+.mon-head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.mon-range{display:flex;gap:6px}.mon-range button{border:1px solid rgba(127,127,127,.35);background:transparent;color:inherit;border-radius:8px;padding:5px 12px}
+.mon-range button.active{background:#22a35a;border-color:#22a35a;color:#fff}
+.mon-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:10px;margin:10px 0 16px}
+.mon-cards div{padding:10px 12px;border:1px solid rgba(127,127,127,.25);border-radius:10px;min-width:0}
+.mon-cards span{display:block;font-size:.8rem;opacity:.75}.mon-cards strong{font-size:1.15rem}
+.mon-charts{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));gap:14px}
+.mon-chart{border:1px solid rgba(127,127,127,.25);border-radius:10px;padding:10px;min-width:0}
+.mon-chart h3{font-size:.92rem;margin:0 0 8px}.mon-chart .box{position:relative;height:220px}
+.mon-fields{margin-top:14px}.mon-fields summary{cursor:pointer;font-weight:600;margin-bottom:8px}
+.mon-field-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:2px 18px;margin-bottom:12px}
+.mon-field-grid div{display:flex;justify-content:space-between;gap:10px;padding:4px 0;border-bottom:1px solid rgba(127,127,127,.15);font-size:.88rem}
+</style>
+<div class="panel mb-3">
+  <div class="mon-head">
+    <h1 class="h4 mb-0">{% trans "پایش کامل نیروگاه" %}</h1>
+    {% if plants|length > 1 %}
+    <form method="get"><select name="plant" class="form-select" aria-label="{% trans 'نیروگاه' %}" onchange="this.form.submit()">
+      {% for item in plants %}<option value="{{ item.pk }}" {% if item.pk == plant.pk %}selected{% endif %}>{{ item.name }}</option>{% endfor %}
+    </select></form>
+    {% elif plant %}<strong>{{ plant.name }}</strong>{% endif %}
+  </div>
+  {% if not plant %}
+  <p class="footer-note mb-0">{% trans "نیروگاهی برای نمایش وجود ندارد." %}</p>
+  {% else %}
+  {% include 'plants/_plant_tabs.html' %}
+  <div data-monitor-url="{% url 'plants:monitor-data' plant.pk %}">
+    <div class="mon-range" role="group" aria-label="{% trans 'بازهٔ نمودار' %}">
+      <button type="button" data-monitor-range="1" class="active">{% trans "۲۴ ساعت" %}</button>
+      <button type="button" data-monitor-range="7">{% trans "۷ روز" %}</button>
+      <button type="button" data-monitor-range="30">{% trans "۳۰ روز" %}</button>
+    </div>
+    <div data-monitor-body class="mt-3"><p class="footer-note">{% trans "در حال دریافت اطلاعات…" %}</p></div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

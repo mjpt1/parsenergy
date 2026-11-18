@@ -1,0 +1,74 @@
+{% load i18n humanize calendar_tags %}
+<style>
+.pj-box{border:1px solid var(--pe-border,#e5e7eb);border-radius:12px;padding:14px;margin-bottom:16px}
+.pj-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.pj-late{color:#b42318;font-weight:700}
+.pj-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:6px;margin-top:6px}
+</style>
+{% if can_see_project_money and req.funnel_stage == 'second_contract' or project_contract %}
+<section class="pj-box" id="project-contract">
+  <div class="pj-head">
+    <h2 class="h6 mb-0">{% trans "قرارداد دوم و برنامهٔ پرداخت" %}</h2>
+    {% if can_manage_project %}<a class="btn secondary btn-sm" data-ajax="true" href="{% url 'requests:project-contract' req.id %}">{% if project_contract %}{% trans "ویرایش قرارداد" %}{% else %}{% trans "ثبت قرارداد دوم" %}{% endif %}</a>{% endif %}
+  </div>
+  {% if project_contract %}
+  <p class="mb-2">{% trans "شماره" %} <strong>{{ project_contract.contract_number }}</strong>
+    · {{ project_contract.signed_on|smartdate:CALENDAR }}
+    · <strong>{{ project_contract.total_amount|intcomma }} {% trans "تومان" %}</strong>
+    {% if project_contract.file %}· <a href="{% url 'requests:project-contract-file' project_contract.id %}" data-no-ajax>{% trans "دریافت فایل قرارداد" %}</a>{% endif %}</p>
+  {% if project_contract.description %}<p class="footer-note">{{ project_contract.description|linebreaksbr }}</p>{% endif %}
+  <div class="table-responsive"><table class="table mb-0">
+    <thead><tr><th>{% trans "قسط" %}</th><th>{% trans "مبلغ (تومان)" %}</th><th>{% trans "موعد" %}</th><th>{% trans "وضعیت" %}</th><th>{% trans "پرداخت و رسید" %}</th></tr></thead>
+    <tbody>{% for item in project_installments %}
+      <tr>
+        <td>{{ item.number }}. {{ item.title }}</td>
+        <td>{{ item.amount|intcomma }}</td>
+        <td {% if item.is_overdue %}class="pj-late"{% endif %}>{{ item.due_date|smartdate:CALENDAR }}{% if item.is_overdue %} · {% trans "گذشته" %}{% endif %}</td>
+        <td><span class="badge {% if item.status != 'approved' %}warning{% endif %}">{{ item.get_status_display }}</span>
+          {% if item.finance_note %}<div class="footer-note">{{ item.finance_note }}</div>{% endif %}</td>
+        <td>
+          {% if item.receipt %}{{ item.paid_on|smartdate:CALENDAR }}{% if item.reference %} · {{ item.reference }}{% endif %}
+            · <a href="{% url 'requests:installment-receipt-file' item.id %}" data-no-ajax>{% trans "رسید" %}</a>{% endif %}
+          {% if can_submit_receipt and item.can_receive_receipt %}
+          <form method="post" enctype="multipart/form-data" data-no-ajax="true" action="{% url 'requests:installment-receipt' item.id %}" class="pj-form">{% csrf_token %}
+            <input class="form-control form-control-sm" name="paid_on" data-jalali="1" autocomplete="off" dir="ltr" placeholder="{% trans 'تاریخ پرداخت' %}" aria-label="{% trans 'تاریخ پرداخت' %}" required>
+            <input class="form-control form-control-sm" name="reference" maxlength="100" placeholder="{% trans 'شمارهٔ پیگیری' %}" aria-label="{% trans 'شمارهٔ پیگیری' %}">
+            <input class="form-control form-control-sm" type="file" name="receipt" accept=".pdf,.jpg,.jpeg,.png" aria-label="{% trans 'فایل رسید' %}" required>
+            <button class="btn secondary btn-sm">{% trans "ثبت رسید" %}</button>
+          </form>{% endif %}
+          {% if can_review_finance and item.status == 'submitted' %}
+          <form method="post" action="{% url 'requests:installment-review' item.id %}" class="pj-form">{% csrf_token %}
+            <input class="form-control form-control-sm" name="note" maxlength="1000" placeholder="{% trans 'توضیح (برای رد الزامی)' %}" aria-label="{% trans 'توضیح' %}">
+            <button class="btn btn-sm" name="decision" value="approve">{% trans "تأیید مالی" %}</button>
+            <button class="btn secondary btn-sm" name="decision" value="reject">{% trans "رد" %}</button>
+          </form>{% endif %}
+        </td>
+      </tr>{% endfor %}</tbody>
+  </table></div>
+  {% else %}<p class="footer-note mb-0">{% trans "قرارداد دوم هنوز ثبت نشده است. برای تکمیل فروش ابتدا آن را ثبت کنید." %}</p>{% endif %}
+</section>
+{% endif %}
+
+<section class="pj-box" id="project-documents">
+  <h2 class="h6">{% trans "مستندات پرونده" %}</h2>
+  {% for doc in project_documents %}
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 py-2 border-top">
+    <span><a href="{% url 'requests:document-file' doc.id %}" data-no-ajax>{{ doc.title }}</a>
+      <span class="badge">{{ doc.get_kind_display }}</span>{% if doc.visible_to_customer %} <span class="badge">{% trans "قابل مشاهده برای مشتری" %}</span>{% endif %}{% if doc.visible_to_contractor %} <span class="badge">{% trans "قابل مشاهده برای پیمانکار" %}</span>{% endif %}
+      <small class="footer-note d-block">{{ doc.get_stage_display }} · {{ doc.uploaded_by|default:'—' }} · {{ doc.created_at|smartdatetime:CALENDAR }}</small></span>
+    {% if doc.uploaded_by_id == request.user.id or request.user.role == 'admin' or request.user.is_superuser %}
+    <form method="post" action="{% url 'requests:document-delete' doc.id %}" onsubmit="return confirm('{% trans "این فایل برای همیشه حذف شود؟" %}')">{% csrf_token %}<button class="btn secondary btn-sm">{% trans "حذف" %}</button></form>
+    {% endif %}
+  </div>
+  {% empty %}<p class="footer-note">{% trans "هنوز مستندی ثبت نشده است." %}</p>{% endfor %}
+  {% if can_upload_document %}
+  <form method="post" enctype="multipart/form-data" data-no-ajax="true" action="{% url 'requests:document-add' req.id %}" class="row g-2 align-items-end mt-2">{% csrf_token %}
+    <div class="col-12 col-md-3"><label class="form-label">{% trans "عنوان" %}</label><input class="form-control" name="title" maxlength="200"></div>
+    <div class="col-12 col-md-3"><label class="form-label">{% trans "نوع" %}</label><select class="form-select" name="kind">{% for value, label in document_kinds %}<option value="{{ value }}">{{ label }}</option>{% endfor %}</select></div>
+    <div class="col-12 col-md-4"><label class="form-label">{% trans "فایل (تا ۲۰ مگابایت)" %}</label><input class="form-control" type="file" name="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.zip,.dwg" required></div>
+    <div class="col-12 col-md-2"><button class="btn secondary">{% trans "بارگذاری" %}</button></div>
+    <div class="col-12 d-flex gap-3 flex-wrap">{% if can_publish_document %}<label><input type="checkbox" name="visible_to_customer" value="1"> {% trans "مشتری هم ببیند" %}</label>{% endif %}
+      <label><input type="checkbox" name="visible_to_contractor" value="1"> {% trans "پیمانکار پروژه هم ببیند" %}</label></div>
+  </form>
+  {% endif %}
+</section>

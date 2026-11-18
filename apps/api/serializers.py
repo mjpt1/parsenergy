@@ -4,6 +4,7 @@ from apps.plants.models import (
     Plant,
     PlantGroup,
     PlantGroupMembership,
+    Equipment,
     Inverter,
     Transformer,
     Gateway,

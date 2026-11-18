@@ -1,0 +1,36 @@
+{% extends 'crud/form.html' %}
+{% load i18n ux_tags %}
+{% block content %}
+{{ block.super }}
+<div class="panel mt-3">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <h2 class="h5 m-0">{% trans "اینورترهای این نیروگاه" %} <span class="badge">{{ inverters|length }}</span></h2>
+    <a class="btn" data-ajax="true" href="{% url 'plants:inverter-create' %}?plant={{ object.pk }}">{% trans "افزودن اینورتر" %}</a>
+  </div>
+  {% if inverters %}
+  <div class="table-responsive">
+    <table class="table">
+      <thead><tr><th>{% trans "شماره سریال" %}</th><th>{% trans "مدل" %}</th><th>{% trans "سازنده" %}</th><th>{% trans "توان (kW)" %}</th><th>{% trans "وضعیت" %}</th><th>{% trans "آنلاین" %}</th><th></th></tr></thead>
+      <tbody>
+        {% for inv in inverters %}
+        <tr>
+          <td dir="ltr">{{ inv.serial_number }}</td>
+          <td>{{ inv.model_name }}</td>
+          <td>{{ inv.manufacturer }}</td>
+          <td>{{ inv.rated_power_kw }}</td>
+          <td>{{ inv.status|fa }}</td>
+          <td>{% if inv.online %}{% trans "بله" %}{% else %}{% trans "خیر" %}{% endif %}</td>
+          <td class="text-nowrap">
+            <a class="btn secondary btn-sm" data-ajax="true" href="{% url 'plants:inverter-edit' inv.pk %}?plant={{ object.pk }}">{% trans "ویرایش" %}</a>
+            <a class="btn secondary btn-sm" data-ajax="true" href="{% url 'plants:inverter-delete' inv.pk %}">{% trans "حذف" %}</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="footer-note m-0">{% trans "هنوز اینورتری برای این نیروگاه تعریف نشده است. با «افزودن اینورتر» اولین را ثبت کنید؛ نیروگاه از قبل انتخاب شده است." %}</p>
+  {% endif %}
+</div>
+{% endblock %}

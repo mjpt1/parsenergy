@@ -1,0 +1,43 @@
+{% extends base_template %}
+{% load i18n calendar_tags %}
+{% block content %}
+<style>
+.inv-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px}
+.inv-grid div{padding:11px 13px;border:1px solid rgba(127,127,127,.25);border-radius:10px;min-width:0}
+.inv-grid span{display:block;font-size:.82rem;opacity:.75}.inv-grid strong{font-size:1.1rem}
+</style>
+<div class="panel mb-3">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <div><h1 class="h4 mb-1">{{ inverter.model_name|default:inverter.serial_number }}</h1>
+      <span class="footer-note">{{ inverter.plant.name }} · <span dir="ltr" data-latin>{{ inverter.serial_number }}</span></span></div>
+    {% if inverter.last_synced_at %}<span class="footer-note">{% trans "آخرین دریافت" %}: {{ inverter.last_synced_at|smartdatetime:CALENDAR }}</span>{% endif %}
+  </div>
+  {% if not data %}
+  <p class="footer-note mb-0">{% trans "با دریافت بعدی از سولاکس، جزئیات این اینورتر اینجا نمایش داده می‌شود." %}</p>
+  {% else %}
+  <div class="inv-grid">
+    {% if data.temperature_c is not None %}<div><span>{% trans "دمای اینورتر" %}</span><strong>{{ data.temperature_c|floatformat:1 }}</strong> °C</div>{% endif %}
+    {% if data.total_yield_kwh is not None %}<div><span>{% trans "تولید کل از ابتدا" %}</span><strong>{{ data.total_yield_kwh|floatformat:1 }}</strong> kWh</div>{% endif %}
+    {% if data.dc_kw is not None %}<div><span>{% trans "توان ورودی پنل‌ها" %}</span><strong>{{ data.dc_kw|floatformat:1 }}</strong> kW</div>{% endif %}
+    {% if data.power_factor is not None %}<div><span>{% trans "ضریب توان" %}</span><strong>{{ data.power_factor|floatformat:2 }}</strong></div>{% endif %}
+    {% if data.grid_frequency is not None %}<div><span>{% trans "فرکانس شبکه" %}</span><strong>{{ data.grid_frequency|floatformat:2 }}</strong> Hz</div>{% endif %}
+  </div>
+  {% if data.phases %}
+  <h2 class="h6">{% trans "فازهای خروجی" %}</h2>
+  <div class="table-responsive mb-3"><table class="table mb-0">
+    <thead><tr><th>{% trans "فاز" %}</th><th>{% trans "ولتاژ (V)" %}</th><th>{% trans "جریان (A)" %}</th></tr></thead>
+    <tbody>{% for phase in data.phases %}<tr><td>{{ phase.number }}</td><td>{{ phase.voltage|floatformat:1 }}</td><td>{{ phase.current|floatformat:1 }}</td></tr>{% endfor %}</tbody>
+  </table></div>
+  {% endif %}
+  {% for group in channel_groups %}
+  {% if group.rows %}
+  <h2 class="h6">{{ group.title }}</h2>
+  <div class="table-responsive mb-3"><table class="table mb-0">
+    <thead><tr><th>{% trans "شماره" %}</th><th>{% trans "ولتاژ (V)" %}</th><th>{% trans "جریان (A)" %}</th><th>{% trans "توان (kW)" %}</th></tr></thead>
+    <tbody>{% for row in group.rows %}<tr><td>{{ row.number }}</td><td>{{ row.voltage|floatformat:1 }}</td><td>{{ row.current|floatformat:1 }}</td><td>{{ row.kw|floatformat:2 }}</td></tr>{% endfor %}</tbody>
+  </table></div>
+  {% endif %}
+  {% endfor %}
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,26 +1,63 @@
 {% extends 'base.html' %}
-{% load i18n calendar_tags %}
+{% load i18n humanize calendar_tags %}
 {% block content %}
 <div class="panel">
-  <h1 class="h4 mb-3">{% trans "پرداخت‌ها" %}</h1>
+  <h1 class="h4 mb-3">{% trans "پرداخت‌ها و تأیید مالی" %}</h1>
+  {% for message in messages %}<div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %}">{{ message }}</div>{% endfor %}
+
+  <h2 class="h6">{% trans "قسط‌های منتظر تأیید مالی" %}</h2>
+  <div class="table-responsive mb-4"><table class="table">
+    <thead><tr><th>{% trans "درخواست" %}</th><th>{% trans "قسط" %}</th><th>{% trans "مبلغ (تومان)" %}</th><th>{% trans "پرداخت" %}</th><th>{% trans "رسید" %}</th><th></th></tr></thead>
+    <tbody>{% for item in installments_waiting %}
+      <tr>
+        <td><a data-ajax="true" href="{% url 'requests:admin-detail' item.contract.request_id %}">#{{ item.contract.request_id }}</a></td>
+        <td>{{ item.number }}. {{ item.title }}</td><td>{{ item.amount|intcomma }}</td>
+        <td>{{ item.paid_on|smartdate:CALENDAR }}{% if item.reference %} · {{ item.reference }}{% endif %}</td>
+        <td><a href="{% url 'requests:installment-receipt-file' item.id %}" data-no-ajax>{% trans "دریافت" %}</a></td>
+        <td>{% if can_review_finance %}<form method="post" action="{% url 'requests:installment-review' item.id %}" class="d-flex gap-1 flex-wrap">{% csrf_token %}
+          <input type="hidden" name="next" value="payments">
+          <input class="form-control form-control-sm" style="max-width:190px" name="note" placeholder="{% trans 'توضیح (برای رد الزامی)' %}" aria-label="{% trans 'توضیح' %}">
+          <button class="btn btn-sm" name="decision" value="approve">{% trans "تأیید" %}</button>
+          <button class="btn secondary btn-sm" name="decision" value="reject">{% trans "رد" %}</button></form>{% endif %}</td>
+      </tr>{% empty %}<tr><td colspan="6">{% trans "قسطی منتظر تأیید نیست." %}</td></tr>{% endfor %}</tbody>
+  </table></div>
+
+  <h2 class="h6">{% trans "قسط‌های پرداخت‌نشده" %}</h2>
+  <div class="table-responsive mb-4"><table class="table">
+    <thead><tr><th>{% trans "درخواست" %}</th><th>{% trans "قسط" %}</th><th>{% trans "مبلغ (تومان)" %}</th><th>{% trans "موعد" %}</th><th>{% trans "وضعیت" %}</th></tr></thead>
+    <tbody>{% for item in installments_open %}
+      <tr><td><a data-ajax="true" href="{% url 'requests:admin-detail' item.contract.request_id %}">#{{ item.contract.request_id }}</a></td>
+        <td>{{ item.number }}. {{ item.title }}</td><td>{{ item.amount|intcomma }}</td>
+        <td {% if item.is_overdue %}style="color:#b42318;font-weight:700"{% endif %}>{{ item.due_date|smartdate:CALENDAR }}</td><td>{{ item.get_status_display }}</td></tr>
+    {% empty %}<tr><td colspan="5">{% trans "قسط بازی وجود ندارد." %}</td></tr>{% endfor %}</tbody>
+  </table></div>
+
+  <h2 class="h6">{% trans "پرداخت‌های آنلاین" %}</h2>
   <div class="table-responsive">
     <table class="table">
-      <thead><tr><th>#</th><th>{% trans "درخواست" %}</th><th>{% trans "پیشنهاد" %}</th><th>{% trans "مبلغ" %}</th><th>{% trans "وضعیت" %}</th><th>{% trans "تاریخ پرداخت" %}</th></tr></thead>
+      <thead><tr><th>#</th><th>{% trans "درخواست" %}</th><th>{% trans "پیشنهاد" %}</th><th>{% trans "مبلغ" %}</th><th>{% trans "وضعیت" %}</th><th>{% trans "تاریخ پرداخت" %}</th><th>{% trans "تأیید مالی" %}</th></tr></thead>
       <tbody>
         {% for p in payments %}
         <tr>
           <td>{{ p.id }}</td>
           <td><a data-ajax="true" href="{% url 'requests:admin-detail' p.request_id %}">#{{ p.request_id }}</a></td>
           <td>{{ p.offer.title }}</td>
-          <td>{{ p.amount }}</td>
+          <td>{{ p.amount|intcomma }}</td>
           <td>{{ p.get_status_display }}</td>
           <td>{{ p.paid_at|smartdatetime:CALENDAR|default:'—' }}</td>
+          <td>{% if p.status == 'paid' %}{{ p.get_finance_status_display }}{% if p.finance_note %}<div class="footer-note">{{ p.finance_note }}</div>{% endif %}
+            {% if can_review_finance and p.finance_status == 'pending' %}<form method="post" action="{% url 'requests:payment-review' p.id %}" class="d-flex gap-1 flex-wrap mt-1">{% csrf_token %}
+              <input type="hidden" name="next" value="payments">
+              <input class="form-control form-control-sm" style="max-width:170px" name="note" placeholder="{% trans 'توضیح' %}" aria-label="{% trans 'توضیح' %}">
+              <button class="btn btn-sm" name="decision" value="approve">{% trans "تأیید" %}</button>
+              <button class="btn secondary btn-sm" name="decision" value="reject">{% trans "رد" %}</button></form>{% endif %}{% else %}—{% endif %}</td>
         </tr>
         {% empty %}
-        <tr><td colspan="6">{% trans "پرداختی یافت نشد." %}</td></tr>
+        <tr><td colspan="7">{% trans "پرداختی یافت نشد." %}</td></tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
+  {% include 'partials/pagination.html' %}
 </div>
 {% endblock %}

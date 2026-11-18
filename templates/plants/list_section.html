@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block content %}
+<div class="panel">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h4 mb-0">{% trans "سوله‌ها و چیدمان پنل" %}</h1>
+    <a class="btn secondary" data-ajax="true" href="{% url 'plants:section-create' %}">{% trans "افزودن سوله" %}</a>
+  </div>
+  {% for row in plant_summary %}
+  <p class="footer-note mb-1">{% blocktrans with name=row.plant.name connected=row.connected|floatformat:"-2" designed=row.designed|floatformat:"-2" capacity=row.plant.capacity_kw|floatformat:"-2" %}{{ name }}: {{ connected }} کیلووات متصل به پایش، {{ designed }} کیلووات ثبت‌شده در سوله‌ها، از ظرفیت {{ capacity }} کیلووات{% endblocktrans %}</p>
+  {% endfor %}
+  <div class="table-responsive mt-2">
+    <table class="table">
+      <thead><tr><th>{% trans "نیروگاه" %}</th><th>{% trans "سوله" %}</th><th>{% trans "پنل" %}</th><th>{% trans "توان (kWp)" %}</th><th>{% trans "مساحت پنل‌ها (m²)" %}</th><th>{% trans "سهم از سقف" %}</th><th>{% trans "شیب / جهت" %}</th><th>{% trans "اینورتر" %}</th><th>{% trans "عملیات" %}</th></tr></thead>
+      <tbody>
+        {% for section in object_list %}
+        <tr>
+          <td>{{ section.plant.name }}</td>
+          <td>{{ section.name }}<div class="footer-note" dir="ltr">{{ section.blocks }}</div></td>
+          <td>{{ section.panel_count }}</td>
+          <td>{{ section.kwp|floatformat:"-2" }}</td>
+          <td>{% if section.panels_area_m2 is not None %}{{ section.panels_area_m2|floatformat:1 }}{% else %}—{% endif %}</td>
+          <td>{% if section.roof_usage_pct is not None %}{{ section.roof_usage_pct|floatformat:1 }}٪{% else %}—{% endif %}</td>
+          <td>{{ section.tilt_text|default:"—" }} / {% if section.azimuth_deg is not None %}{{ section.azimuth_deg|floatformat:"-1" }}°{% else %}—{% endif %}</td>
+          <td>{% if section.inverter %}<span dir="ltr" data-latin>{{ section.inverter.serial_number }}</span>{% else %}{% trans "به پایش وصل نشده" %}{% endif %}</td>
+          <td class="d-flex gap-2">
+            <a class="btn secondary btn-sm" data-ajax="true" href="{% url 'plants:section-edit' section.pk %}">{% trans "ویرایش" %}</a>
+            <a class="btn secondary btn-sm" data-ajax="true" href="{% url 'plants:section-delete' section.pk %}">{% trans "حذف" %}</a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="9">{% trans "هنوز سوله‌ای ثبت نشده است." %}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends 'base_portal.html' %}
+{% load i18n calendar_tags %}
+{% block content %}
+<div class="panel">
+  <h1 class="h4 mb-3">{% trans "پروژه‌های من" %}</h1>
+  <div class="table-responsive"><table class="table mb-0">
+    <thead><tr><th>{% trans "پروژه" %}</th><th>{% trans "شرح کار" %}</th><th>{% trans "بازه" %}</th><th>{% trans "وضعیت" %}</th><th></th></tr></thead>
+    <tbody>{% for job in jobs %}
+      <tr><td>#{{ job.request_id }}<div class="footer-note">{{ job.request.province }}{% if job.request.city %} / {{ job.request.city }}{% endif %}</div></td><td>{{ job.scope }}</td>
+        <td>{{ job.start_date|smartdate:CALENDAR|default:'—' }} — {{ job.end_date|smartdate:CALENDAR|default:'—' }}</td><td>{{ job.get_status_display }}</td>
+        <td>{% if job.status == 'active' %}<a class="btn secondary" href="{% url 'requests:contractor-project' job.request_id %}">{% trans "باز کردن" %}</a>{% endif %}</td></tr>
+    {% empty %}<tr><td colspan="5">{% trans "هنوز پروژه‌ای به شما ارجاع نشده است." %}</td></tr>{% endfor %}</tbody>
+  </table></div>
+</div>
+{% endblock %}

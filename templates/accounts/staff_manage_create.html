@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block content %}
+<div class="panel" style="max-width:640px">
+  <h1 class="h4 mb-3">{% trans "ساخت کاربر جدید" %}</h1>
+
+  {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+
+  <p class="text-muted">{% trans "نام کاربری و رمز عبور الزامی است؛ بقیهٔ فیلدها اختیاری‌اند. نقش تعیین می‌کند کاربر به کدام بخش‌های پنل دسترسی داشته باشد." %}</p>
+
+  <form method="post">{% csrf_token %}
+    {% for field in form %}
+    <div class="mb-3">
+      <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+      {{ field }}
+      {% if field.help_text %}<div class="footer-note">{{ field.help_text|safe }}</div>{% endif %}
+      {% if field.errors %}<div class="text-danger small">{{ field.errors|striptags }}</div>{% endif %}
+    </div>
+    {% endfor %}
+    <div class="d-flex gap-2 mt-3">
+      <button type="submit" class="btn">{% trans "ساخت کاربر" %}</button>
+      <a class="btn secondary" data-ajax="true" href="{% url 'accounts:staff-manage' %}">{% trans "انصراف" %}</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

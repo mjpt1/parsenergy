@@ -4,16 +4,16 @@
 {% trans "بله,خیر" as yesno_str %}
 <div class="panel">
   <div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="h4 mb-0">{% trans "اعضای VPP" %}</h1>
+    <h1 class="h4 mb-0">{% trans "اعضای نیروگاه مجازی" %}</h1>
     <div class="d-flex gap-2 flex-wrap">
       <a class="btn secondary" data-ajax="true" href="{% url 'vpp:member-create' %}">{% trans "افزودن عضو" %}</a>
       <a class="btn secondary" data-ajax="true" href="{% url 'vpp:list' %}">{% trans "بازگشت به VPP" %}</a>
-      <a class="btn secondary" data-ajax="true" href="{% url 'vpp:schedules' %}">{% trans "برنامه‌های Dispatch" %}</a>
+      <a class="btn secondary" data-ajax="true" href="{% url 'vpp:schedules' %}">{% trans "برنامه‌های تولید" %}</a>
     </div>
   </div>
   <div class="table-responsive">
     <table class="table">
-      <thead><tr><th>VPP</th><th>{% trans "نیروگاه" %}</th><th>{% trans "سهم (kW)" %}</th><th>{% trans "فعال" %}</th><th>{% trans "عملیات" %}</th></tr></thead>
+      <thead><tr><th>{% trans "نیروگاه مجازی" %}</th><th>{% trans "نیروگاه" %}</th><th>{% trans "سهم (kW)" %}</th><th>{% trans "فعال" %}</th><th>{% trans "عملیات" %}</th></tr></thead>
       <tbody>
         {% for m in object_list %}
         <tr>

@@ -1,0 +1,45 @@
+{% load i18n humanize calendar_tags %}
+{% if project_contract %}
+<h2 class="h6 mt-4">{% trans "قرارداد دوم و برنامهٔ پرداخت" %}</h2>
+<p>{% trans "شماره" %} <strong>{{ project_contract.contract_number }}</strong> · {{ project_contract.signed_on|smartdate:CALENDAR }}
+  · <strong>{{ project_contract.total_amount|intcomma }} {% trans "تومان" %}</strong>
+  {% if project_contract.file %}· <a href="{% url 'requests:project-contract-file' project_contract.id %}">{% trans "دریافت فایل قرارداد" %}</a>{% endif %}</p>
+<div class="table-responsive mb-3"><table class="table">
+  <thead><tr><th>{% trans "قسط" %}</th><th>{% trans "مبلغ (تومان)" %}</th><th>{% trans "موعد" %}</th><th>{% trans "وضعیت" %}</th><th>{% trans "رسید پرداخت" %}</th></tr></thead>
+  <tbody>{% for item in project_installments %}
+    <tr>
+      <td>{{ item.number }}. {{ item.title }}</td><td>{{ item.amount|intcomma }}</td>
+      <td {% if item.is_overdue %}style="color:#b42318;font-weight:700"{% endif %}>{{ item.due_date|smartdate:CALENDAR }}</td>
+      <td>{{ item.get_status_display }}{% if item.status == 'rejected' and item.finance_note %}<div class="footer-note">{{ item.finance_note }}</div>{% endif %}</td>
+      <td>
+        {% if item.receipt %}<a href="{% url 'requests:installment-receipt-file' item.id %}">{% trans "دریافت رسید" %}</a>{% endif %}
+        {% if item.can_receive_receipt %}
+        <form method="post" enctype="multipart/form-data" data-no-ajax="true" action="{% url 'requests:installment-receipt' item.id %}" style="display:grid;gap:6px;min-width:170px">{% csrf_token %}
+          <input class="form-control form-control-sm" name="paid_on" data-jalali="1" autocomplete="off" dir="ltr" placeholder="{% trans 'تاریخ پرداخت' %}" aria-label="{% trans 'تاریخ پرداخت' %}" required>
+          <input class="form-control form-control-sm" name="reference" maxlength="100" placeholder="{% trans 'شمارهٔ پیگیری' %}" aria-label="{% trans 'شمارهٔ پیگیری' %}">
+          <input class="form-control form-control-sm" type="file" name="receipt" accept=".pdf,.jpg,.jpeg,.png" aria-label="{% trans 'فایل رسید' %}" required>
+          <button class="btn secondary btn-sm">{% trans "ارسال رسید" %}</button>
+        </form>{% endif %}
+      </td>
+    </tr>{% endfor %}</tbody>
+</table></div>
+{% endif %}
+{% if equipment_items %}
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-4 mb-2">
+  <h2 class="h6 mb-0">{% trans "تجهیزات پروژهٔ شما" %}</h2>
+  <div class="d-flex gap-2"><a class="btn secondary btn-sm" target="_blank" rel="noopener" href="{% url 'requests:equipment-document' req.id %}">{% trans "چاپ / PDF" %}</a>
+  <a class="btn secondary btn-sm" href="{% url 'requests:equipment-document' req.id %}?format=excel">{% trans "اکسل" %}</a></div>
+</div>
+<div class="table-responsive mb-3"><table class="table">
+  <thead><tr><th>{% trans "تجهیز" %}</th><th>{% trans "برند / مدل" %}</th><th>{% trans "سریال" %}</th><th>{% trans "تعداد" %}</th><th>{% trans "گارانتی تا" %}</th></tr></thead>
+  <tbody>{% for item in equipment_items %}<tr><td>{{ item.name }}</td><td>{{ item.model_name|default:'—' }}</td><td dir="ltr">{{ item.serial_number|default:'—' }}</td><td>{{ item.quantity|floatformat:"-2" }} {{ item.unit }}</td><td>{{ item.warranty_until|smartdate:CALENDAR|default:'—' }}</td></tr>{% endfor %}</tbody>
+</table></div>
+{% endif %}
+{% if insurances %}
+<h2 class="h6 mt-3">{% trans "بیمه‌نامه‌های پروژه" %}</h2>
+<ul>{% for policy in insurances %}<li>{{ policy.get_phase_display }} — {{ policy.get_kind_display }} — {{ policy.insurer }} — {% trans "تا" %} {{ policy.end_date|smartdate:CALENDAR }}{% if policy.file %} · <a href="{% url 'requests:insurance-file' policy.id %}">{% trans "فایل" %}</a>{% endif %}</li>{% endfor %}</ul>
+{% endif %}
+{% if project_documents %}
+<h2 class="h6 mt-3">{% trans "مستندات پروژه" %}</h2>
+<ul>{% for doc in project_documents %}<li><a href="{% url 'requests:document-file' doc.id %}">{{ doc.title }}</a></li>{% endfor %}</ul>
+{% endif %}

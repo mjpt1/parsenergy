@@ -1,30 +1,34 @@
 {% extends 'base.html' %}
-{% load i18n %}
+{% load i18n calendar_tags %}
 {% block content %}
-{% trans "بله,خیر" as yesno_str %}
 <div class="panel">
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h1 class="h4 mb-0">{% trans "اینورترها" %}</h1>
-    <a class="btn secondary" data-ajax="true" href="{% url 'plants:inverter-create' %}">{% trans "افزودن اینورتر" %}</a>
+    {% if request.user.can_edit_plants %}<a class="btn secondary" data-ajax="true" href="{% url 'plants:inverter-create' %}">{% trans "افزودن اینورتر" %}</a>{% endif %}
   </div>
   <div class="table-responsive">
     <table class="table">
-      <thead><tr><th>{% trans "نیروگاه" %}</th><th>{% trans "سریال" %}</th><th>{% trans "مدل" %}</th><th>{% trans "آنلاین" %}</th><th>{% trans "توان نامی" %}</th><th>{% trans "عملیات" %}</th></tr></thead>
+      <thead><tr><th>{% trans "نیروگاه" %}</th><th>{% trans "اینورتر" %}</th><th>{% trans "وضعیت" %}</th><th>{% trans "توان فعلی (کیلووات)" %}</th><th>{% trans "تولید امروز (کیلووات‌ساعت)" %}</th><th>{% trans "آخرین دریافت" %}</th><th>{% trans "توان نامی" %}</th><th>{% trans "عملیات" %}</th></tr></thead>
       <tbody>
         {% for inverter in object_list %}
         <tr>
           <td>{{ inverter.plant.name }}</td>
-          <td>{{ inverter.serial_number }}</td>
-          <td>{{ inverter.model_name }}</td>
-          <td>{{ inverter.online|yesno:yesno_str }}</td>
-          <td>{{ inverter.rated_power_kw }}</td>
+          <td><a data-ajax="true" href="{% url 'plants:inverter-detail' inverter.pk %}"><span dir="ltr" data-latin>{{ inverter.serial_number }}</span></a>{% if inverter.model_name %}<div class="footer-note">{{ inverter.model_name }}</div>{% endif %}</td>
+          <td>
+            <span class="badge {{ inverter.state_tone }}">{{ inverter.state_label }}</span>
+            {% if inverter.last_sync_error and can_manage_cloud %}<div class="footer-note">{{ inverter.last_sync_error }}</div>{% endif %}
+          </td>
+          <td>{% if inverter.is_fresh %}{{ inverter.live_power|floatformat:1 }}{% else %}—{% endif %}</td>
+          <td>{% if inverter.today_kwh is not None %}{{ inverter.today_kwh|floatformat:1 }}{% else %}—{% endif %}</td>
+          <td>{% if inverter.live_at %}{{ inverter.live_at|smartdatetime:CALENDAR }}{% else %}—{% endif %}</td>
+          <td>{{ inverter.rated_power_kw|floatformat:"-1" }}</td>
           <td class="d-flex gap-2">
-            <a class="btn secondary" data-ajax="true" href="{% url 'plants:inverter-edit' inverter.id %}">{% trans "ویرایش" %}</a>
-            <a class="btn secondary" data-ajax="true" href="{% url 'plants:inverter-delete' inverter.id %}">{% trans "حذف" %}</a>
+            {% if request.user.can_edit_plants %}<a class="btn secondary" data-ajax="true" href="{% url 'plants:inverter-edit' inverter.id %}">{% trans "ویرایش" %}</a>{% endif %}
+            {% if request.user.can_edit_plants %}<a class="btn secondary" data-ajax="true" href="{% url 'plants:inverter-delete' inverter.id %}">{% trans "حذف" %}</a>{% endif %}
           </td>
         </tr>
         {% empty %}
-        <tr><td colspan="6">{% trans "موردی یافت نشد." %}</td></tr>
+        <tr><td colspan="8">{% trans "موردی یافت نشد." %}</td></tr>
         {% endfor %}
       </tbody>
     </table>

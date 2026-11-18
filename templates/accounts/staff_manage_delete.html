@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block content %}
+{% include 'partials/users_tabs.html' with active='users' %}
+<div class="panel">
+  <h2 class="h5 mb-3">{% trans "حذف کاربر" %}</h2>
+  <p>{% blocktrans with name=target.username %}آیا از حذف کاربر «{{ name }}» مطمئن هستید؟{% endblocktrans %}</p>
+  <p class="footer-note">{% trans "این کار برگشت‌ناپذیر است. اگر فقط می‌خواهید دسترسی کاربر قطع شود، به‌جای حذف او را غیرفعال کنید." %}</p>
+  <form method="post">{% csrf_token %}
+    <div class="d-flex gap-2 flex-wrap">
+      <button class="btn" type="submit">{% trans "بله، حذف کن" %}</button>
+      <a class="btn secondary" data-ajax="true" href="{% url 'accounts:staff-manage' %}">{% trans "انصراف" %}</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

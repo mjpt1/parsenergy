@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% load i18n calendar_tags %}
+{% block content %}
+<style>
+  .inv-sec{border:1px solid var(--pe-border,#e5e7eb);border-radius:14px;padding:16px 18px;margin-bottom:14px;background:var(--pe-panel,#fff)}
+  .inv-sec h2{font-size:1rem;font-weight:800;margin:0 0 4px}
+  .inv-sec>p{font-size:.82rem;color:var(--pe-muted,#666);margin:0 0 12px}
+  .inv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px 16px}
+  .inv-grid .help{font-size:.75rem;color:var(--pe-muted,#666);margin-top:3px}
+  .inv-grid .err{font-size:.78rem;color:#dc2626;font-weight:700}
+  .inv-state{display:flex;flex-wrap:wrap;gap:10px 24px;align-items:center;font-size:.88rem}
+  .inv-state b{font-weight:800}
+  .ok{color:#16a34a}.bad{color:#dc2626}
+</style>
+<div class="panel" style="max-width:980px">
+  <h1 class="h4 mb-3">{% if object %}{% trans "ویرایش اینورتر" %} {{ object.serial_number }}{% else %}{% trans "افزودن اینورتر" %}{% endif %}</h1>
+  {% for message in messages %}<div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %}">{{ message }}</div>{% endfor %}
+  {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+
+  {% if object and object.data_source == 'solax' %}
+  <div class="inv-sec">
+    <h2>{% trans "وضعیت اتصال به سولاکس" %}</h2>
+    <div class="inv-state">
+      <span>{% trans "آخرین دریافت" %}: <b>{% if object.last_synced_at %}{{ object.last_synced_at|smartdatetime:CALENDAR }}{% else %}{% trans "هنوز نه" %}{% endif %}</b></span>
+      <span>{% trans "وضعیت" %}: <b class="{% if object.online %}ok{% else %}bad{% endif %}">{% if object.online %}{% trans "آنلاین" %}{% else %}{% trans "قطع" %}{% endif %}</b></span>
+      {% if object.last_sync_error %}<span class="bad">{{ object.last_sync_error }}</span>{% endif %}
+      <form method="post" action="{% url 'plants:inverter-sync' object.pk %}" data-no-ajax="true" style="margin-inline-start:auto">{% csrf_token %}
+        <button class="btn" type="submit">{% trans "دریافت داده الان" %}</button>
+      </form>
+    </div>
+  </div>
+  {% endif %}
+
+  <form method="post">{% csrf_token %}
+    {% for title, hint, names in sections %}
+    <div class="inv-sec">
+      <h2>{{ title }}</h2>{% if hint %}<p>{{ hint }}</p>{% endif %}
+      <div class="inv-grid">
+        {% for field in form %}{% if field.name in names %}
+        <div>
+          <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {% if field.help_text %}<div class="help">{{ field.help_text }}</div>{% endif %}
+          {% for e in field.errors %}<div class="err">{{ e }}</div>{% endfor %}
+        </div>
+        {% endif %}{% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+    <div class="d-flex gap-2 mt-2">
+      <button type="submit" class="btn">{% trans "ذخیره" %}</button>
+      <a href="javascript:history.back()" class="btn secondary">{% trans "بازگشت" %}</a>
+      {% if can_manage_cloud %}<a class="btn secondary" data-ajax="true" href="{% url 'plants:cloud-accounts' %}">{% trans "حساب‌های ابری" %}</a>{% endif %}
+    </div>
+  </form>
+</div>
+{% endblock %}

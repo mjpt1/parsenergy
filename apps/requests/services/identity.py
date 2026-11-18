@@ -107,7 +107,13 @@ class ShabanicIdentityBackend(IdentityBackend):
         except ValueError as exc:
             raise IdentityError(_('پاسخ سرویس احراز هویت نامعتبر است.')) from exc
         result = data.get('result') or {}
-        matched = bool(result.get('isValid')) and str(data.get('status', 'DONE')).upper() == 'DONE'
+        status = str(data.get('status', '')).upper()
+        # Tolerate both API generations: v1 returns result.isValid, v2 returns
+        # result.isMatched (and a top-level success flag); a FAILED status or an
+        # error object means no match (e.g. invalid national code).
+        is_match = bool(result.get('isMatched') or result.get('isValid')
+                        or data.get('success') is True)
+        matched = is_match and status != 'FAILED' and not data.get('error')
         track = data.get('trackId') or data.get('responseCode') or data.get('status') or ''
         return (matched, str(track)[:200])
 

@@ -12,6 +12,7 @@ from .models import (
     Equipment,
     Transformer,
     Gateway,
+    PVModule,
 )
 
 class LastSeenAtAdminForm(forms.ModelForm):
@@ -79,3 +80,10 @@ class GatewayAdmin(admin.ModelAdmin):
 
 admin.site.register(TelemetryReading)
 admin.site.register(EnvironmentalReading)
+
+
+@admin.register(PVModule)
+class PVModuleAdmin(admin.ModelAdmin):
+    list_display = ('code', 'plant', 'row', 'col', 'status', 'temperature_c', 'string_code', 'inverter')
+    list_filter = ('status', 'plant')
+    search_fields = ('code', 'string_code', 'plant__name')

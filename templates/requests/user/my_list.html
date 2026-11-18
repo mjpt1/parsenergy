@@ -1,5 +1,5 @@
-{% extends 'base.html' %}
-{% load i18n calendar_tags %}
+{% extends 'base_portal.html' %}
+{% load calendar_tags i18n ux_tags %}
 {% block content %}
 <div class="panel">
   <div class="d-flex justify-content-between align-items-center mb-3">
@@ -14,19 +14,19 @@
   {% endfor %}{% endif %}
   <div class="table-responsive">
     <table class="table">
-      <thead><tr><th>#</th><th>{% trans "عنوان" %}</th><th>{% trans "استان" %}</th><th>{% trans "وضعیت" %}</th><th>{% trans "تاریخ" %}</th><th>{% trans "عملیات" %}</th></tr></thead>
+      <thead><tr><th>#</th><th>{% trans "عنوان" %}</th><th>{% trans "استان" %}</th><th>{% trans "مرحله" %}</th><th>{% trans "تاریخ" %}</th><th>{% trans "عملیات" %}</th></tr></thead>
       <tbody>
         {% for req in requests %}
         <tr>
           <td>{{ req.id }}</td>
           <td>{{ req.full_name }}</td>
           <td>{{ req.province }}</td>
-          <td>{{ req.get_status_display }}</td>
-          <td>{{ req.created_at|smartdatetime:CALENDAR }}</td>
+          <td>{% with p=req|customer_progress %}{% if p.your_turn %}<b style="color:#b45309">{% trans "نوبت شما" %}:</b> {% endif %}{{ p.current|default:req.get_status_display }}{% endwith %}</td>
+          <td>{{ req.created_at|smartdate:CALENDAR }}</td>
           <td><a class="btn secondary" data-ajax="true" href="{% url 'requests:my-detail' req.id %}">{% trans "مشاهده" %}</a></td>
         </tr>
         {% empty %}
-        <tr><td colspan="6">{% trans "هنوز درخواستی ثبت نکرده‌اید." %}</td></tr>
+        <tr><td colspan="6">{% trans "هنوز درخواستی ثبت نکرده‌اید." %} <a data-ajax="true" href="{% url 'requests:submit' %}">{% trans "ثبت اولین درخواست" %}</a></td></tr>
         {% endfor %}
       </tbody>
     </table>

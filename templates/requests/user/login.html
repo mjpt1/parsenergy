@@ -1,17 +1,18 @@
-{% extends 'base.html' %}
+{% extends 'base_portal.html' %}
 {% load i18n %}
 {% block content %}
 <div class="panel" style="max-width:480px;margin:0 auto">
-  <h1 class="h4 mb-3">{% trans "ورود با کد پیامک" %}</h1>
+  <h1 class="h4 mb-1">{% trans "ورود / ثبت‌نام با موبایل" %}</h1>
+  <p class="text-muted">{% trans "شماره موبایل خود را وارد کنید؛ کد تأیید برایتان پیامک می‌شود. اگر قبلاً ثبت‌نام نکرده باشید، حساب شما خودکار ساخته می‌شود." %}</p>
   {% if messages %}{% for message in messages %}
     <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %}">{{ message }}</div>
   {% endfor %}{% endif %}
   <form method="post">{% csrf_token %}
     <p>
       <label class="form-label">{% trans "شماره موبایل" %}</label>
-      <input type="text" name="mobile" value="{{ mobile|default:'' }}" class="form-control" required>
+      <input type="text" name="mobile" inputmode="numeric" placeholder="۰۹۱۲۳۴۵۶۷۸۹" value="{{ mobile|default:'' }}" class="form-control" required>
     </p>
-    <button type="submit" class="btn w-100">{% trans "ارسال کد" %}</button>
+    <button type="submit" class="btn w-100">{% trans "ارسال کد تأیید" %}</button>
   </form>
 </div>
 {% endblock %}

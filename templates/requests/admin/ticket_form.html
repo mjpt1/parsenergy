@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block content %}
+<div class="panel">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h4 mb-0">{% trans "تیکت" %}</h1>
+    <a class="btn secondary" data-ajax="true" href="{% url 'requests:admin-tickets' %}">{% trans "بازگشت" %}</a>
+  </div>
+  {% if messages %}{% for message in messages %}
+    <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %}">{{ message }}</div>
+  {% endfor %}{% endif %}
+  <form method="post">{% csrf_token %}
+    <div class="mb-3"><label class="form-label">{% trans "این تیکت برای کدام بخش است؟" %}</label>{{ form.department }}</div>
+    <div class="mb-3"><label class="form-label">{% trans "موضوع" %}</label>{{ form.subject }}</div>
+    <div class="mb-3"><label class="form-label">{% trans "اولویت" %}</label>{{ form.priority }}</div>
+    <div class="mb-3"><label class="form-label">{% trans "پیام" %}</label>{{ form.message }}</div>
+    <button type="submit" class="btn">{% trans "ثبت تیکت" %}</button>
+  </form>
+</div>
+{% endblock %}

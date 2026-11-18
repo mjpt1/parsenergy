@@ -90,48 +90,22 @@ def ai_analysis(request):
     if request.method != 'POST':
         return JsonResponse({'error': 'invalid_method'}, status=405)
 
-    base_url = _get_param('ai_base_url', '').strip()
-    model = _get_param('ai_model', '').strip()
-    api_key = _get_param('ai_api_key', '').strip()
-    auth_header = _get_param('ai_auth_header', 'Authorization').strip() or 'Authorization'
-    auth_prefix = _get_param('ai_auth_prefix', 'Bearer').strip()
-    enabled = _get_param('ai_enabled', 'false') == 'true'
-    system_prompt = _get_param('ai_system_prompt', '').strip()
-
-    if not enabled or not base_url or not model or not api_key:
+    from apps.core import ai, ai_limits
+    if not ai.is_available():
         return JsonResponse({'error': 'ai_not_configured'}, status=400)
-
-    endpoint = base_url.rstrip('/')
-    if not endpoint.endswith('/chat/completions'):
-        endpoint = f"{endpoint}/chat/completions"
-
+    blocked = ai_limits.check(request.user, 'plant')
+    if blocked:
+        return JsonResponse({'error': blocked}, status=403)
+    system_prompt = _get_param('ai_system_prompt', '').strip()
     if not system_prompt:
         system_prompt = 'شما تحلیلگر ارشد نیروگاه خورشیدی هستید. خروجی را خلاصه، دقیق و عملیاتی ارائه بده.'
 
     context = _build_ai_context(request.user)
     user_prompt = f"با توجه به داده‌های زیر، تحلیل عملکرد، ریسک‌ها و پیشنهادهای عملی ارائه بده:\n{json.dumps(context, ensure_ascii=False)}"
 
-    payload = {
-        'model': model,
-        'messages': [
-            {'role': 'system', 'content': system_prompt},
-            {'role': 'user', 'content': user_prompt},
-        ],
-        'temperature': 0.3,
-    }
-
-    headers = {
-        'Content-Type': 'application/json',
-    }
-    if api_key:
-        auth_value = f"{auth_prefix} {api_key}".strip() if auth_prefix else api_key
-        headers[auth_header] = auth_value
-
     try:
-        req = url_request.Request(endpoint, data=json.dumps(payload).encode('utf-8'), headers=headers)
-        with url_request.urlopen(req, timeout=30) as resp:
-            result = json.loads(resp.read().decode('utf-8'))
-        content = result.get('choices', [{}])[0].get('message', {}).get('content', '')
-        return JsonResponse({'analysis': content or 'پاسخی دریافت نشد.'})
-    except Exception as exc:
-        return JsonResponse({'error': str(exc)}, status=500)
+        result = ai.ask(system_prompt, user_prompt)
+        ai_limits.consume(request.user, 'plant')
+        return JsonResponse({'analysis': result.text, 'provider': result.provider})
+    except ai.AIError as exc:
+        return JsonResponse({'error': str(exc)}, status=502)

@@ -1,11 +1,8 @@
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
-from django.db.models import Sum
 
 from apps.alerts.models import AlertEvent
-from apps.plants.models import TelemetryReading
-from .services import build_pdf_report, build_excel_report
 
 
 from apps.plants.scoping import plant_scope_for_user as _plant_scope_for_user
@@ -20,47 +17,78 @@ def report_center(request):
 
 @login_required
 def export_pdf(request, plant_id):
+    """Plant report as an A4 sheet; the browser saves it as PDF (print/sheet.html)."""
+    from datetime import timedelta
+    from django.utils import timezone
+    from apps.core.localtime import day_start, local_day
+
     plants = _plant_scope_for_user(request.user)
-    plant = get_object_or_404(plants, id=plant_id)
-    telemetry = TelemetryReading.objects.filter(plant=plant).aggregate(
-        total_energy=Sum('energy_kwh'),
-        total_power=Sum('power_kw'),
-    )
-    alerts_count = AlertEvent.objects.filter(rule__plant=plant, acknowledged=False).count()
-    rows = [
-        ('Name', plant.name),
-        ('Capacity (kW)', str(plant.capacity_kw)),
-        ('Location', plant.location_name),
-        ('Status', plant.connection_status),
-        ('Active Alerts', str(alerts_count)),
-        ('Total Energy (kWh)', str(telemetry.get('total_energy') or 0)),
-        ('Total Power (kW)', str(telemetry.get('total_power') or 0)),
-    ]
-    content = build_pdf_report(f'Report - {plant.name}', rows)
-    response = HttpResponse(content, content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="{plant.name}.pdf"'
-    return response
+    plant = get_object_or_404(plants.select_related('owner'), id=plant_id)
+    today = timezone.localdate()
+    since = day_start(today - timedelta(days=13))
+    per_day = {today - timedelta(days=i): 0.0 for i in range(13, -1, -1)}
+    for ts, kwh in plant.telemetry.filter(created_at__gte=since).values_list('created_at', 'energy_kwh'):
+        day = local_day(ts)
+        if day in per_day:
+            per_day[day] += float(kwh or 0)
+    peak = max(per_day.values()) or 1
+    daily = [{'day': d, 'kwh': v, 'text': f'{v:,.0f}', 'pct': round(100 * v / peak)} for d, v in per_day.items()]
+    latest = plant.telemetry.order_by('-created_at').first()
+    alerts = AlertEvent.objects.filter(rule__plant=plant).select_related('rule').order_by('-created_at')
+    modules = plant.modules.all()
+    return render(request, 'reports/plant_print.html', {
+        'plant': plant,
+        'page_title': f'گزارش نیروگاه {plant.name}',
+        'generated_at': timezone.now(),
+        'inverters': plant.inverters.order_by('id'),
+        'daily': daily,
+        'energy_14d_text': f'{sum(per_day.values()):,.0f}',
+        'latest': latest,
+        'active_alerts': alerts.filter(acknowledged=False).count(),
+        'recent_alerts': alerts[:8],
+        'modules_total': modules.count(),
+        'modules_hot': modules.filter(status='hot').count(),
+        'modules_warn': modules.filter(status='warn').count(),
+    })
 
 
 @login_required
 def export_excel(request, plant_id):
-    plants = _plant_scope_for_user(request.user)
-    plant = get_object_or_404(plants, id=plant_id)
-    telemetry = TelemetryReading.objects.filter(plant=plant).aggregate(
-        total_energy=Sum('energy_kwh'),
-        total_power=Sum('power_kw'),
-    )
-    alerts_count = AlertEvent.objects.filter(rule__plant=plant, acknowledged=False).count()
-    rows = [
-        ('Name', plant.name),
-        ('Capacity (kW)', str(plant.capacity_kw)),
-        ('Location', plant.location_name),
-        ('Status', plant.connection_status),
-        ('Active Alerts', str(alerts_count)),
-        ('Total Energy (kWh)', str(telemetry.get('total_energy') or 0)),
-        ('Total Power (kW)', str(telemetry.get('total_power') or 0)),
-    ]
-    content = build_excel_report(f'Report {plant.name}', rows)
+    """The customer's "تحلیل عملکرد" workbook (apps/reports/excel.py)."""
+    import jdatetime
+    from django.utils.http import content_disposition_header
+    from .excel import build_performance_workbook
+
+    plant = get_object_or_404(_plant_scope_for_user(request.user), id=plant_id)
+    content = build_performance_workbook(plant)
     response = HttpResponse(content, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-    response['Content-Disposition'] = f'attachment; filename="{plant.name}.xlsx"'
+    name = f'تحلیل عملکرد {plant.name} {jdatetime.date.today().strftime("%Y-%m-%d")}.xlsx'
+    response['Content-Disposition'] = content_disposition_header(True, name)
     return response
+
+
+@login_required
+def proposal(request):
+    """Form -> filled 5-page proposal; the browser saves it as PDF."""
+    from django.core.exceptions import PermissionDenied
+    from django.http import JsonResponse
+    from django.templatetags.static import static
+    from django.utils.html import escape
+    from django.utils.safestring import mark_safe
+    from .forms import ProposalForm
+    from .proposal import image_uri, render as render_proposal
+
+    if not request.user.can_build_proposal:
+        raise PermissionDenied
+    # The form page posts with fetch and shows the result in place; a plain POST still works.
+    ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+    form = ProposalForm(request.POST or None, request.FILES or None)
+    if request.method == 'POST' and form.is_valid():
+        d = {k: escape(v) if isinstance(v, str) else v for k, v in form.cleaned_data.items()}
+        d['layout'] = image_uri(d['layout'])
+        d['site'] = image_uri(d['site'])
+        pages = render_proposal(d, static('img/pars-logo.webp'), static('img/proposal-cover.jpg'))
+        return render(request, 'reports/proposal.html', {'pages': mark_safe(pages), 'title': d['customer'], 'embedded': ajax})
+    if request.method == 'POST' and ajax:
+        return JsonResponse({'errors': form.errors}, status=400)
+    return render(request, 'reports/proposal_form.html', {'form': form, 'title': 'پیشنهاد تجاری اولیه'})

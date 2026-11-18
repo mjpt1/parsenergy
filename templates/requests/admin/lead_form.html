@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% load i18n form_extras %}
+{% block content %}
+<div class="panel" style="max-width:900px">
+  <h1 class="h4 mb-3">{{ page_title }}</h1>
+  {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+  <form method="post" data-location-form>{% csrf_token %}
+    <div class="row g-3">
+      {% for field in form %}
+      <div class="col-12 {% if field.name != 'description' and field.name != 'install_address' %}col-md-6{% endif %}">
+        <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {% if field.help_text %}<div class="footer-note">{{ field.help_text }}</div>{% endif %}
+        {% if field.errors %}<div class="text-danger small">{{ field.errors|striptags }}</div>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    <div class="d-flex gap-2 mt-3">
+      <button type="submit" class="btn">{% trans "ذخیره" %}</button>
+      <a class="btn secondary" data-ajax="true" href="{% if object %}{% url 'requests:admin-detail' object.pk %}{% else %}{% url 'requests:admin-list' %}{% endif %}">{% trans "بازگشت" %}</a>
+    </div>
+  </form>
+</div>
+{% location_select %}
+{% endblock %}

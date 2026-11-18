@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>دمو v3 داشبوردهای نقش — پارس انرژی</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <style>
+    :root {
+      --bg: #eef3f0;
+      --panel: #ffffff;
+      --ink: #122018;
+      --muted: #5c6f64;
+      --line: #d5e0d9;
+      --sun: #d97706;
+      --sun-soft: #fef3c7;
+      --leaf: #0f766e;
+      --leaf-soft: #ccfbf1;
+      --alert: #b91c1c;
+      --alert-soft: #fee2e2;
+      --hold: #a16207;
+      --ok: #15803d;
+      --blue: #1d4ed8;
+      --blue-soft: #dbeafe;
+      --radius: 14px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Vazirmatn, system-ui, sans-serif;
+      background:
+        radial-gradient(1200px 500px at 100% -10%, #fde68a55, transparent 55%),
+        radial-gradient(900px 420px at -10% 0%, #99f6e455, transparent 50%),
+        var(--bg);
+      color: var(--ink);
+      min-height: 100vh;
+    }
+    .wrap { max-width: 1280px; margin: 0 auto; padding: 24px 18px 72px; }
+    .banner { display:flex; flex-wrap:wrap; gap:14px; align-items:flex-end; justify-content:space-between; margin-bottom:14px; }
+    .banner h1 { margin:0 0 6px; font-size:1.45rem; font-weight:700; }
+    .banner p { margin:0; color:var(--muted); font-size:.9rem; max-width:52rem; line-height:1.7; }
+    .pill { background:var(--sun-soft); color:#92400e; border:1px solid #fcd34d; border-radius:999px; padding:8px 14px; font-size:.8rem; font-weight:600; }
+    .matrix {
+      background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:14px 16px; margin-bottom:16px;
+    }
+    .matrix h2 { margin:0 0 6px; font-size:1rem; }
+    .matrix .sub { margin:0 0 10px; color:var(--muted); font-size:.8rem; line-height:1.6; }
+    .matrix table { width:100%; border-collapse:collapse; font-size:.78rem; }
+    .matrix th,.matrix td { padding:7px 6px; border-bottom:1px solid var(--line); text-align:right; vertical-align:top; }
+    .matrix th { color:var(--muted); font-weight:600; font-size:.72rem; }
+    .matrix .yes { color:var(--ok); font-weight:600; }
+    .matrix .no { color:#94a3b8; }
+    .matrix .soon { color:var(--hold); font-weight:600; }
+    .roles { display:flex; flex-wrap:wrap; gap:6px; padding:8px; background:var(--panel); border:1px solid var(--line); border-radius:16px; margin-bottom:18px; position:sticky; top:8px; z-index:20; }
+    .roles button { appearance:none; border:0; cursor:pointer; background:transparent; color:var(--muted); font:inherit; font-weight:600; font-size:.86rem; padding:9px 12px; border-radius:11px; }
+    .roles button:hover { background:#f3f7f4; color:var(--ink); }
+    .roles button.active { background:var(--leaf); color:#fff; }
+    .dash { display:none; animation:in .25s ease; }
+    .dash.active { display:block; }
+    @keyframes in { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:none} }
+    .grid-2 { display:grid; grid-template-columns:1.35fr .95fr; gap:14px; margin-bottom:14px; }
+    .grid-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:14px; }
+    .grid-4 { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+    .split { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px; }
+    @media (max-width:980px){ .grid-2,.grid-3,.split{grid-template-columns:1fr} .grid-4{grid-template-columns:1fr 1fr} }
+    .card { background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:16px; }
+    .card.mb { margin-bottom:14px; }
+    .card h2 { margin:0 0 2px; font-size:1.08rem; font-weight:700; }
+    .card h3 { margin:0 0 10px; font-size:.95rem; font-weight:700; }
+    .card .sub { margin:0 0 14px; color:var(--muted); font-size:.82rem; line-height:1.55; }
+    .kpi { background:#f7faf8; border:1px solid var(--line); border-radius:12px; padding:12px; }
+    .kpi .n { font-size:1.45rem; font-weight:700; line-height:1.1; font-variant-numeric:tabular-nums; }
+    .kpi .l { margin-top:3px; color:var(--muted); font-size:.74rem; font-weight:500; }
+    .kpi.warn .n{color:var(--hold)} .kpi.danger .n{color:var(--alert)} .kpi.ok .n{color:var(--ok)} .kpi.sun .n{color:var(--sun)} .kpi.blue .n{color:var(--blue)}
+    .pipeline { display:grid; grid-template-columns:repeat(5,1fr); gap:7px; }
+    @media (max-width:700px){ .pipeline{grid-template-columns:1fr 1fr} }
+    .stage { background:#f7faf8; border:1px solid var(--line); border-radius:11px; padding:10px; text-align:center; }
+    .stage .n { font-size:1.2rem; font-weight:700; }
+    .stage .l { font-size:.72rem; color:var(--muted); margin-top:2px; }
+    .stage.hot { background:var(--leaf-soft); border-color:#5eead4; }
+    .bars { display:flex; flex-direction:column; gap:9px; }
+    .bar-row { display:grid; grid-template-columns:7.5rem 1fr 2.4rem; gap:8px; align-items:center; }
+    .bar-row span { font-size:.78rem; color:var(--muted); }
+    .bar-row strong { font-size:.78rem; text-align:left; }
+    .track { height:9px; background:#e8eee9; border-radius:999px; overflow:hidden; }
+    .fill { height:100%; border-radius:999px; background:linear-gradient(90deg,var(--leaf),#14b8a6); }
+    .fill.amber { background:linear-gradient(90deg,#b45309,#f59e0b); }
+    .fill.red { background:linear-gradient(90deg,#991b1b,#ef4444); }
+    table.data { width:100%; border-collapse:collapse; font-size:.84rem; }
+    table.data th,table.data td { padding:9px 7px; border-bottom:1px solid var(--line); text-align:right; vertical-align:top; }
+    table.data th { color:var(--muted); font-weight:600; font-size:.74rem; }
+    .badge { display:inline-block; padding:2px 8px; border-radius:999px; font-size:.7rem; font-weight:600; white-space:nowrap; }
+    .b-mkt{background:#fef3c7;color:#92400e} .b-sales{background:var(--blue-soft);color:#1e40af}
+    .b-tech{background:var(--leaf-soft);color:#115e59} .b-done{background:#dcfce7;color:#166534}
+    .b-hold{background:#ffedd5;color:#9a3412} .b-err{background:var(--alert-soft);color:#991b1b}
+    .b-warn{background:#fef3c7;color:#92400e} .b-mask{background:#f1f5f9;color:#475569;font-family:ui-monospace,monospace}
+    .b-info{background:#e0f2fe;color:#075985} .b-hot{background:#ffedd5;color:#9a3412}
+    .err-list { display:flex; flex-direction:column; gap:8px; }
+    .err-item { display:grid; grid-template-columns:auto 1fr auto; gap:10px; align-items:start; padding:10px; border-radius:10px; border:1px solid var(--line); background:#fafbfa; }
+    .err-item.critical { border-color:#fecaca; background:var(--alert-soft); }
+    .err-item.major { border-color:#fde68a; background:#fffbeb; }
+    .err-item .title { font-weight:600; font-size:.86rem; }
+    .err-item .meta { color:var(--muted); font-size:.75rem; margin-top:2px; line-height:1.5; }
+    .note { margin-top:14px; padding:11px 13px; border-radius:12px; background:#fffbeb; border:1px dashed #f59e0b; color:#78350f; font-size:.82rem; line-height:1.7; }
+    .section-label { font-size:.72rem; font-weight:700; letter-spacing:.04em; color:var(--muted); margin:0 0 8px; }
+    .mini-stat { display:flex; justify-content:space-between; gap:8px; padding:8px 0; border-bottom:1px solid var(--line); font-size:.84rem; }
+    .mini-stat:last-child { border-bottom:0; }
+    .timeline { display:flex; flex-direction:column; gap:0; }
+    .tl-item { display:grid; grid-template-columns:5.5rem 1fr; gap:10px; padding:8px 0; border-bottom:1px solid var(--line); font-size:.82rem; }
+    .tl-item time { color:var(--muted); font-size:.75rem; }
+    .ceo-block { margin-bottom:14px; }
+    .ceo-block h3 { margin:0 0 10px; font-size:.95rem; font-weight:700; padding-bottom:6px; border-bottom:2px solid var(--leaf); display:inline-block; }
+    .map-box { height:240px; border-radius:12px; overflow:hidden; border:1px solid var(--line); background:#dbe7e0; }
+    .map-box.tall { height:300px; }
+    .map-box.short { height:200px; }
+    .layout-wrap { display:grid; grid-template-columns:1fr 220px; gap:14px; }
+    @media (max-width:800px){ .layout-wrap{grid-template-columns:1fr} }
+    .cell-grid {
+      display:grid; grid-template-columns:repeat(12,1fr); gap:4px;
+      background:#0f172a; padding:10px; border-radius:12px; direction:ltr;
+    }
+    .cell {
+      aspect-ratio:1; border-radius:3px; cursor:pointer; position:relative;
+      border:1px solid rgba(255,255,255,.12);
+    }
+    .cell:hover { outline:2px solid #fff; z-index:1; }
+    .cell.ok { background:#22c55e; }
+    .cell.warn { background:#f59e0b; }
+    .cell.hot { background:#ef4444; box-shadow:0 0 8px #ef444488; }
+    .cell.offline { background:#64748b; }
+    .cell.fault { background:#7f1d1d; background-image:repeating-linear-gradient(45deg,transparent,transparent 3px,#0003 3px,#0003 6px); }
+    .legend { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; font-size:.74rem; color:var(--muted); }
+    .legend i { display:inline-block; width:12px; height:12px; border-radius:3px; margin-left:4px; vertical-align:middle; }
+    .equip-dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-left:6px; }
+    .equip-dot.on{background:#16a34a} .equip-dot.off{background:#dc2626} .equip-dot.warn{background:#d97706}
+    .tooltip-cell {
+      display:none; position:absolute; z-index:30; background:#0f172a; color:#fff; font-size:.72rem;
+      padding:8px 10px; border-radius:8px; pointer-events:none; max-width:200px; line-height:1.5;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="banner">
+      <div>
+        <h1>دمو v3 — ادغام‌شده در اپ</h1>
+        <p>
+          این پیش‌نمایش مرجع است. داشبوردهای زنده در مسیرهای
+          <code>/dashboard/</code>، <code>/plants/dashboard/</code> و
+          <code>/requests/manage/dashboard/</code> پیاده‌سازی شده‌اند.
+          مدل <code>PVModule</code> (ردیف/ستون + دما + وضعیت) هم اضافه شده است.
+        </p>
+      </div>
+      <span class="pill">پیش‌نمایش v3 · نمونه</span>
+    </div>
+
+    <div class="matrix">
+      <h2>ماتریس نیاز هر نقش (خروجی بررسی کدبیس)</h2>
+      <p class="sub">
+        منبع داده امروز: <code>plants</code> (lat/lng، اینورتر، سنسور دما/تابش، تله‌متری، Equipment.health)، <code>alerts</code>، <code>requests</code> (لید/UTM/نقشه سایت)، داشبورد مالک فعلی بدون شبکه سلول.
+        مدل جداگانه Cell/Module هنوز در DB نیست → در ادغام باید موقعیت ردیف/ستون و دمای سلول اضافه شود؛ UI زیر هدف نهایی است.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>قابلیت</th>
+            <th>بازاریابی</th>
+            <th>فروش</th>
+            <th>فنی</th>
+            <th>عملیات</th>
+            <th>خریدار</th>
+            <th>مدیرکل</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>قیف لید / UTM / کمپین</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">—</td><td class="yes">✓</td><td class="no">—</td><td class="yes">✓</td></tr>
+          <tr><td>هویت مشتری (نام/موبایل)</td><td class="no">محدود</td><td class="yes">✓</td><td class="no">مخفی</td><td class="yes">✓</td><td class="yes">خودش</td><td class="yes">✓</td></tr>
+          <tr><td>آدرس + نقشه سایت لید</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">خودش</td><td class="yes">✓</td></tr>
+          <tr><td>نقشه جغرافیایی نیروگاه‌ها</td><td class="yes">خلاصه</td><td class="yes">خلاصه</td><td class="yes">ناوگان</td><td class="yes">ناوگان</td><td class="yes">خودش</td><td class="yes">ناوگان</td></tr>
+          <tr><td>چیدمان پنل / وضعیت سلول / گرما</td><td class="no">—</td><td class="no">—</td><td class="yes">✓</td><td class="yes">پایش</td><td class="yes">✓ کامل</td><td class="yes">خلاصه</td></tr>
+          <tr><td>اینورتر/سنسور/کنتور/گیت‌وی</td><td class="no">—</td><td class="no">—</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">KPI</td></tr>
+          <tr><td>تولید لحظه‌ای / انرژی / نمودار</td><td class="no">—</td><td class="no">—</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+          <tr><td>هشدار و خطای تجهیزات</td><td class="no">—</td><td class="no">—</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">خودش</td><td class="yes">✓</td></tr>
+          <tr><td>پیشنهاد / قرارداد / پرداخت</td><td class="no">—</td><td class="yes">✓</td><td class="soon">قیمت</td><td class="yes">SLA</td><td class="yes">✓</td><td class="yes">KPI</td></tr>
+          <tr><td>انتقال CRM / خارج SLA</td><td class="no">—</td><td class="yes">✓</td><td class="no">—</td><td class="yes">✓</td><td class="no">—</td><td class="yes">✓</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <nav class="roles" id="roleTabs">
+      <button type="button" class="active" data-role="marketing">توسعه بازار</button>
+      <button type="button" data-role="sales">فروش</button>
+      <button type="button" data-role="technical">فنی</button>
+      <button type="button" data-role="operations">عملیات</button>
+      <button type="button" data-role="customer">خریدار</button>
+      <button type="button" data-role="ceo">مدیر کل</button>
+    </nav>
+
+    <!-- ========== MARKETING ========== -->
+    <section class="dash active" id="dash-marketing">
+      <div class="grid-2">
+        <div class="card">
+          <h2>داشبورد توسعه بازار</h2>
+          <p class="sub">جذب لید، کیفیت فرم، کمپین و کانال — بدون تماس فروش</p>
+          <div class="grid-4">
+            <div class="kpi sun"><div class="n">48</div><div class="l">لید جدید هفته</div></div>
+            <div class="kpi"><div class="n">12.4%</div><div class="l">بازدید → لید</div></div>
+            <div class="kpi ok"><div class="n">86%</div><div class="l">تکمیل فرم</div></div>
+            <div class="kpi"><div class="n">3.8%</div><div class="l">ترک مرحله ۳</div></div>
+            <div class="kpi blue"><div class="n">31</div><div class="l">ارجاع به فروش</div></div>
+            <div class="kpi"><div class="n">9</div><div class="l">ناقص / برگشتی</div></div>
+            <div class="kpi"><div class="n">17</div><div class="l">Landing فعال</div></div>
+            <div class="kpi warn"><div class="n">4</div><div class="l">کمپین زیر هدف</div></div>
+          </div>
+        </div>
+        <div class="card">
+          <h2>نقشه جغرافیایی لیدها و نیروگاه‌ها</h2>
+          <p class="sub">تراکم تقاضا + محل نیروگاه‌های فعال (قابل‌رویت در همه داشبوردها)</p>
+          <div class="map-box short" data-map="fleet-mkt"></div>
+        </div>
+      </div>
+      <div class="grid-3">
+        <div class="card">
+          <h2>کمپین‌ها</h2>
+          <div class="bars">
+            <div class="bar-row"><span>Summer2026</span><div class="track"><div class="fill amber" style="width:90%"></div></div><strong>22</strong></div>
+            <div class="bar-row"><span>SEO خورشیدی</span><div class="track"><div class="fill" style="width:68%"></div></div><strong>16</strong></div>
+            <div class="bar-row"><span>ویدیو اینستا</span><div class="track"><div class="fill amber" style="width:42%"></div></div><strong>10</strong></div>
+            <div class="bar-row"><span>لینکدین B2B</span><div class="track"><div class="fill" style="width:28%"></div></div><strong>7</strong></div>
+          </div>
+        </div>
+        <div class="card">
+          <h2>منبع لید (UTM)</h2>
+          <div class="bars">
+            <div class="bar-row"><span>Google</span><div class="track"><div class="fill" style="width:85%"></div></div><strong>34</strong></div>
+            <div class="bar-row"><span>Instagram</span><div class="track"><div class="fill amber" style="width:45%"></div></div><strong>18</strong></div>
+            <div class="bar-row"><span>Organic</span><div class="track"><div class="fill" style="width:38%"></div></div><strong>15</strong></div>
+            <div class="bar-row"><span>Referral</span><div class="track"><div class="fill" style="width:22%"></div></div><strong>9</strong></div>
+          </div>
+        </div>
+        <div class="card">
+          <h2>استان / نوع پروژه</h2>
+          <table class="data">
+            <thead><tr><th>استان</th><th>لید</th><th>نوع</th></tr></thead>
+            <tbody>
+              <tr><td>تهران</td><td>19</td><td>اختصاصی</td></tr>
+              <tr><td>اصفهان</td><td>9</td><td>مشارکتی</td></tr>
+              <tr><td>فارس</td><td>7</td><td>مشاوره</td></tr>
+              <tr><td>یزد</td><td>4</td><td>سوله</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card mb">
+        <h2>صف بررسی بازاریابی</h2>
+        <table class="data">
+          <thead><tr><th>#</th><th>منبع</th><th>کمپین</th><th>استان</th><th>نقشه سایت</th><th>کامل بودن</th><th>اقدام</th></tr></thead>
+          <tbody>
+            <tr><td>1048</td><td>Google</td><td>Summer2026</td><td>تهران</td><td><span class="badge b-done">دارد</span></td><td><span class="badge b-done">کامل</span></td><td>ارجاع فروش</td></tr>
+            <tr><td>1047</td><td>Instagram</td><td>ویدیو</td><td>کرج</td><td><span class="badge b-warn">ندارد</span></td><td><span class="badge b-warn">فاقد قبض</span></td><td>بررسی</td></tr>
+            <tr><td>1041</td><td>Direct</td><td>—</td><td>یزد</td><td><span class="badge b-err">ندارد</span></td><td><span class="badge b-err">بدون نقشه</span></td><td>برگشت فرم</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="note">بازاریابی نقشه لید/نیروگاه را برای فهم جغرافیا می‌بیند؛ جزئیات سلول و هویت تماس فروش اینجا نیست.</div>
+    </section>
+
+    <!-- ========== SALES ========== -->
+    <section class="dash" id="dash-sales">
+      <div class="grid-2">
+        <div class="card">
+          <h2>داشبورد فروش</h2>
+          <p class="sub">تماس، اولویت، مذاکره، قرارداد و انتقال CRM</p>
+          <div class="grid-4">
+            <div class="kpi sun"><div class="n">14</div><div class="l">نیازمند تماس</div></div>
+            <div class="kpi warn"><div class="n">6</div><div class="l">اولویت High</div></div>
+            <div class="kpi"><div class="n">9</div><div class="l">مذاکره فعال</div></div>
+            <div class="kpi blue"><div class="n">5</div><div class="l">پیشنهاد آماده</div></div>
+            <div class="kpi ok"><div class="n">12</div><div class="l">قرارداد موفق ماه</div></div>
+            <div class="kpi danger"><div class="n">4</div><div class="l">از دست‌رفته</div></div>
+            <div class="kpi"><div class="n">3</div><div class="l">Hold</div></div>
+            <div class="kpi"><div class="n">2.1</div><div class="l">روز تا تماس اول</div></div>
+          </div>
+        </div>
+        <div class="card">
+          <h2>نقشه مشتریان و سایت‌ها</h2>
+          <p class="sub">محل لیدهای فعال + نیروگاه‌های تحویل‌شده برای زمینه فروش</p>
+          <div class="map-box short" data-map="fleet-sales"></div>
+        </div>
+      </div>
+      <div class="card mb">
+        <h2>صف عملیاتی امروز</h2>
+        <table class="data">
+          <thead><tr><th>#</th><th>مشتری</th><th>موبایل</th><th>نقشه</th><th>اولویت</th><th>مرحله</th><th>اقدام</th></tr></thead>
+          <tbody>
+            <tr><td>1042</td><td>شرکت آفتاب‌گستر</td><td>0912…3344</td><td><span class="badge b-done">✓</span></td><td><span class="badge b-hold">High</span></td><td><span class="badge b-sales">صلاحیت</span></td><td>تماس اول</td></tr>
+            <tr><td>1038</td><td>خانم رضایی</td><td>0913…7788</td><td><span class="badge b-done">✓</span></td><td>Normal</td><td><span class="badge b-tech">برگشت فنی</span></td><td>ارائه پیشنهاد</td></tr>
+            <tr><td>1031</td><td>کارخانه سپید</td><td>0912…1122</td><td><span class="badge b-done">✓</span></td><td><span class="badge b-hold">High</span></td><td><span class="badge b-sales">مذاکره</span></td><td>صدور قرارداد</td></tr>
+            <tr><td>1024</td><td>تعاونی کشاورزان</td><td>0917…9900</td><td><span class="badge b-done">✓</span></td><td>Normal</td><td><span class="badge b-done">آماده CRM</span></td><td>تأیید انتقال</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="split">
+        <div class="card">
+          <h2>تقویم پیگیری</h2>
+          <div class="timeline">
+            <div class="tl-item"><time>امروز ۱۴:۰۰</time><div>تماس با #1042</div></div>
+            <div class="tl-item"><time>امروز ۱۶:۳۰</time><div>ارسال پیشنهاد #1038</div></div>
+            <div class="tl-item"><time>فردا ۱۰:۰۰</time><div>جلسه قرارداد #1031</div></div>
+          </div>
+        </div>
+        <div class="card">
+          <h2>دلایل از دست رفتن</h2>
+          <div class="bars">
+            <div class="bar-row"><span>قیمت</span><div class="track"><div class="fill red" style="width:70%"></div></div><strong>7</strong></div>
+            <div class="bar-row"><span>زمان اجرا</span><div class="track"><div class="fill amber" style="width:40%"></div></div><strong>4</strong></div>
+            <div class="bar-row"><span>رقیب</span><div class="track"><div class="fill" style="width:30%"></div></div><strong>3</strong></div>
+          </div>
+        </div>
+      </div>
+      <div class="note">فروش هویت و نقشه سایت را می‌بیند؛ چیدمان سلول فقط پس از تحویل نیروگاه در داشبورد فنی/خریدار است.</div>
+    </section>
+
+    <!-- ========== TECHNICAL ========== -->
+    <section class="dash" id="dash-technical">
+      <div class="grid-2">
+        <div class="card">
+          <h2>داشبورد فنی</h2>
+          <p class="sub">پیشنهاد قیمت لید + پایش ناوگان — بدون هویت مشتری</p>
+          <div class="grid-4">
+            <div class="kpi sun"><div class="n">18</div><div class="l">صف قیمت‌گذاری</div></div>
+            <div class="kpi ok"><div class="n">11</div><div class="l">پیشنهاد تکمیل</div></div>
+            <div class="kpi danger"><div class="n">5</div><div class="l">خطای Critical</div></div>
+            <div class="kpi warn"><div class="n">12</div><div class="l">هشدار Major</div></div>
+            <div class="kpi"><div class="n">3</div><div class="l">اینورتر آفلاین</div></div>
+            <div class="kpi ok"><div class="n">94%</div><div class="l">آپتایم ناوگان</div></div>
+            <div class="kpi danger"><div class="n">7</div><div class="l">سلول داغ</div></div>
+            <div class="kpi"><div class="n">4.2</div><div class="l">میانگین ساعت پیشنهاد</div></div>
+          </div>
+        </div>
+        <div class="card">
+          <h2>نقشه ناوگان نیروگاه‌ها</h2>
+          <p class="sub">موقعیت + وضعیت آنلاین/آلارم روی نقشه</p>
+          <div class="map-box" data-map="fleet-tech"></div>
+        </div>
+      </div>
+
+      <div class="card mb">
+        <h2>نمونه چیدمان سلول — نیروگاه پارک خورشید (انتخاب‌شده از نقشه)</h2>
+        <p class="sub">همان نمایی که خریدار برای نیروگاه خودش می‌بیند؛ فنی روی همه نیروگاه‌های ناوگان دسترسی دارد</p>
+        <div class="layout-wrap">
+          <div>
+            <div class="cell-grid" id="techCellGrid" data-cells="fleet"></div>
+            <div class="legend">
+              <span><i style="background:#22c55e"></i>عادی</span>
+              <span><i style="background:#f59e0b"></i>هشدار دما</span>
+              <span><i style="background:#ef4444"></i>داغ</span>
+              <span><i style="background:#64748b"></i>آفلاین</span>
+              <span><i style="background:#7f1d1d"></i>Fault</span>
+            </div>
+          </div>
+          <div id="techCellDetail">
+            <div class="section-label">جزئیات سلول انتخاب‌شده</div>
+            <div class="mini-stat"><span>شناسه</span><strong>C-R3-C7</strong></div>
+            <div class="mini-stat"><span>دما</span><strong style="color:var(--alert)">78°C</strong></div>
+            <div class="mini-stat"><span>وضعیت</span><strong>داغ / Hotspot</strong></div>
+            <div class="mini-stat"><span>استرینگ</span><strong>S2 · INV-14</strong></div>
+            <div class="mini-stat"><span>توان نسبی</span><strong>62%</strong></div>
+            <div class="mini-stat"><span>آخرین داده</span><strong>۲ دقیقه پیش</strong></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mb">
+        <h2>خطاها و هشدارهای تجهیزات</h2>
+        <div class="err-list">
+          <div class="err-item critical">
+            <span class="badge b-err">Critical</span>
+            <div><div class="title">قطع ارتباط اینورتر INV-14 — پارک خورشید</div><div class="meta">COMM_TIMEOUT · گیت‌وی GW-03 · ۴۲ دقیقه</div></div>
+            <span>فوری</span>
+          </div>
+          <div class="err-item critical">
+            <span class="badge b-err">Critical</span>
+            <div><div class="title">سلول داغ خوشه‌ای — سوله کرج · R2-C4 تا R2-C6</div><div class="meta">STRING_FAULT · دما &gt; ۷۵°C</div></div>
+            <span>فوری</span>
+          </div>
+          <div class="err-item major">
+            <span class="badge b-warn">Major</span>
+            <div><div class="title">دمای اینورتر بالا — پشت‌بام یزد</div><div class="meta">TEMP_HIGH · ۷۸°C</div></div>
+            <span>امروز</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="split">
+        <div class="card">
+          <h2>صف پیشنهاد (بدون هویت)</h2>
+          <table class="data">
+            <thead><tr><th>ID</th><th>شهر</th><th>نقشه سایت</th><th>محل</th><th>وضعیت</th></tr></thead>
+            <tbody>
+              <tr><td><span class="badge b-mask">#1042</span></td><td>تهران</td><td>✓</td><td>پشت‌بام</td><td>در حال تهیه</td></tr>
+              <tr><td><span class="badge b-mask">#1038</span></td><td>کرج</td><td>✓</td><td>سوله</td><td>آماده ارجاع</td></tr>
+              <tr><td><span class="badge b-mask">#1035</span></td><td>یزد</td><td><span class="badge b-err">نیاز</span></td><td>زمین</td><td>نیاز نقشه</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card">
+          <h2>تجهیزات ناوگان</h2>
+          <div class="mini-stat"><span><span class="equip-dot on"></span>اینورتر آنلاین</span><strong>128 / 131</strong></div>
+          <div class="mini-stat"><span><span class="equip-dot warn"></span>سنسور دما/تابش</span><strong>۴ هشدار</strong></div>
+          <div class="mini-stat"><span><span class="equip-dot off"></span>گیت‌وی آفلاین</span><strong>1</strong></div>
+          <div class="mini-stat"><span><span class="equip-dot on"></span>کنتور</span><strong>۵۲ / ۵۲</strong></div>
+        </div>
+      </div>
+      <div class="note">فنی: آدرس و نقشه لید ✓ · هویت مخفی · چیدمان/گرمای سلول و خطای تجهیزات روی ناوگان ✓</div>
+    </section>
+
+    <!-- ========== OPERATIONS ========== -->
+    <section class="dash" id="dash-operations">
+      <div class="grid-2">
+        <div class="card">
+          <h2>داشبورد عملیات و فرایند</h2>
+          <p class="sub">مالک Workflow وب‌سایت، SLA، ارجاع‌ها، CRM + دید کلی سلامت ناوگان</p>
+          <div class="grid-4">
+            <div class="kpi"><div class="n">142</div><div class="l">لید فعال</div></div>
+            <div class="kpi danger"><div class="n">9</div><div class="l">خارج از SLA</div></div>
+            <div class="kpi warn"><div class="n">5</div><div class="l">بدون مسئول</div></div>
+            <div class="kpi ok"><div class="n">28</div><div class="l">منتقل به CRM</div></div>
+            <div class="kpi danger"><div class="n">5</div><div class="l">Critical ناوگان</div></div>
+            <div class="kpi"><div class="n">53</div><div class="l">نیروگاه فعال</div></div>
+            <div class="kpi sun"><div class="n">72س</div><div class="l">آستانه SLA</div></div>
+            <div class="kpi"><div class="n">3</div><div class="l">بازگشت از فنی</div></div>
+          </div>
+        </div>
+        <div class="card">
+          <h2>نقشه ناوگان + وضعیت</h2>
+          <p class="sub">برای تشخیص سریع نیروگاه‌های مشکل‌دار جغرافیایی</p>
+          <div class="map-box" data-map="fleet-ops"></div>
+        </div>
+      </div>
+      <div class="split">
+        <div class="card">
+          <h2>Pipeline لحظه‌ای</h2>
+          <div class="pipeline">
+            <div class="stage"><div class="n">22</div><div class="l">بازاریابی</div></div>
+            <div class="stage hot"><div class="n">35</div><div class="l">فروش</div></div>
+            <div class="stage"><div class="n">18</div><div class="l">فنی</div></div>
+            <div class="stage"><div class="n">14</div><div class="l">مذاکره</div></div>
+            <div class="stage"><div class="n">28</div><div class="l">CRM</div></div>
+          </div>
+        </div>
+        <div class="card">
+          <h2>پرونده‌های بحرانی فرایند</h2>
+          <table class="data">
+            <thead><tr><th>#</th><th>مشکل</th><th>مرحله</th><th>عمر</th></tr></thead>
+            <tbody>
+              <tr><td>1019</td><td>توقف خارج SLA</td><td>فنی</td><td>۹۶س</td></tr>
+              <tr><td>1022</td><td>بدون مسئول فروش</td><td>صلاحیت</td><td>۵۰س</td></tr>
+              <tr><td>1003</td><td>آماده CRM بدون تأیید</td><td>Done</td><td>۲ روز</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="note">عملیات مالک گردش‌کار است؛ نقشه ناوگان برای هماهنگی با فنی دیده می‌شود. KPI اجرای نصب در CRM می‌ماند.</div>
+    </section>
+
+    <!-- ========== CUSTOMER / BUYER ========== -->
+    <section class="dash" id="dash-customer">
+      <div class="grid-2">
+        <div class="card">
+          <h2>پنل خریدار — نیروگاه من</h2>
+          <p class="sub">همه بخش‌های نیروگاه خودتان: تولید، نقشه، چیدمان سلول، تجهیزات، هشدار + وضعیت درخواست‌ها</p>
+          <div class="grid-4">
+            <div class="kpi sun"><div class="n">42.6</div><div class="l">توان لحظه‌ای kW</div></div>
+            <div class="kpi ok"><div class="n">318</div><div class="l">انرژی امروز kWh</div></div>
+            <div class="kpi"><div class="n">96%</div><div class="l">راندمان نسبی</div></div>
+            <div class="kpi danger"><div class="n">2</div><div class="l">هشدار فعال</div></div>
+            <div class="kpi"><div class="n">4/4</div><div class="l">اینورتر آنلاین</div></div>
+            <div class="kpi warn"><div class="n">3</div><div class="l">سلول داغ</div></div>
+            <div class="kpi blue"><div class="n">1</div><div class="l">پیشنهاد جدید</div></div>
+            <div class="kpi"><div class="n">1</div><div class="l">قرارداد در انتظار</div></div>
+          </div>
+        </div>
+        <div class="card">
+          <h2>نقشه قرارگیری نیروگاه من</h2>
+          <p class="sub">مختصات Plant.latitude / longitude</p>
+          <div class="map-box tall" data-map="buyer-plant"></div>
+          <div class="mini-stat" style="margin-top:10px"><span>آدرس</span><strong>یزد · شهرک صنعتی · قطعه ۱۲</strong></div>
+          <div class="mini-stat"><span>ظرفیت</span><strong>۵۰ kW</strong></div>
+          <div class="mini-stat"><span>وضعیت اتصال</span><strong style="color:var(--ok)">آنلاین</strong></div>
+        </div>
+      </div>
+
+      <div class="card mb">
+        <h2>چیدمان سلول‌ها — وضعیت و دما</h2>
+        <p class="sub">روی هر سلول کلیک کنید: وضعیت، دما، استرینگ، اینورتر مرتبط</p>
+        <div class="layout-wrap">
+          <div>
+            <div class="cell-grid" id="buyerCellGrid" data-cells="buyer"></div>
+            <div class="legend">
+              <span><i style="background:#22c55e"></i>عادی (&lt;55°C)</span>
+              <span><i style="background:#f59e0b"></i>هشدار (۵۵–۷۰)</span>
+              <span><i style="background:#ef4444"></i>داغ (&gt;۷۰)</span>
+              <span><i style="background:#64748b"></i>آفلاین</span>
+              <span><i style="background:#7f1d1d"></i>Fault</span>
+            </div>
+          </div>
+          <div>
+            <div class="section-label">جزئیات سلول</div>
+            <div id="buyerCellDetail">
+              <div class="mini-stat"><span>شناسه</span><strong>C-R4-C9</strong></div>
+              <div class="mini-stat"><span>دما</span><strong style="color:var(--alert)">76°C</strong></div>
+              <div class="mini-stat"><span>وضعیت</span><strong>داغ — نیاز بازدید</strong></div>
+              <div class="mini-stat"><span>استرینگ</span><strong>S3</strong></div>
+              <div class="mini-stat"><span>اینورتر</span><strong>INV-02</strong></div>
+              <div class="mini-stat"><span>جریان نسبی</span><strong>58%</strong></div>
+              <div class="mini-stat"><span>آخرین داده</span><strong>۴۵ ثانیه پیش</strong></div>
+            </div>
+            <div class="section-label" style="margin-top:14px">خلاصه آرایه</div>
+            <div class="mini-stat"><span>کل سلول</span><strong>96</strong></div>
+            <div class="mini-stat"><span>سالم</span><strong style="color:var(--ok)">88</strong></div>
+            <div class="mini-stat"><span>هشدار دما</span><strong style="color:var(--hold)">5</strong></div>
+            <div class="mini-stat"><span>داغ</span><strong style="color:var(--alert)">3</strong></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="split">
+        <div class="card">
+          <h2>تجهیزات نیروگاه من</h2>
+          <table class="data">
+            <thead><tr><th>تجهیز</th><th>وضعیت</th><th>جزئیات</th></tr></thead>
+            <tbody>
+              <tr><td>INV-01</td><td><span class="badge b-done">آنلاین</span></td><td>12.1 kW · 51°C</td></tr>
+              <tr><td>INV-02</td><td><span class="badge b-warn">هشدار</span></td><td>9.8 kW · سلول داغ S3</td></tr>
+              <tr><td>INV-03</td><td><span class="badge b-done">آنلاین</span></td><td>11.4 kW</td></tr>
+              <tr><td>INV-04</td><td><span class="badge b-done">آنلاین</span></td><td>9.3 kW</td></tr>
+              <tr><td>سنسور تابش</td><td><span class="badge b-done">فعال</span></td><td>812 W/m²</td></tr>
+              <tr><td>سنسور دما محیط</td><td><span class="badge b-done">فعال</span></td><td>38°C</td></tr>
+              <tr><td>کنتور دو طرفه</td><td><span class="badge b-done">آنلاین</span></td><td>Modbus</td></tr>
+              <tr><td>گیت‌وی GW-01</td><td><span class="badge b-done">آنلاین</span></td><td>آخرین: اکنون</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card">
+          <h2>هشدارهای نیروگاه من</h2>
+          <div class="err-list">
+            <div class="err-item major">
+              <span class="badge b-hot">دما</span>
+              <div><div class="title">۳ سلول داغ در استرینگ S3</div><div class="meta">R4-C9 · R4-C10 · R5-C9 · پیشنهاد: بازدید حضوری</div></div>
+              <span>فعال</span>
+            </div>
+            <div class="err-item">
+              <span class="badge b-info">اطلاع</span>
+              <div><div class="title">راندمان صبحگاهی کمتر از میانگین هفته</div><div class="meta">احتمال گرد و غبار — شست‌وشو پیشنهاد می‌شود</div></div>
+              <span>پایش</span>
+            </div>
+          </div>
+          <div class="section-label" style="margin-top:14px">محیط</div>
+          <div class="mini-stat"><span>دما محیط</span><strong>38°C</strong></div>
+          <div class="mini-stat"><span>تابش</span><strong>812 W/m²</strong></div>
+          <div class="mini-stat"><span>تولید ۱۴ روز</span><strong>نمودار در اپ</strong></div>
+        </div>
+      </div>
+
+      <div class="card mb">
+        <h2>درخواست‌ها، پیشنهاد و قرارداد من</h2>
+        <table class="data">
+          <thead><tr><th>#</th><th>نوع</th><th>وضعیت قابل‌فهم</th><th>اقدام شما</th></tr></thead>
+          <tbody>
+            <tr><td>1038</td><td>اختصاصی</td><td><span class="badge b-tech">پیشنهاد آماده</span></td><td>مشاهده و انتخاب</td></tr>
+            <tr><td>1024</td><td>مشارکتی</td><td><span class="badge b-sales">قرارداد · OTP</span></td><td>تأیید قرارداد</td></tr>
+            <tr><td>0988</td><td>اختصاصی</td><td><span class="badge b-done">پرداخت‌شده · در پایش</span></td><td>مشاهده نیروگاه ↑</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="note">
+        خریدار باید همان سطح جزئیات پایش نیروگاه خودش را ببیند که فنی روی ناوگان می‌بیند —
+        نقشه، سلول (دما/وضعیت)، اینورتر، سنسور، کنتور، گیت‌وی، هشدار — به‌علاوه مسیر خرید (پیشنهاد/قرارداد).
+        صف داخلی واحدها را نمی‌بیند.
+      </div>
+    </section>
+
+    <!-- ========== CEO ========== -->
+    <section class="dash" id="dash-ceo">
+      <div class="card mb">
+        <h2>داشبورد مدیر کل</h2>
+        <p class="sub">یکجا: قیف وب‌سایت + سلامت ناوگان + نقشه سراسری</p>
+        <div class="grid-4">
+          <div class="kpi sun"><div class="n">142</div><div class="l">لید فعال</div></div>
+          <div class="kpi ok"><div class="n">12</div><div class="l">قرارداد ماه</div></div>
+          <div class="kpi blue"><div class="n">28</div><div class="l">ورود به CRM</div></div>
+          <div class="kpi danger"><div class="n">9</div><div class="l">خارج SLA</div></div>
+          <div class="kpi danger"><div class="n">5</div><div class="l">Critical ناوگان</div></div>
+          <div class="kpi warn"><div class="n">7</div><div class="l">سلول داغ ناوگان</div></div>
+          <div class="kpi"><div class="n">53</div><div class="l">نیروگاه فعال</div></div>
+          <div class="kpi"><div class="n">94%</div><div class="l">آپتایم</div></div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3>نقشه سراسری نیروگاه‌ها و لیدها</h3>
+          <div class="map-box tall" data-map="fleet-ceo"></div>
+        </div>
+        <div class="card">
+          <h3>قیف سراسری</h3>
+          <div class="pipeline" style="margin-bottom:14px">
+            <div class="stage hot"><div class="n">48</div><div class="l">لید</div></div>
+            <div class="stage"><div class="n">31</div><div class="l">فروش</div></div>
+            <div class="stage"><div class="n">18</div><div class="l">فنی</div></div>
+            <div class="stage"><div class="n">12</div><div class="l">قرارداد</div></div>
+            <div class="stage"><div class="n">12</div><div class="l">CRM</div></div>
+          </div>
+          <div class="mini-stat"><span>بازدید → لید</span><strong>12.4%</strong></div>
+          <div class="mini-stat"><span>مذاکره → قرارداد</span><strong>41%</strong></div>
+          <div class="mini-stat"><span>گلوگاه</span><strong style="color:var(--alert)">صف فنی ۵۲س</strong></div>
+          <div class="mini-stat"><span>بدون مسئول فروش</span><strong style="color:var(--alert)">5</strong></div>
+        </div>
+      </div>
+
+      <div class="grid-3 ceo-block">
+        <div class="card">
+          <h3>بازاریابی</h3>
+          <div class="mini-stat"><span>لید هفته</span><strong>48</strong></div>
+          <div class="mini-stat"><span>بهترین کمپین</span><strong>Summer2026</strong></div>
+          <div class="mini-stat"><span>فرم ناقص</span><strong>9</strong></div>
+        </div>
+        <div class="card">
+          <h3>فروش</h3>
+          <div class="mini-stat"><span>نیازمند تماس</span><strong>14</strong></div>
+          <div class="mini-stat"><span>موفق / ازدست</span><strong>12 / 4</strong></div>
+          <div class="mini-stat"><span>آماده CRM</span><strong>3</strong></div>
+        </div>
+        <div class="card">
+          <h3>فنی / ناوگان</h3>
+          <div class="mini-stat"><span>صف پیشنهاد</span><strong>18</strong></div>
+          <div class="mini-stat"><span>Critical</span><strong style="color:var(--alert)">5</strong></div>
+          <div class="mini-stat"><span>سلول داغ</span><strong style="color:var(--alert)">7</strong></div>
+        </div>
+      </div>
+
+      <div class="card mb">
+        <h3>هشدارهای مدیریتی</h3>
+        <div class="err-list">
+          <div class="err-item critical">
+            <span class="badge b-err">فرایند</span>
+            <div><div class="title">۹ پرونده خارج SLA — گلوگاه صف فنی</div></div>
+          </div>
+          <div class="err-item critical">
+            <span class="badge b-err">ناوگان</span>
+            <div><div class="title">۵ Critical + ۷ سلول داغ روی نقشه</div></div>
+          </div>
+          <div class="err-item major">
+            <span class="badge b-warn">فروش</span>
+            <div><div class="title">۵ لید بدون مسئول در صلاحیت</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="note">مدیرکل نقشه و سلامت ناوگان را می‌بیند. Happy Call و KPI مالی اجرای پروژه در CRM می‌ماند.</div>
+    </section>
+  </div>
+
+  <div class="tooltip-cell" id="cellTip"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    const FLEET = [
+      { name: 'پارک خورشید', lat: 35.72, lng: 51.42, online: true, alerts: 2 },
+      { name: 'سوله کرج', lat: 35.84, lng: 50.94, online: true, alerts: 1 },
+      { name: 'پشت‌بام یزد', lat: 31.90, lng: 54.37, online: false, alerts: 3 },
+      { name: 'کشاورزی شیراز', lat: 29.61, lng: 52.53, online: true, alerts: 0 },
+      { name: 'مشارکتی اصفهان', lat: 32.65, lng: 51.67, online: true, alerts: 0 },
+      { name: 'نیروگاه خریدار', lat: 31.8974, lng: 54.3569, online: true, alerts: 2, buyer: true },
+    ];
+
+    const maps = {};
+    function initMap(el, focusBuyer) {
+      if (!window.L || el.dataset.ready) return;
+      const center = focusBuyer ? [31.8974, 54.3569] : [32.8, 52.5];
+      const zoom = focusBuyer ? 11 : 5;
+      const map = L.map(el, { zoomControl: true, attributionControl: false }).setView(center, zoom);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(map);
+      const points = focusBuyer ? FLEET.filter((p) => p.buyer) : FLEET;
+      points.forEach((p) => {
+        const color = !p.online ? '#dc2626' : (p.alerts ? '#d97706' : '#15803d');
+        const m = L.circleMarker([p.lat, p.lng], {
+          radius: focusBuyer ? 10 : 7,
+          color: '#fff',
+          weight: 2,
+          fillColor: color,
+          fillOpacity: 0.9,
+        }).addTo(map);
+        m.bindPopup(`<b>${p.name}</b><br>${p.online ? 'آنلاین' : 'آفلاین'} · هشدار: ${p.alerts}`);
+      });
+      el.dataset.ready = '1';
+      maps[el.dataset.map] = map;
+      setTimeout(() => map.invalidateSize(), 80);
+    }
+
+    function buildCells(grid, detailRoot, seedHot) {
+      if (!grid || grid.dataset.ready) return;
+      const rows = 8, cols = 12;
+      const statuses = [];
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          let st = 'ok';
+          const n = (r * 17 + c * 13 + seedHot) % 47;
+          if (n === 3 || n === 11) st = 'hot';
+          else if (n === 7 || n === 19 || n === 23) st = 'warn';
+          else if (n === 29) st = 'offline';
+          else if (n === 31) st = 'fault';
+          statuses.push({ r: r + 1, c: c + 1, st, temp: st === 'hot' ? 72 + (n % 8) : st === 'warn' ? 58 + (n % 10) : 42 + (n % 12) });
+        }
+      }
+      statuses.forEach((cell) => {
+        const el = document.createElement('div');
+        el.className = 'cell ' + cell.st;
+        el.title = `R${cell.r}-C${cell.c} · ${cell.temp}°C · ${cell.st}`;
+        el.addEventListener('click', () => {
+          if (!detailRoot) return;
+          const label = cell.st === 'hot' ? 'داغ — نیاز بازدید' : cell.st === 'warn' ? 'هشدار دما' : cell.st === 'fault' ? 'Fault' : cell.st === 'offline' ? 'آفلاین' : 'عادی';
+          const color = cell.st === 'hot' || cell.st === 'fault' ? 'var(--alert)' : cell.st === 'warn' ? 'var(--hold)' : 'var(--ok)';
+          detailRoot.innerHTML = `
+            <div class="mini-stat"><span>شناسه</span><strong>C-R${cell.r}-C${cell.c}</strong></div>
+            <div class="mini-stat"><span>دما</span><strong style="color:${color}">${cell.temp}°C</strong></div>
+            <div class="mini-stat"><span>وضعیت</span><strong>${label}</strong></div>
+            <div class="mini-stat"><span>استرینگ</span><strong>S${((cell.c - 1) % 4) + 1}</strong></div>
+            <div class="mini-stat"><span>اینورتر</span><strong>INV-0${((cell.r - 1) % 4) + 1}</strong></div>
+            <div class="mini-stat"><span>جریان نسبی</span><strong>${cell.st === 'hot' ? 58 : cell.st === 'fault' ? 12 : 92}%</strong></div>
+            <div class="mini-stat"><span>آخرین داده</span><strong>۴۵ ثانیه پیش</strong></div>`;
+        });
+        grid.appendChild(el);
+      });
+      grid.dataset.ready = '1';
+    }
+
+    function activateRole(role) {
+      document.querySelectorAll('#roleTabs button').forEach((b) => b.classList.toggle('active', b.dataset.role === role));
+      document.querySelectorAll('.dash').forEach((d) => d.classList.toggle('active', d.id === 'dash-' + role));
+      const section = document.getElementById('dash-' + role);
+      if (!section) return;
+      section.querySelectorAll('[data-map]').forEach((el) => {
+        initMap(el, el.dataset.map === 'buyer-plant');
+        const m = maps[el.dataset.map];
+        if (m) setTimeout(() => m.invalidateSize(), 100);
+      });
+      if (role === 'customer') {
+        buildCells(document.getElementById('buyerCellGrid'), document.getElementById('buyerCellDetail'), 5);
+      }
+      if (role === 'technical') {
+        buildCells(document.getElementById('techCellGrid'), document.getElementById('techCellDetail'), 9);
+      }
+    }
+
+    document.querySelectorAll('#roleTabs button').forEach((btn) => {
+      btn.addEventListener('click', () => activateRole(btn.dataset.role));
+    });
+
+    activateRole('marketing');
+  </script>
+</body>
+</html>

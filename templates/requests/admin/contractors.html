@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block content %}
+<div class="panel">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <h1 class="h4 mb-0">{% trans "پیمانکاران" %}</h1>
+    {% if can_create %}<a class="btn" data-ajax="true" href="{% url 'accounts:staff-manage-create' %}">{% trans "ساخت حساب پیمانکار" %}</a>{% endif %}
+  </div>
+  <p class="footer-note">{% trans "برای ساخت حساب، نقش کاربر را «پیمانکار» انتخاب کنید." %}</p>
+  <div class="table-responsive"><table class="table">
+    <thead><tr><th>{% trans "پیمانکار" %}</th><th>{% trans "تخصص" %}</th><th>{% trans "موبایل" %}</th><th>{% trans "پروژهٔ فعال" %}</th><th>{% trans "پروژهٔ پایان‌یافته" %}</th><th>{% trans "میانگین امتیاز" %}</th><th></th></tr></thead>
+    <tbody>{% for person in contractors %}
+      <tr><td>{{ person.get_full_name|default:person.username }}{% if person.contractor_profile.company_name %}<div class="footer-note">{{ person.contractor_profile.company_name }}</div>{% endif %}</td>
+        <td>{{ person.contractor_profile.expertise|default:'—' }}</td><td dir="ltr">{{ person.phone_number|default:'—' }}</td>
+        <td>{{ person.active_jobs }}</td><td>{{ person.done_jobs }}</td><td>{{ person.avg_rating|floatformat:1|default:'—' }}</td>
+        <td><a class="btn secondary btn-sm" data-ajax="true" href="{% url 'requests:contractor-detail' person.id %}">{% trans "سوابق" %}</a></td></tr>
+    {% empty %}<tr><td colspan="7">{% trans "هنوز پیمانکاری ثبت نشده است." %}</td></tr>{% endfor %}</tbody>
+  </table></div>
+</div>
+{% endblock %}

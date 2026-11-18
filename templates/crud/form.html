@@ -1,24 +1,28 @@
 {% extends 'base.html' %}
-{% load i18n %}
+{% load i18n ux_tags %}
 {% block content %}
-<div class="panel">
-  <h1 class="h4 mb-3">{% trans "فرم" %}</h1>
+<div class="panel" style="max-width:980px">
+  {% form_heading form as heading %}
+  <h1 class="h4 mb-3">{{ heading }}</h1>
   <form method="post">{% csrf_token %}
-    {{ form.as_p }}
+    {% include 'partials/form_fields.html' %}
+    {% if form.fields.latitude and form.fields.longitude %}
+    {# Any model with coordinates gets the same picker the request form uses; #}
+    {# initLocationMap() binds to #locationMap / #id_latitude / #id_longitude. #}
+    <div class="mb-3 mt-3">
+      <label class="form-label d-block">{% trans "موقعیت روی نقشه" %}</label>
+      <p class="footer-note mb-2">{% trans "روی نقشه کلیک کنید تا مختصات به‌صورت خودکار پر شود. می‌توانید نشانگر را جابه‌جا کنید." %}</p>
+      <div id="locationMap" style="height:300px;border-radius:14px;overflow:hidden;border:1px solid var(--pe-border,#ccc)"></div>
+      <div class="d-flex gap-2 mt-2 align-items-center flex-wrap">
+        <button type="button" class="btn secondary btn-sm" id="useMyLocation">{% trans "موقعیت فعلی من" %}</button>
+        <span class="footer-note" id="mapCoords">{% trans "موقعیتی انتخاب نشده است." %}</span>
+      </div>
+    </div>
+    {% endif %}
     <div class="d-flex gap-2 mt-3">
       <button type="submit" class="btn">{% trans "ذخیره" %}</button>
       <a href="javascript:history.back()" class="btn secondary">{% trans "بازگشت" %}</a>
     </div>
   </form>
 </div>
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-    var lastSeen = document.querySelector('input[name="last_seen_at"]');
-    if (lastSeen && typeof lastSeen.showPicker === 'function') {
-      lastSeen.addEventListener('focus', function () {
-        lastSeen.showPicker();
-      });
-    }
-  });
-</script>
 {% endblock %}

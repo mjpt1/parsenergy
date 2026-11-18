@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'base_portal.html' %}
 {% load i18n calendar_tags %}
 {% block content %}
 <div class="panel">
@@ -16,7 +16,7 @@
     {% for m in thread %}
     <div class="item" style="flex-direction:column;align-items:stretch">
       <div class="d-flex justify-content-between">
-        <strong>{% if m.is_staff_reply %}{% trans "پشتیبانی" %}{% else %}{% trans "شما" %}{% endif %}</strong>
+        <strong>{% if m.is_staff_reply %}{% if m.author %}{{ m.author.get_full_name|default:m.author.username }}{% else %}{% trans "پشتیبانی" %}{% endif %} <span class="badge">{% trans "کارشناس" %}</span>{% else %}{% trans "شما" %}{% endif %}</strong>
         <small>{{ m.created_at|smartdatetime:CALENDAR }}</small>
       </div>
       <div style="white-space:pre-wrap">{{ m.body }}</div>

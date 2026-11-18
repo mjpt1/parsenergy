@@ -1,0 +1,41 @@
+{% extends 'base_portal.html' %}
+{% load i18n calendar_tags %}
+{% block content %}
+<div class="panel">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <h1 class="h4 mb-0">{% trans "پروژه" %} #{{ req.id }}</h1>
+    <a class="btn secondary" href="{% url 'requests:contractor-home' %}">{% trans "بازگشت" %}</a>
+  </div>
+  <table class="table mb-4"><tbody>
+    <tr><th style="width:170px">{% trans "شرح کار شما" %}</th><td>{{ job.scope }}</td></tr>
+    <tr><th>{% trans "بازهٔ کار" %}</th><td>{{ job.start_date|smartdate:CALENDAR|default:'—' }} — {{ job.end_date|smartdate:CALENDAR|default:'—' }}</td></tr>
+    <tr><th>{% trans "مرحلهٔ پروژه" %}</th><td>{{ req.get_funnel_stage_display }}</td></tr>
+    <tr><th>{% trans "محل" %}</th><td>{{ req.province }}{% if req.city %} / {{ req.city }}{% endif %}{% if req.install_address %} — {{ req.install_address }}{% endif %}</td></tr>
+    {% if req.latitude and req.longitude %}<tr><th>{% trans "نقشه" %}</th><td><a href="https://www.google.com/maps?q={{ req.latitude }},{{ req.longitude }}" target="_blank" rel="noopener">{% trans "نمایش موقعیت" %}</a></td></tr>{% endif %}
+    {% if job.share_contact %}<tr><th>{% trans "رابط پروژه" %}</th><td>{{ req.full_name }} — <a href="tel:{{ req.mobile }}">{{ req.mobile }}</a></td></tr>{% endif %}
+    {% if req.technical_note %}<tr><th>{% trans "یادداشت فنی" %}</th><td>{{ req.technical_note|linebreaksbr }}</td></tr>{% endif %}
+  </tbody></table>
+
+  <h2 class="h6">{% trans "تجهیزات" %}</h2>
+  <div class="table-responsive mb-4"><table class="table">
+    <thead><tr><th>{% trans "تجهیز" %}</th><th>{% trans "برند / مدل" %}</th><th>{% trans "سریال" %}</th><th>{% trans "تعداد" %}</th></tr></thead>
+    <tbody>{% for item in equipment_items %}<tr><td>{{ item.name }}</td><td>{{ item.model_name|default:'—' }}</td><td dir="ltr">{{ item.serial_number|default:'—' }}</td><td>{{ item.quantity|floatformat:"-2" }} {{ item.unit }}</td></tr>
+    {% empty %}<tr><td colspan="4">{% trans "تجهیزی ثبت نشده است." %}</td></tr>{% endfor %}</tbody>
+  </table></div>
+
+  {% if insurances %}<h2 class="h6">{% trans "بیمهٔ دورهٔ اجرا" %}</h2>
+  <ul>{% for policy in insurances %}<li>{{ policy.get_kind_display }} — {{ policy.insurer }} — <span dir="ltr">{{ policy.policy_number }}</span> — {% trans "تا" %} {{ policy.end_date|smartdate:CALENDAR }}</li>{% endfor %}</ul>{% endif %}
+
+  <h2 class="h6">{% trans "مستندات" %}</h2>
+  <ul>{% for doc in documents %}<li><a href="{% url 'requests:document-file' doc.id %}">{{ doc.title }}</a></li>{% empty %}<li>{% trans "مستندی برای شما ثبت نشده است." %}</li>{% endfor %}</ul>
+
+  <h2 class="h6 mt-4">{% trans "گزارش کار" %}</h2>
+  <form method="post" enctype="multipart/form-data" data-no-ajax="true" action="{% url 'requests:contractor-report' req.id %}" class="mb-3" style="display:grid;gap:8px">{% csrf_token %}
+    <textarea class="form-control" name="body" rows="3" maxlength="2000" placeholder="{% trans 'گزارش پیشرفت کار' %}" aria-label="{% trans 'گزارش' %}"></textarea>
+    <input class="form-control" name="title" maxlength="200" placeholder="{% trans 'عنوان فایل (اختیاری)' %}" aria-label="{% trans 'عنوان فایل' %}">
+    <input class="form-control" type="file" name="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.zip,.dwg" aria-label="{% trans 'فایل' %}">
+    <div><button class="btn">{% trans "ثبت گزارش" %}</button></div>
+  </form>
+  {% for report in reports %}<div class="py-2 border-top"><small class="footer-note">{{ report.created_at|smartdatetime:CALENDAR }}</small><div>{{ report.body|linebreaksbr }}</div></div>{% endfor %}
+</div>
+{% endblock %}

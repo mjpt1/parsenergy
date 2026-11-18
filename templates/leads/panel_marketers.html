@@ -1,0 +1,108 @@
+{% extends printing|yesno:"leads/print_base.html,base.html" %}
+{% load i18n calendar_tags %}
+{% comment %}
+  Marketer performance. Credit comes only from the QR a lead arrived through,
+  so a marketer cannot be credited by what a visitor typed. `?print=1` renders
+  this same body on an A4 sheet; `?export=excel` returns the same rows.
+{% endcomment %}
+{% block content %}
+<style>
+  .rp-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:end;margin-bottom:16px}
+  .rp-bar label{font-size:.8rem;color:var(--pe-muted,#666);display:block;margin-bottom:3px}
+  .rp-table{width:100%;border-collapse:collapse;background:#fff;font-size:.88rem}
+  .rp-table th,.rp-table td{padding:9px 10px;border-bottom:1px solid var(--pe-border,#e5e7eb);text-align:right;white-space:nowrap}
+  .rp-table thead th{background:#f6f8f5;font-weight:700;font-size:.8rem}
+  .rp-table tfoot td{font-weight:700;background:#f1f6ee}
+  .rp-wrap{overflow-x:auto;border:1px solid var(--pe-border,#e5e7eb);border-radius:12px}
+  .rp-bar-pct{display:inline-block;height:6px;border-radius:3px;background:#4b773c;vertical-align:middle;margin-inline-start:6px}
+  .rp-muted{color:#888}
+  .rp-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px}
+  .rp-kpi{background:#fff;border:1px solid var(--pe-border,#e5e7eb);border-radius:12px;padding:12px 14px}
+  .rp-kpi b{display:block;font-size:1.35rem}
+  .rp-kpi span{font-size:.8rem;color:#666}
+</style>
+
+<h1 class="h4 mb-1">{% trans "گزارش عملکرد بازاریاب‌ها" %}</h1>
+<p class="meta rp-muted" style="margin-top:0">
+  {% if date_from or date_to %}{% trans "بازه" %}: {{ date_from|default:"…" }} {% trans "تا" %} {{ date_to|default:"…" }}
+  {% else %}{% trans "همهٔ زمان‌ها" %}{% endif %}
+</p>
+
+{% if not printing %}
+<form method="get" class="rp-bar">
+  <div><label for="df">{% trans "از تاریخ" %}</label><input id="df" type="text" inputmode="numeric" placeholder="۱۴۰۵/۰۸/۰۱" autocomplete="off" name="date_from" value="{{ date_from }}" class="form-control"></div>
+  <div><label for="dt">{% trans "تا تاریخ" %}</label><input id="dt" type="text" inputmode="numeric" placeholder="۱۴۰۵/۰۸/۰۱" autocomplete="off" name="date_to" value="{{ date_to }}" class="form-control"></div>
+  <button class="btn" type="submit">{% trans "اعمال" %}</button>
+  <a class="btn secondary" target="_blank" href="?print=1&date_from={{ date_from }}&date_to={{ date_to }}">{% trans "نسخهٔ چاپی / PDF" %}</a>
+  <a class="btn secondary" href="?export=excel&date_from={{ date_from }}&date_to={{ date_to }}">{% trans "خروجی اکسل" %}</a>
+  <a class="btn secondary" data-ajax="true" href="{% url 'leads:followup' %}">{% trans "پیگیری فرم‌های ناقص" %}</a>
+</form>
+{% endif %}
+
+<div class="{% if printing %}kpis{% else %}rp-kpis{% endif %}">
+  <div class="{% if printing %}kpi{% else %}rp-kpi{% endif %}"><b>{{ total.total }}</b><span>{% trans "کل درخواست‌ها" %}</span></div>
+  <div class="{% if printing %}kpi{% else %}rp-kpi{% endif %}"><b>{{ total.stage2_pct }}٪</b><span>{% trans "تکمیل فرم دوم" %} ({{ total.stage2 }})</span></div>
+  <div class="{% if printing %}kpi{% else %}rp-kpi{% endif %}"><b>{{ total.stage1_only }}</b><span>{% trans "فقط فرم اول" %}</span></div>
+  <div class="{% if printing %}kpi{% else %}rp-kpi{% endif %}"><b>{{ total.referred }}</b><span>{% trans "ارجاع به فروش/فنی" %}</span></div>
+  <div class="{% if printing %}kpi{% else %}rp-kpi{% endif %}"><b>{{ total.won }}</b><span>{% trans "قرارداد / پرداخت" %} ({{ total.won_pct }}٪)</span></div>
+</div>
+
+<div class="{% if not printing %}rp-wrap{% endif %}">
+<table class="rp-table">
+  <thead>
+    <tr>
+      <th>{% trans "بازاریاب" %}</th>
+      <th>{% trans "کل درخواست" %}</th>
+      <th>{% trans "فرم ۲ تکمیل" %}</th>
+      <th>{% trans "فقط فرم ۱" %}</th>
+      <th>{% trans "داغ" %}</th>
+      <th>{% trans "گرم" %}</th>
+      <th>{% trans "سرد" %}</th>
+      <th>{% trans "فاقد شرایط" %}</th>
+      <th>{% trans "ارجاع شده" %}</th>
+      <th>{% trans "قرارداد/پرداخت" %}</th>
+      <th>{% trans "از دست‌رفته" %}</th>
+      <th>{% trans "یادآوری" %}</th>
+      <th>{% trans "آخرین درخواست" %}</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for r in rows %}
+    <tr>
+      <td>
+        {% if printing %}{{ r.name }}{% else %}
+        <a data-ajax="true" href="{% if r.marketer %}{% url 'leads:marketer-detail' r.marketer.pk %}{% else %}{% url 'leads:marketer-detail' 0 %}{% endif %}?date_from={{ date_from }}&date_to={{ date_to }}">{{ r.name }}</a>
+        {% endif %}
+      </td>
+      <td><b>{{ r.total }}</b></td>
+      <td>{{ r.stage2 }} <span class="rp-muted">({{ r.stage2_pct }}٪)</span>{% if not printing and r.total %}<span class="rp-bar-pct" style="width:{{ r.stage2_pct }}px"></span>{% endif %}</td>
+      <td>{{ r.stage1_only }}</td>
+      <td>{{ r.hot }}</td>
+      <td>{{ r.warm }}</td>
+      <td>{{ r.cold }}</td>
+      <td>{{ r.unqualified }}</td>
+      <td>{{ r.referred }} <span class="rp-muted">({{ r.referred_pct }}٪)</span></td>
+      <td><b>{{ r.won }}</b> <span class="rp-muted">({{ r.won_pct }}٪)</span></td>
+      <td>{{ r.lost }}</td>
+      <td>{{ r.reminders }}</td>
+      <td>{% if r.last_lead %}{{ r.last_lead|smartdate:CALENDAR }}{% else %}<span class="rp-muted">—</span>{% endif %}</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="13" class="rp-muted">{% trans "هنوز بازاریابی ثبت نشده است." %}</td></tr>
+    {% endfor %}
+  </tbody>
+  <tfoot>
+    <tr>
+      <td>{% trans "جمع" %}</td>
+      <td>{{ total.total }}</td><td>{{ total.stage2 }} ({{ total.stage2_pct }}٪)</td><td>{{ total.stage1_only }}</td>
+      <td>{{ total.hot }}</td><td>{{ total.warm }}</td><td>{{ total.cold }}</td><td>{{ total.unqualified }}</td>
+      <td>{{ total.referred }}</td><td>{{ total.won }} ({{ total.won_pct }}٪)</td><td>{{ total.lost }}</td>
+      <td>{{ total.reminders }}</td><td></td>
+    </tr>
+  </tfoot>
+</table>
+</div>
+<p class="rp-muted" style="font-size:.78rem;margin-top:10px">
+  {% trans "«ارجاع شده» یعنی درخواست از بازاریابی به فروش یا فنی رفته است. «قرارداد/پرداخت» شامل قرارداد تأییدشده، در انتظار پرداخت و پرداخت‌شده است." %}
+</p>
+{% endblock %}

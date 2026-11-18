@@ -33,7 +33,13 @@ def issue(*, mobile: str, purpose: str, request=None) -> OtpVerification:
         mobile=mobile, purpose=purpose, is_used=False,
     ).update(is_used=True)
 
-    code = generate_code()
+    # MelliPayamak's OTP service creates and sends the code itself; we only
+    # keep what it returns. Without it (or if it fails) we use our own code.
+    # The contract code has its own approved pattern ("{0} کد تایید قرارداد
+    # شما {1} ..."), which names the customer; it beats the generic OTP service.
+    is_contract = purpose == OtpVerification.Purpose.CONTRACT_APPROVAL
+    provider_code, note = (None, '') if is_contract else sms_service.provider_otp(mobile)
+    code = provider_code or generate_code()
     otp = OtpVerification.objects.create(
         mobile=mobile,
         code=code,
@@ -41,12 +47,22 @@ def issue(*, mobile: str, purpose: str, request=None) -> OtpVerification:
         request=request,
         expires_at=timezone.now() + timedelta(minutes=OTP_TTL_MINUTES),
     )
-    sms_service.send_message(
-        request=request,
-        mobile=mobile,
-        body=f'کد تأیید شما: {code}',
-        message_type=RequestMessageLog.MessageType.OTP,
-    )
+    if provider_code:
+        RequestMessageLog.objects.create(
+            request=request, mobile=mobile,
+            body=f'کد تأیید شما: {code}',
+            message_type=RequestMessageLog.MessageType.OTP,
+            provider=note, status=RequestMessageLog.Status.SENT,
+        )
+    else:
+        name = (getattr(request, 'full_name', '') or '') if request is not None else ''
+        sms_service.send_message(
+            request=request,
+            mobile=mobile,
+            body=f'کد تأیید شما: {code}',
+            message_type=RequestMessageLog.MessageType.OTP,
+            pattern=(sms_service.CONTRACT_PATTERN, [name, code]) if is_contract else None,
+        )
     return otp
 
 

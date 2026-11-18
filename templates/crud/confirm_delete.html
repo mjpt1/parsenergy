@@ -1,13 +1,16 @@
 {% extends 'base.html' %}
-{% load i18n %}
+{% load i18n ux_tags %}
 {% block content %}
-<div class="panel">
-  <h1 class="h4 mb-3">{% trans "حذف" %}</h1>
-  <p>{% trans "آیا از حذف این مورد مطمئن هستید؟" %}</p>
+{% delete_info object as info %}
+<div class="panel" style="max-width:620px">
+  <h1 class="h4 mb-3">{% trans "حذف" %} {{ info.kind }}</h1>
+  <p class="mb-2">{% trans "این مورد حذف می‌شود:" %} <strong>{{ info.name }}</strong></p>
+  {% if info.note %}<p class="mb-2">{{ info.note }}</p>{% endif %}
+  <div class="alert alert-danger" role="alert">{% trans "این کار برگشت‌پذیر نیست." %}</div>
   <form method="post">{% csrf_token %}
     <div class="d-flex gap-2">
-      <button type="submit" class="btn">{% trans "حذف" %}</button>
       <a href="javascript:history.back()" class="btn secondary">{% trans "انصراف" %}</a>
+      <button type="submit" class="btn" style="background:#dc2626;border-color:#dc2626;color:#fff">{% trans "بله، حذف شود" %}</button>
     </div>
   </form>
 </div>

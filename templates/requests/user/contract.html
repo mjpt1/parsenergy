@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'base_portal.html' %}
 {% load i18n %}
 {% block content %}
 <div class="panel">
@@ -33,9 +33,9 @@
     {% if contract.status == 'generated' %}
       {% if not req.identity_verified %}
         <h2 class="h6">{% trans "احراز هویت" %}</h2>
-        <p class="footer-note">{% trans "برای ادامه، کد ملی خود را وارد کنید تا با شمارهٔ موبایل شما تطبیق داده شود." %}</p>
+        <p class="footer-note">{% if req.user_type == 'legal' %}{% trans "شناسهٔ ملی ۱۱ رقمی شرکت یا کد ملی نماینده را وارد کنید." %}{% else %}{% trans "برای ادامه، کد ملی خود را وارد کنید تا با شمارهٔ موبایل شما تطبیق داده شود." %}{% endif %}</p>
         <form method="post" action="{% url 'requests:contract-send-otp' req.id %}" class="d-flex gap-2 flex-wrap">{% csrf_token %}
-          <input type="text" name="national_id" class="form-control" style="max-width:220px" placeholder="{% trans 'کد ملی (۱۰ رقم)' %}" inputmode="numeric" maxlength="10" required>
+          <input type="text" name="national_id" class="form-control" style="max-width:220px" placeholder="{% if req.user_type == 'legal' %}{% trans 'شناسهٔ ملی یا کد ملی' %}{% else %}{% trans 'کد ملی (۱۰ رقم)' %}{% endif %}" inputmode="numeric" maxlength="{% if req.user_type == 'legal' %}11{% else %}10{% endif %}" required>
           <button type="submit" class="btn">{% trans "احراز هویت و ارسال کد" %}</button>
         </form>
       {% else %}
@@ -51,7 +51,9 @@
       {% endif %}
     {% elif contract.status == 'approved' %}
       <div class="alert alert-success">{% trans "این قرارداد تأیید شده است." %}</div>
-      {% if req.status != 'paid' %}
+      {% if not contract.offer.has_price %}
+      <div class="alert alert-warning">{% trans "مبلغ این قرارداد هنوز تعیین نشده است؛ لطفاً با کارشناس فروش تماس بگیرید." %}</div>
+      {% elif req.status != 'paid' %}
       <form method="post" action="{% url 'requests:pay-start' req.id %}">{% csrf_token %}
         <button type="submit" class="btn">{% trans "ادامه و پرداخت" %}</button>
       </form>

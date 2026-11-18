@@ -18,10 +18,10 @@
         {% for equipment in object_list %}
         <tr>
           <td>{{ equipment.plant.name }}</td>
-          <td>{{ equipment.category }}</td>
+          <td>{{ equipment.get_category_display }}</td>
           <td>{{ equipment.name }}</td>
           <td>{{ equipment.serial_number }}</td>
-          <td>{{ equipment.health_status }}</td>
+          <td>{{ equipment.get_health_status_display }}</td>
           <td>{{ equipment.online|yesno:yesno_str }}</td>
           <td class="d-flex gap-2">
             <a class="btn secondary" data-ajax="true" href="{% url 'plants:equipment-edit' equipment.id %}">{% trans "ویرایش" %}</a>

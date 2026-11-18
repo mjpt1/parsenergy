@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% comment %}
+  The QR codes. Each link is the whole authorisation for a capture form, so
+  management sees them all and a marketer only their own.
+
+  The QR is inline SVG rendered on the server — no CDN script, nothing to load
+  from outside, and it prints at any size without going blurry.
+{% endcomment %}
+{% block content %}
+{% if can_manage %}{% include 'partials/settings_tabs.html' with active='qr' %}{% endif %}
+<style>
+  .qr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+  .qr-card{background:#fff;border:1px solid var(--pe-border);border-radius:14px;
+    padding:16px;text-align:center}
+  .qr-card h3{margin:0 0 2px;font-size:1rem}
+  .qr-card .who{font-size:.85rem;color:var(--pe-muted);margin:0 0 10px}
+  .qr-card svg{width:170px;height:170px;display:block;margin:0 auto 10px}
+  .qr-card svg path{fill:#111}
+  .qr-link{width:100%;font-size:.72rem;font-family:monospace;padding:6px;
+    border:1px solid var(--pe-border);border-radius:8px;text-align:left;direction:ltr}
+  .qr-meta{display:flex;justify-content:space-between;font-size:.8rem;
+    color:var(--pe-muted);margin-top:8px}
+  @media print{
+    .no-print{display:none !important}
+    .qr-grid{grid-template-columns:repeat(2,1fr)}
+    .qr-card{break-inside:avoid;border:1px solid #333}
+  }
+</style>
+
+<div class="panel">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3 no-print">
+    <div>
+      <h1 class="h4 mb-0">{{ page_title }}</h1>
+      <span class="footer-note">{% if can_manage %}
+        {% trans "هر بازاریاب QR خودش را دارد؛ درخواست‌ها از همین لینک به نام او ثبت می‌شوند." %}{% else %}
+        {% trans "این QR را به مشتری نشان دهید؛ درخواستی که با آن ثبت شود به نام شما می‌آید." %}{% endif %}</span>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+      <button class="btn secondary" type="button" onclick="window.print()">
+        🖨 {% trans "چاپ QR" %}</button>
+      <a class="btn secondary" data-ajax="true" href="{% url 'requests:admin-list' %}">
+        {% trans "فهرست درخواست‌ها" %}</a>
+      {% if can_manage %}<a class="btn" href="{% url 'admin:leads_leadsource_add' %}" target="_blank" rel="noopener">
+        + {% trans "QR جدید" %}</a>{% endif %}
+    </div>
+  </div>
+
+  <div class="qr-grid">
+    {% for source in sources %}
+    <div class="qr-card">
+      <h3>{{ source.name }}</h3>
+      <p class="who">
+        {% if source.marketer %}{{ source.marketer.get_full_name|default:source.marketer.username }}
+        {% else %}{% trans "QR عمومی" %}{% endif %}
+        {% if not source.is_active %}— <span class="status-bad">{% trans "غیرفعال" %}</span>{% endif %}
+      </p>
+
+      {{ source.qr_svg }}
+
+      <input class="qr-link" readonly value="{{ source.public_url }}" onclick="this.select()">
+      <div class="qr-meta no-print">
+        <span>{% trans "درخواست‌ها" %}: {{ source.leads.count }}</span>
+        {% if can_manage %}<a href="{% url 'admin:leads_leadsource_change' source.pk %}"
+           target="_blank" rel="noopener">{% trans "ویرایش" %}</a>{% endif %}
+      </div>
+    </div>
+    {% empty %}
+    <p>{% if can_manage %}{% trans "هنوز QR ساخته نشده است. با دکمهٔ «QR جدید» اولین مورد را بسازید." %}{% else %}{% trans "هنوز QR برای شما ساخته نشده است. از مدیر بخواهید یکی برایتان بسازد." %}{% endif %}</p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+{% load calendar_tags i18n %}
+{% comment %}
+  A marketer's own queue. The view already restricts the rows; this template
+  only decides what is worth showing at a glance — who, when, how hot, and
+  whether the project detail ever arrived.
+{% endcomment %}
+{% block content %}
+<div class="panel">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <div>
+      <h1 class="h4 mb-0">{% trans "سرنخ‌های نمایشگاهی" %}</h1>
+      <span class="footer-note">{% blocktrans %}{{ total }} سرنخ{% endblocktrans %}</span>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+      <a class="btn secondary" href="?{{ querystring }}&export=excel">⬇ {% trans "اکسل" %}</a>
+      <a class="btn secondary" href="?{{ querystring }}&print=1" target="_blank" rel="noopener">🖨 {% trans "PDF / چاپ" %}</a>
+      {% if is_management %}
+      <a class="btn secondary" data-ajax="true" href="{% url 'leads:sources' %}">{% trans "QR بازاریاب‌ها" %}</a>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if marketer_filter %}
+  <div class="alert alert-success d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <span>{% trans "در حال نمایش سرنخ‌های یک بازاریاب" %}</span>
+    <a class="btn secondary" data-ajax="true" href="{% url 'leads:list' %}">
+      ↩ {% trans "نمایش همهٔ بازاریاب‌ها" %}</a>
+  </div>
+  {% endif %}
+
+  {% if breakdown %}
+  {% comment %}Management only: how each stand is doing, side by side.{% endcomment %}
+  <div class="table-responsive mb-3">
+    <table class="table">
+      <thead><tr>
+        <th>{% trans "بازاریاب" %}</th><th>{% trans "کل سرنخ" %}</th>
+        <th>{% trans "تکمیل مرحله ۲" %}</th><th>{% trans "سرنخ داغ" %}</th><th></th>
+      </tr></thead>
+      <tbody>
+        {% for row in breakdown %}
+        <tr>
+          <td>{{ row.name }}</td>
+          <td>{{ row.total }}</td>
+          <td>{{ row.completed }}</td>
+          <td>{{ row.hot }}</td>
+          <td>
+            {% if marketer_filter == row.id|stringformat:'s' %}
+            <a class="btn" data-ajax="true" href="{% url 'leads:list' %}">✓ {% trans "نمایش همه" %}</a>
+            {% else %}
+            <a class="btn secondary" data-ajax="true" href="?marketer={{ row.id }}">{% trans "فقط این بازاریاب" %}</a>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
+  <form method="get" class="d-flex gap-2 flex-wrap mb-3">
+    <input type="search" name="q" value="{{ search_query }}" class="form-control form-control-sm"
+           style="min-width:190px" placeholder="{% trans 'شناسه، نام، موبایل یا شرکت' %}">
+    <select name="temperature" class="form-select form-select-sm" style="min-width:150px">
+      <option value="">{% trans "همهٔ کیفیت‌ها" %}</option>
+      {% for value, label in temperature_choices %}
+      <option value="{{ value }}" {% if value == temperature_filter %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <select name="stage2" class="form-select form-select-sm" style="min-width:160px">
+      <option value="">{% trans "مرحلهٔ ۲: همه" %}</option>
+      <option value="yes" {% if stage2_filter == 'yes' %}selected{% endif %}>{% trans "تکمیل‌شده" %}</option>
+      <option value="no" {% if stage2_filter == 'no' %}selected{% endif %}>{% trans "تکمیل‌نشده" %}</option>
+    </select>
+    {% if is_management %}
+    <select name="marketer" class="form-select form-select-sm" style="min-width:170px">
+      <option value="">{% trans "همهٔ بازاریاب‌ها" %}</option>
+      <option value="public" {% if marketer_filter == 'public' %}selected{% endif %}>{% trans "QR عمومی" %}</option>
+      {% for person in marketers %}
+      <option value="{{ person.id }}" {% if marketer_filter == person.id %}selected{% endif %}>{{ person.name }}</option>
+      {% endfor %}
+    </select>
+    {% else %}
+    <input type="hidden" name="marketer" value="{{ marketer_filter }}">
+    {% endif %}
+    <button class="btn secondary" type="submit">{% trans "فیلتر" %}</button>
+    {% if search_query or temperature_filter or stage2_filter or marketer_filter %}
+    <a class="btn secondary" data-ajax="true" href="{% url 'leads:list' %}">{% trans "پاک کردن" %}</a>
+    {% endif %}
+  </form>
+
+  <div class="table-responsive">
+    <table class="table">
+      <thead><tr>
+        <th>{% trans "شناسه" %}</th>
+        <th>{% trans "نام" %}</th>
+        <th>{% trans "موبایل" %}</th>
+        <th>{% trans "شرکت" %}</th>
+        <th>{% trans "کیفیت" %}</th>
+        <th>{% trans "مرحلهٔ ۲" %}</th>
+        {% if is_management %}<th>{% trans "بازاریاب" %}</th>{% endif %}
+        <th>{% trans "تاریخ" %}</th>
+        <th></th>
+      </tr></thead>
+      <tbody>
+        {% for lead in leads %}
+        <tr>
+          <td><code>{{ lead.lead_code }}</code></td>
+          <td>{{ lead.full_name }}</td>
+          <td>{{ lead.mobile }}</td>
+          <td>{{ lead.company|default:'—' }}</td>
+          <td>
+            {% if lead.temperature %}<span class="badge">{{ lead.get_temperature_display }}</span>
+            {% else %}<span class="footer-note">{% trans "تعیین‌نشده" %}</span>{% endif %}
+          </td>
+          <td>
+            {% if lead.stage2_completed %}<span class="status-ok">{% trans "تکمیل" %}</span>
+            {% else %}<span class="status-bad">{% trans "ناقص" %}</span>{% endif %}
+          </td>
+          {% if is_management %}
+          <td>{% if lead.marketer %}{{ lead.marketer.get_full_name|default:lead.marketer.username }}
+              {% else %}<span class="footer-note">{% trans "عمومی" %}</span>{% endif %}</td>
+          {% endif %}
+          <td>{{ lead.created_at|smartdatetime:CALENDAR }}</td>
+          <td><a class="btn secondary" data-ajax="true" href="{% url 'leads:detail' lead.pk %}">{% trans "جزئیات" %}</a></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="9">{% trans "هنوز سرنخی ثبت نشده است." %}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

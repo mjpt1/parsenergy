@@ -1,0 +1,181 @@
+{% extends 'base_portal.html' %}
+{% load i18n %}
+{% comment %}
+  Stage 2. Reached either straight after stage 1 or from the SMS link days
+  later — either way it edits the same lead, so nothing asked in stage 1 is
+  asked again. Every field is optional; a partial answer is still useful.
+{% endcomment %}
+{% block content %}
+<style>
+  .lead-form{max-width:560px;margin:0 auto}
+  .lead-form .card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px 18px}
+  .lead-field{margin-bottom:18px}
+  .lead-field > label{display:block;font-weight:600;font-size:.9rem;margin-bottom:6px}
+  .lead-field input[type=text],.lead-field input[type=file],.lead-field textarea{
+    width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:10px;
+    font-size:1rem;font-family:inherit}
+  .opt-grid{display:grid;gap:8px}
+  .opt{display:flex;align-items:center;gap:10px;padding:11px 13px;border:1px solid var(--line);
+    border-radius:10px;cursor:pointer;font-size:.93rem;background:#fff}
+  .opt:has(input:checked){border-color:var(--green);background:#f1f8f1;font-weight:600}
+  .opt input{width:18px;height:18px;accent-color:var(--green);flex:none;margin:0}
+  .lead-submit{width:100%;padding:14px;border:0;border-radius:12px;background:var(--green);
+    color:#fff;font-size:1.05rem;font-weight:700;font-family:inherit;cursor:pointer}
+  #leadMap{height:260px;border-radius:12px;overflow:hidden;border:1px solid var(--line)}
+  .hint{color:var(--muted);font-size:.84rem;margin:6px 0 0}
+  .lead-badge{display:inline-block;background:var(--paper);border:1px solid var(--line);
+    border-radius:8px;padding:5px 12px;font-size:.86rem;margin:0 0 10px}
+  .lead-badge strong{font-family:monospace;direction:ltr;display:inline-block}
+  .req{color:#dc2626}
+  .errorlist{color:#dc2626;font-size:.84rem;margin:6px 0 0;padding:0;list-style:none}
+  @media (min-width:520px){.opt-grid.two{grid-template-columns:1fr 1fr}}
+</style>
+
+<div class="lead-form">
+  <div class="card">
+    <h1 style="font-size:1.2rem;margin:0 0 4px">{% trans "اطلاعات پروژه" %}</h1>
+    <div class="lead-badge">{% trans "شمارهٔ سرنخ" %}: <strong>{{ lead.lead_code }}</strong></div>
+    <p class="hint" style="margin:0 0 18px">
+      {% trans "به‌جز شناسهٔ قبض، تکمیل همهٔ موارد لازم است." %}
+    </p>
+
+    {% if form.non_field_errors %}
+      <ul class="errorlist">{% for e in form.non_field_errors %}<li>{{ e }}</li>{% endfor %}</ul>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data" novalidate>{% csrf_token %}
+      <div class="lead-field">
+        <label>{% trans "محل پروژه روی نقشه" %} <span class="req">*</span></label>
+        <div id="leadMap"></div>
+        {{ form.latitude }}{{ form.longitude }}{{ form.install_address }}
+        <p class="hint" id="leadMapCoords">{% trans "روی نقشه بزنید تا محل پروژه مشخص شود." %}</p>
+        <button type="button" id="leadUseMyLocation" class="btn secondary" style="margin-top:8px">
+          {% trans "موقعیت فعلی من" %}
+        </button>
+      </div>
+
+      <div class="lead-field">
+        <label>{{ form.install_location.label }} <span class="req">*</span></label>
+        <div class="opt-grid two">
+          {% for choice in form.install_location %}
+          <label class="opt">{{ choice.tag }} <span>{{ choice.choice_label }}</span></label>
+          {% endfor %}
+        </div>
+        <div id="installOtherWrap" hidden style="margin-top:8px">{{ form.install_location_note }}</div>
+      </div>
+
+      <div class="lead-field">
+        <label>{{ form.area_range.label }} <span class="req">*</span></label>
+        <div class="opt-grid">
+          {% for choice in form.area_range %}
+          <label class="opt">{{ choice.tag }} <span>{{ choice.choice_label }}</span></label>
+          {% endfor %}
+        </div>
+        <div style="margin-top:8px">{{ form.area_note }}</div>
+        <p class="hint">{% trans "اگر مساحت دقیق را می‌دانید، اینجا بنویسید." %}</p>
+        {{ form.area_range.errors }}
+      </div>
+
+      <div class="lead-field">
+        <label>{{ form.demand_power.label }}</label>
+        <div class="opt-grid">
+          {% for choice in form.demand_power %}
+          <label class="opt">{{ choice.tag }} <span>{{ choice.choice_label }}</span></label>
+          {% endfor %}
+        </div>
+        {{ form.demand_power.errors }}
+      </div>
+
+      <div class="lead-field">
+        <label>{{ form.shade_status.label }} <span class="req">*</span></label>
+        <div class="opt-grid two">
+          {% for choice in form.shade_status %}
+          <label class="opt">{{ choice.tag }} <span>{{ choice.choice_label }}</span></label>
+          {% endfor %}
+        </div>
+        <div id="shadingNoteWrap" hidden style="margin-top:8px">
+          {{ form.shade_status_note }}
+          <p class="hint">{% trans "موانع موجود را ذکر کنید (اختیاری)." %}</p>
+        </div>
+      </div>
+
+      <div class="lead-field">
+        <label for="{{ form.bill_id.id_for_label }}">{{ form.bill_id.label }}</label>
+        {{ form.bill_id }}
+        <p class="hint">{% trans "یا فایل قبض را آپلود کنید — PDF، عکس یا ZIP تا ۱۰ مگابایت." %}</p>
+        <div style="margin-top:8px">{{ form.bill_file }}</div>
+        {{ form.bill_file.errors }}
+      </div>
+
+      <button class="lead-submit" type="submit">{% trans "ثبت اطلاعات پروژه" %}</button>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  // Reveal the two conditional notes only when their trigger is chosen.
+  const toggle = (name, value, wrapId) => {
+    const wrap = document.getElementById(wrapId);
+    if (!wrap) return;
+    const sync = () => {
+      const picked = document.querySelector('input[name="' + name + '"]:checked');
+      wrap.hidden = !(picked && picked.value === value);
+    };
+    document.querySelectorAll('input[name="' + name + '"]').forEach(
+      (el) => el.addEventListener('change', sync));
+    sync();
+  };
+  toggle('install_location', 'other', 'installOtherWrap');
+  toggle('shade_status', 'yes', 'shadingNoteWrap');
+
+  const el = document.getElementById('leadMap');
+  if (!el || typeof L === 'undefined') return;
+  const lat = document.getElementById('{{ form.latitude.auto_id }}');
+  const lng = document.getElementById('{{ form.longitude.auto_id }}');
+  const addr = document.getElementById('{{ form.install_address.auto_id }}');
+  const out = document.getElementById('leadMapCoords');
+  const has = lat && lat.value && lng && lng.value;
+  const map = L.map(el).setView(
+    [parseFloat(lat && lat.value) || 32.4279, parseFloat(lng && lng.value) || 53.6880],
+    has ? 15 : 5);
+  tileLayer().addTo(map);  // shared layer from main.js, with the satellite switch
+
+  let marker = null;
+  let seq = 0;
+  const place = (la, ln) => {
+    if (!marker) {
+      marker = L.marker([la, ln], { draggable: true }).addTo(map);
+      marker.on('dragend', () => { const p = marker.getLatLng(); place(p.lat, p.lng); });
+    } else { marker.setLatLng([la, ln]); }
+    if (lat) lat.value = la.toFixed(6);
+    if (lng) lng.value = ln.toFixed(6);
+    if (out) out.textContent = la.toFixed(5) + '، ' + ln.toFixed(5);
+    const mine = ++seq;
+    fetch('/core/geocode/reverse/?lat=' + la.toFixed(6) + '&lng=' + ln.toFixed(6))
+      .then((r) => r.json())
+      .then((d) => {
+        if (mine !== seq || !d.ok || !d.address) return;
+        if (addr) addr.value = d.address;
+        if (out) out.textContent = d.address;
+      })
+      .catch(() => {});
+  };
+  if (has) place(parseFloat(lat.value), parseFloat(lng.value));
+  map.on('click', (e) => place(e.latlng.lat, e.latlng.lng));
+
+  const btn = document.getElementById('leadUseMyLocation');
+  if (btn && navigator.geolocation) {
+    btn.addEventListener('click', () => {
+      navigator.geolocation.getCurrentPosition((pos) => {
+        map.setView([pos.coords.latitude, pos.coords.longitude], 16);
+        place(pos.coords.latitude, pos.coords.longitude);
+      });
+    });
+  }
+  setTimeout(() => map.invalidateSize(), 150);
+})();
+</script>
+{% endblock %}

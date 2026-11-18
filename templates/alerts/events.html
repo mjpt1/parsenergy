@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load i18n %}
+{% load i18n ux_tags %}
 {% block content %}
 {% trans "بله,خیر" as yesno_str %}
 <div class="panel">
@@ -9,13 +9,13 @@
   </div>
   <div class="table-responsive">
     <table class="table">
-      <thead><tr><th>{% trans "نیروگاه" %}</th><th>{% trans "قانون" %}</th><th>Severity</th><th>{% trans "پیام" %}</th><th>Ack</th></tr></thead>
+      <thead><tr><th>{% trans "نیروگاه" %}</th><th>{% trans "قانون" %}</th><th>{% trans "شدت" %}</th><th>{% trans "پیام" %}</th><th>{% trans "بررسی شده" %}</th></tr></thead>
       <tbody>
         {% for event in object_list %}
         <tr>
           <td>{{ event.rule.plant.name }}</td>
           <td>{{ event.rule.name }}</td>
-          <td>{{ event.severity }}</td>
+          <td>{{ event.severity|fa }}</td>
           <td>{{ event.message }}</td>
           <td>{{ event.acknowledged|yesno:yesno_str }}</td>
         </tr>

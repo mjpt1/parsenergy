@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% load calendar_tags humanize i18n ux_tags %}
+{% block content %}
+<div class="panel">
+  <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <h1 class="h4 mb-0">{% trans "جزئیات پایش نیروگاه‌ها" %}</h1>
+    {% if request.user.can_edit_plants %}<a class="btn secondary" data-ajax="true" href="{% url 'plants:create' %}">➕ {% trans "افزودن نیروگاه" %}</a>{% endif %}
+  </div>
+
+  <div class="d-flex gap-3 flex-wrap mb-4">
+    <div class="panel" style="flex:1;min-width:140px;text-align:center"><div class="h3 mb-0">{{ plant_count }}</div><div class="text-muted">{% trans "تعداد نیروگاه" %}</div></div>
+    <div class="panel" style="flex:1;min-width:140px;text-align:center"><div class="h3 mb-0"><span style="color:#16a34a">{{ online }}</span> / <span style="color:#dc2626">{{ offline }}</span></div><div class="text-muted">{% trans "آنلاین / آفلاین" %}</div></div>
+    <div class="panel" style="flex:1;min-width:140px;text-align:center"><div class="h3 mb-0">{{ total_power|floatformat:1|intcomma }}</div><div class="text-muted">{% trans "توان لحظه‌ای کل (kW)" %}</div></div>
+    <div class="panel" style="flex:1;min-width:140px;text-align:center"><div class="h3 mb-0" style="color:{% if total_alerts %}#dc2626{% else %}#16a34a{% endif %}">{{ total_alerts }}</div><div class="text-muted">{% trans "ارورهای فعال" %}</div></div>
+    <div class="panel" style="flex:1;min-width:140px;text-align:center"><div class="h3 mb-0" style="color:{% if hot_cells %}#dc2626{% else %}#16a34a{% endif %}">{{ hot_cells }}</div><div class="text-muted">{% trans "پنل داغ" %}</div></div>
+  </div>
+
+  <div id="plantDashboardMap" style="height:360px;border-radius:12px;overflow:hidden;border:1px solid var(--border,#ccc)" class="mb-4"></div>
+  {{ map_points|json_script:"plant-map-data" }}
+  {{ chart_data|json_script:"plant-charts-data" }}
+
+  {% if module_grid %}
+  <div class="panel mb-4">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+      <h2 class="h6 mb-0">{% trans "چیدمان پنل‌ها" %} — {{ selected_plant.name }}</h2>
+      <form method="get" class="d-flex gap-2 align-items-center">
+        <label class="footer-note mb-0">{% trans "نیروگاه" %}</label>
+        <select name="plant" class="form-select form-select-sm" onchange="this.form.submit()" style="min-width:12rem">
+          {% for r in rows %}
+          <option value="{{ r.plant.id }}" {% if selected_plant.id == r.plant.id %}selected{% endif %}>{{ r.plant.name }}</option>
+          {% endfor %}
+        </select>
+      </form>
+    </div>
+    <div class="layout-wrap">
+      <div>
+        <div id="pvModuleGrid" class="cell-grid" data-cols="{{ module_grid.cols }}"></div>
+        <div class="cell-legend">
+          <span><i class="ok"></i>{% trans "عادی" %}</span>
+          <span><i class="warn"></i>{% trans "هشدار دما" %}</span>
+          <span><i class="hot"></i>{% trans "داغ" %}</span>
+          <span><i class="offline"></i>{% trans "آفلاین" %}</span>
+          <span><i class="fault"></i>{% trans "خطا" %}</span>
+        </div>
+      </div>
+      <div id="pvModuleDetail" class="cell-detail">
+        <div class="footer-note mb-2">{% trans "روی یک پنل کلیک کنید" %}</div>
+        <div class="mini-stat"><span>{% trans "کل پنل" %}</span><strong>{{ module_grid.summary.total }}</strong></div>
+        <div class="mini-stat"><span>{% trans "سالم" %}</span><strong style="color:#16a34a">{{ module_grid.summary.ok }}</strong></div>
+        <div class="mini-stat"><span>{% trans "هشدار" %}</span><strong style="color:#d97706">{{ module_grid.summary.warn }}</strong></div>
+        <div class="mini-stat"><span>{% trans "داغ" %}</span><strong style="color:#dc2626">{{ module_grid.summary.hot }}</strong></div>
+      </div>
+    </div>
+    {{ module_grid|json_script:"pv-module-grid-data" }}
+  </div>
+  {% endif %}
+
+  <div class="row g-3">
+    {% for r in rows %}
+    <div class="col-12 col-lg-6">
+      <div class="panel" style="text-align:right;height:100%">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h2 class="h6 mb-0">
+            <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:{% if r.is_online %}#16a34a{% else %}#dc2626{% endif %};margin-left:6px"></span>
+            {{ r.plant.name }}
+          </h2>
+          <div class="d-flex gap-2">
+            <a class="btn secondary btn-sm" data-ajax="true" href="?plant={{ r.plant.id }}">{% trans "پنل‌ها" %}</a>
+            {% if r.plant.latitude and r.plant.longitude %}<a class="btn secondary btn-sm" href="https://www.google.com/maps?q={{ r.plant.latitude }},{{ r.plant.longitude }}" target="_blank" rel="noopener">🗺️</a>{% endif %}
+            {% if request.user.can_edit_plants %}<a class="btn secondary btn-sm" data-ajax="true" href="{% url 'plants:edit' r.plant.id %}">✏️</a>{% endif %}
+          </div>
+        </div>
+        <table class="table table-sm mb-2">
+          <tbody>
+            <tr><th style="width:45%">{% trans "توان لحظه‌ای" %}</th><td><strong>{{ r.power|floatformat:2|intcomma }}</strong> kW</td></tr>
+            <tr><th>{% trans "انرژی تجمعی" %}</th><td>{{ r.energy|floatformat:1|intcomma }} kWh</td></tr>
+            <tr><th>{% trans "ظرفیت" %}</th><td>{{ r.plant.capacity_kw|floatformat:0|intcomma }} kW</td></tr>
+            <tr><th>{% trans "اینورترها (آنلاین)" %}</th><td>{{ r.inv_online }} / {{ r.inv_total }}</td></tr>
+            <tr><th>{% trans "پنل داغ / هشدار" %}</th><td>{{ r.module_hot }} / {{ r.module_warn }} <span class="footer-note">({{ r.module_total }})</span></td></tr>
+            <tr><th>{% trans "وضعیت آخرین داده" %}</th><td>{{ r.tstatus|fa }}</td></tr>
+            <tr><th>{% trans "آدرس" %}</th><td>{{ r.plant.location_name|default:'—' }}</td></tr>
+            <tr><th>{% trans "آخرین داده" %}</th><td>{{ r.last_seen|smartdatetime:CALENDAR|default:'—' }}</td></tr>
+          </tbody>
+        </table>
+        <div class="mb-2">
+          <div class="footer-note mb-1">{% trans "تولید روزانه (kWh) — ۱۴ روز اخیر" %}</div>
+          {% if r.has_chart %}
+          <div style="height:140px"><canvas id="plantChart-{{ r.plant.id }}"></canvas></div>
+          {% else %}
+          <div class="alert alert-light py-2 px-3 mb-0">{% trans "هنوز داده‌ی تولیدی ثبت نشده است." %}</div>
+          {% endif %}
+        </div>
+        {% if r.alert_count %}
+        <div class="alert alert-danger py-2 px-3 mb-0">
+          <strong>{% trans "خطاها و مشکلات" %} ({{ r.alert_count }}):</strong>
+          <ul class="mb-0 ps-3">
+            {% for a in r.alerts %}<li><span class="badge bg-secondary">{{ a.severity|fa }}</span> {{ a.message|truncatechars:90 }} <span class="footer-note">— {{ a.created_at|smartdatetime:CALENDAR }}</span></li>{% endfor %}
+          </ul>
+        </div>
+        {% else %}
+        <div class="alert alert-success py-2 px-3 mb-0">{% trans "بدون خطای فعال ✓" %}</div>
+        {% endif %}
+      </div>
+    </div>
+    {% empty %}
+    <div class="col-12"><div class="alert alert-light">{% trans "هنوز نیروگاهی ثبت نشده است." %} {% if request.user.can_edit_plants %}<a data-ajax="true" href="{% url 'plants:create' %}">{% trans "افزودن نیروگاه" %}</a>{% endif %}</div></div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

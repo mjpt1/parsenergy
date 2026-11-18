@@ -3,10 +3,10 @@ from django.db import models
 
 
 class SystemParameter(models.Model):
-    key = models.CharField(max_length=128, unique=True)
-    value = models.TextField()
-    description = models.CharField(max_length=255, blank=True)
-    is_secret = models.BooleanField(default=False)
+    key = models.CharField(max_length=128, unique=True, verbose_name='کلید')
+    value = models.TextField(verbose_name='مقدار')
+    description = models.CharField(max_length=255, blank=True, verbose_name='توضیح')
+    is_secret = models.BooleanField(default=False, verbose_name='محرمانه است')
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
@@ -14,12 +14,15 @@ class SystemParameter(models.Model):
 
 
 class SecuritySetting(models.Model):
-    require_mfa = models.BooleanField(default=True)
-    session_timeout_minutes = models.PositiveIntegerField(default=30)
-    password_rotation_days = models.PositiveIntegerField(default=90)
-    lockout_threshold = models.PositiveIntegerField(default=5)
-    ip_allowlist = models.TextField(blank=True)
+    require_mfa = models.BooleanField(default=True, verbose_name='ورود دومرحله‌ای الزامی باشد')
+    session_timeout_minutes = models.PositiveIntegerField(default=30, verbose_name='مدت نشست (دقیقه)')
+    password_rotation_days = models.PositiveIntegerField(default=90, verbose_name='دورهٔ تغییر رمز (روز)')
+    lockout_threshold = models.PositiveIntegerField(default=5, verbose_name='تعداد تلاش ناموفق تا قفل حساب')
+    ip_allowlist = models.TextField(blank=True, verbose_name='فهرست IPهای مجاز')
     updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f'تنظیمات امنیتی {self.pk}'
 
 
 class AuditLog(models.Model):
@@ -49,29 +52,35 @@ class ServerHealthMetric(models.Model):
 
 class DatabaseBackup(models.Model):
     class Status(models.TextChoices):
-        PENDING = 'pending', 'Pending'
-        SUCCESS = 'success', 'Success'
-        FAILED = 'failed', 'Failed'
+        PENDING = 'pending', 'در انتظار'
+        SUCCESS = 'success', 'موفق'
+        FAILED = 'failed', 'ناموفق'
 
-    file_path = models.CharField(max_length=1024)
-    file_size_bytes = models.BigIntegerField(default=0)
-    status = models.CharField(max_length=16, choices=Status.choices, default=Status.PENDING)
-    notes = models.TextField(blank=True)
+    file_path = models.CharField(max_length=1024, verbose_name='مسیر فایل')
+    file_size_bytes = models.BigIntegerField(default=0, verbose_name='حجم (بایت)')
+    status = models.CharField(max_length=16, choices=Status.choices, default=Status.PENDING, verbose_name='وضعیت')
+    notes = models.TextField(blank=True, verbose_name='یادداشت')
     created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.file_path
 
 
 class APIConnection(models.Model):
     class AuthType(models.TextChoices):
-        NONE = 'none', 'None'
+        NONE = 'none', 'بدون احراز هویت'
         TOKEN = 'token', 'Token'
         BASIC = 'basic', 'Basic'
 
-    name = models.CharField(max_length=128)
-    base_url = models.URLField()
-    auth_type = models.CharField(max_length=16, choices=AuthType.choices, default=AuthType.TOKEN)
-    token = models.CharField(max_length=512, blank=True)
-    is_active = models.BooleanField(default=True)
-    last_success_at = models.DateTimeField(null=True, blank=True)
+    name = models.CharField(max_length=128, verbose_name='نام')
+    base_url = models.URLField(verbose_name='آدرس پایه')
+    auth_type = models.CharField(max_length=16, choices=AuthType.choices, default=AuthType.TOKEN, verbose_name='نوع احراز هویت')
+    token = models.CharField(max_length=512, blank=True, verbose_name='توکن')
+    is_active = models.BooleanField(default=True, verbose_name='فعال')
+    last_success_at = models.DateTimeField(null=True, blank=True, verbose_name='آخرین اتصال موفق')
+
+    def __str__(self):
+        return self.name
 
 
 class ProtocolAdapter(models.Model):
@@ -81,9 +90,42 @@ class ProtocolAdapter(models.Model):
         OPCUA = 'opcua', 'OPC-UA'
         HTTP = 'http', 'HTTP'
 
-    name = models.CharField(max_length=128)
-    protocol = models.CharField(max_length=16, choices=Protocol.choices)
-    endpoint = models.CharField(max_length=255)
-    config = models.JSONField(default=dict, blank=True)
-    enabled = models.BooleanField(default=True)
+    name = models.CharField(max_length=128, verbose_name='نام')
+    protocol = models.CharField(max_length=16, choices=Protocol.choices, verbose_name='پروتکل')
+    endpoint = models.CharField(max_length=255, verbose_name='آدرس اتصال')
+    config = models.JSONField(default=dict, blank=True, verbose_name='تنظیمات (JSON)')
+    enabled = models.BooleanField(default=True, verbose_name='فعال')
     updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name
+
+
+class SettingChangeRequest(models.Model):
+    """SMS, Shahkar or payment settings a technical user wants changed.
+
+    Nothing reaches the live settings until an administrator approves it.
+    `changes` is {key: {'value': str, 'secret': bool}}; secret values are wiped
+    as soon as the request is decided.
+    """
+
+    class Status(models.TextChoices):
+        PENDING = 'pending', 'در انتظار تأیید'
+        APPROVED = 'approved', 'تأیید شد'
+        REJECTED = 'rejected', 'رد شد'
+
+    requested_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL,
+                                     related_name='setting_change_requests', verbose_name='درخواست‌دهنده')
+    changes = models.JSONField(default=dict, verbose_name='تغییرات')
+    status = models.CharField(max_length=16, choices=Status.choices, default=Status.PENDING,
+                              db_index=True, verbose_name='وضعیت')
+    created_at = models.DateTimeField(auto_now_add=True)
+    decided_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL,
+                                   related_name='decided_setting_changes', verbose_name='تصمیم‌گیرنده')
+    decided_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ('-id',)
+
+    def __str__(self):
+        return f'تغییر تنظیمات {self.pk}'

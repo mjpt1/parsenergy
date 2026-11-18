@@ -5,13 +5,13 @@
 <div class="panel">
   <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
-      <h1 class="h4 mb-0">{% trans "VPPها" %}</h1>
-      <div class="small text-secondary">{% trans "مدیریت مجموعه نیروگاه‌های مجازی و برنامه‌های dispatch" %}</div>
+      <h1 class="h4 mb-0">{% trans "نیروگاه‌های مجازی" %}</h1>
+      <div class="small text-secondary">{% trans "مدیریت نیروگاه‌های مجازی و برنامه‌های تولید آن‌ها" %}</div>
     </div>
     <div class="d-flex gap-2 flex-wrap">
-      <a class="btn secondary" data-ajax="true" href="{% url 'vpp:members' %}">{% trans "اعضای VPP" %}</a>
-      <a class="btn secondary" data-ajax="true" href="{% url 'vpp:schedules' %}">{% trans "برنامه‌های Dispatch" %}</a>
-      <a class="btn secondary" data-ajax="true" href="{% url 'vpp:create' %}">{% trans "ایجاد VPP" %}</a>
+      <a class="btn secondary" data-ajax="true" href="{% url 'vpp:members' %}">{% trans "اعضا" %}</a>
+      <a class="btn secondary" data-ajax="true" href="{% url 'vpp:schedules' %}">{% trans "برنامه‌های تولید" %}</a>
+      <a class="btn secondary" data-ajax="true" href="{% url 'vpp:create' %}">{% trans "افزودن نیروگاه مجازی" %}</a>
     </div>
   </div>
   <div class="table-responsive">
@@ -29,7 +29,7 @@
           </td>
         </tr>
         {% empty %}
-        <tr><td colspan="4">{% trans "VPPیی یافت نشد." %}</td></tr>
+        <tr><td colspan="4">{% trans "نیروگاه مجازی ثبت نشده است." %}</td></tr>
         {% endfor %}
       </tbody>
     </table>

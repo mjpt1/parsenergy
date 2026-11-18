@@ -1,8 +1,53 @@
-{% extends 'base.html' %}
-{% load i18n %}
+{% extends 'base_portal.html' %}
+{% load i18n form_extras %}
 {% block content %}
-<div class="panel" style="max-width:760px">
-  <h1 class="h4 mb-3">{% trans "فرم ارزیابی نیروگاه خورشیدی" %}</h1>
+<style>
+  .eval-card{
+    max-width:760px;margin:0 auto;background:#fff;border:1px solid var(--line);
+    border-radius:24px;padding:36px 34px 30px;box-shadow:0 24px 60px -34px rgba(15,23,42,.35);
+  }
+  .eval-head{margin-bottom:22px}
+  .eval-head .eyebrow{
+    display:inline-block;font-size:.76rem;letter-spacing:.03em;color:#4b773c;font-weight:700;
+    background:rgba(75,119,60,.1);border:1px solid rgba(75,119,60,.25);padding:4px 12px;border-radius:999px;margin-bottom:10px
+  }
+  .eval-head h1{margin:0;font-size:1.35rem;font-weight:700}
+
+  .eval-progress{margin-bottom:28px}
+  .eval-progress .row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+  .eval-progress #wizardLabel{font-size:.86rem;font-weight:700;color:var(--ink)}
+  .eval-progress .bar{height:8px;background:var(--green-soft);border-radius:999px;overflow:hidden}
+  .eval-progress .bar span{display:block;height:100%;background:#4b773c;transition:width .25s ease}
+
+  .eval-card fieldset.wizard-step{border:none;padding:0;margin:0 0 4px}
+  .eval-card .mb-3{margin-bottom:20px}
+  .eval-card .form-label{font-weight:500;font-size:.88rem;margin-bottom:8px}
+  .eval-card hr{border-color:var(--line);margin:26px 0}
+  .eval-card h2.h6{font-weight:700;font-size:.98rem}
+
+  .eval-card .form-check{
+    background:var(--paper);border:1px solid var(--line);border-radius:14px;
+    padding:14px 16px;margin:0;display:flex;align-items:flex-start;gap:10px
+  }
+  .eval-card .form-check-input{margin-top:3px}
+  .eval-card .form-check-label{font-size:.9rem;line-height:1.8}
+
+  #locationMap{border-color:var(--line) !important}
+
+  .eval-nav{
+    display:flex;gap:10px;margin-top:30px;padding-top:22px;border-top:1px solid var(--line);
+    justify-content:flex-start
+  }
+  .eval-nav .btn{border-radius:12px;padding:12px 26px;font-weight:500}
+
+  @media (max-width:640px){.eval-card{padding:26px 18px;border-radius:18px}}
+</style>
+
+<div class="eval-card">
+  <div class="eval-head">
+    <span class="eyebrow">{% trans "ثبت درخواست / ارزیابی" %}</span>
+    <h1>{% trans "فرم ارزیابی نیروگاه خورشیدی" %}</h1>
+  </div>
 
   {% if messages %}{% for message in messages %}
     <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %}">{{ message }}</div>
@@ -10,122 +55,79 @@
   {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
   {% if form.errors %}<div class="alert alert-danger">{% trans "لطفاً خطاهای مشخص‌شده را برطرف کنید." %}</div>{% endif %}
 
-  <div class="mb-3">
-    <div class="d-flex justify-content-between mb-1">
-      <span id="wizardLabel">{% trans "مرحلهٔ ۱ از ۳ — مشخصات عمومی" %}</span>
+  <div class="eval-progress">
+    <div class="row">
+      <span id="wizardLabel">{% trans "نوع درخواست" %}</span>
     </div>
-    <div class="bar"><span id="wizardBar" style="width:33%"></span></div>
+    <div class="bar"><span id="wizardBar" style="width:20%"></span></div>
   </div>
 
   <form method="post" id="evalForm">{% csrf_token %}
-    <fieldset class="wizard-step" data-step-label="{% trans 'مرحلهٔ ۱ از ۳ — مشخصات عمومی' %}">
-      <div class="mb-3">
-        <label class="form-label d-block">{{ form.user_type.label }}</label>
-        {{ form.user_type }}
-        {% if form.user_type.errors %}<div class="text-danger small">{{ form.user_type.errors|striptags }}</div>{% endif %}
-      </div>
-      <div class="mb-3">
-        <label class="form-label">{{ form.full_name.label }}</label>
-        {{ form.full_name }}
-        {% if form.full_name.errors %}<div class="text-danger small">{{ form.full_name.errors|striptags }}</div>{% endif %}
-      </div>
-      <div class="mb-3">
-        <label class="form-label">{{ form.project_type.label }}</label>
-        {{ form.project_type }}
-        {% if form.project_type.errors %}<div class="text-danger small">{{ form.project_type.errors|striptags }}</div>{% endif %}
-      </div>
-      <div class="mb-3">
-        <label class="form-label d-block">{{ form.needs_financial_consult.label }}</label>
-        {{ form.needs_financial_consult }}
-      </div>
-      <div class="mb-3">
-        <label class="form-label">{% trans "استان" %}</label>
-        <select name="province" id="id_province" class="form-select" required>
-          <option value="">{% trans "انتخاب کنید" %}</option>
-          {% for p in provinces %}<option value="{{ p }}" {% if form.province.value == p %}selected{% endif %}>{{ p }}</option>{% endfor %}
-        </select>
-        {% if form.province.errors %}<div class="text-danger small">{{ form.province.errors|striptags }}</div>{% endif %}
-      </div>
-      <div class="mb-3">
-        <label class="form-label">{% trans "شهر" %}</label>
-        <select name="city" id="id_city" class="form-select" data-selected="{{ form.city.value|default:'' }}" required></select>
-        {% if form.city.errors %}<div class="text-danger small">{{ form.city.errors|striptags }}</div>{% endif %}
-      </div>
-      <div class="mb-3">
-        <label class="form-label">{{ form.install_address.label }}</label>
-        {{ form.install_address }}
-      </div>
-      <div class="mb-3">
-        <label class="form-label">{{ form.area_m2.label }}</label>
-        {{ form.area_m2 }}
-        {% if form.area_m2.errors %}<div class="text-danger small">{{ form.area_m2.errors|striptags }}</div>{% endif %}
-      </div>
-    </fieldset>
 
-    <fieldset class="wizard-step" data-step-label="{% trans 'مرحلهٔ ۲ از ۳ — مشخصات پروژه' %}" hidden>
-      <div class="mb-3">
-        <label class="form-label d-block">{{ form.install_location.label }}</label>
-        {{ form.install_location }}
-        {% if form.install_location.errors %}<div class="text-danger small">{{ form.install_location.errors|striptags }}</div>{% endif %}
-      </div>
-      <div class="mb-3">
-        <label class="form-label">{{ form.building_type.label }}</label>
-        {{ form.building_type }}
-        {% if form.building_type.errors %}<div class="text-danger small">{{ form.building_type.errors|striptags }}</div>{% endif %}
-      </div>
-      <div class="mb-3">
-        <label class="form-label d-block">{{ form.has_shading.label }}</label>
-        {{ form.has_shading }}
-      </div>
-      <div class="mb-3">
-        <label class="form-label">{{ form.description.label }}</label>
-        {{ form.description }}
-        {% if form.description.errors %}<div class="text-danger small">{{ form.description.errors|striptags }}</div>{% endif %}
-      </div>
-      <div class="mb-3">
-        <label class="form-label d-block">{{ form.ownership_type.label }}</label>
-        {{ form.ownership_type }}
-        {% if form.ownership_type.errors %}<div class="text-danger small">{{ form.ownership_type.errors|striptags }}</div>{% endif %}
-      </div>
-      <div class="mb-3">
-        <label class="form-label">{{ form.grid_distance_m.label }}</label>
-        {{ form.grid_distance_m }}
-        {% if form.grid_distance_m.errors %}<div class="text-danger small">{{ form.grid_distance_m.errors|striptags }}</div>{% endif %}
-      </div>
-      <div class="mb-3">
-        <label class="form-label d-block">{{ form.storage_interest.label }}</label>
-        {{ form.storage_interest }}
-        {% if form.storage_interest.errors %}<div class="text-danger small">{{ form.storage_interest.errors|striptags }}</div>{% endif %}
-      </div>
-      <div class="mb-3">
-        <label class="form-label">{{ form.bill_id.label }}</label>
-        {{ form.bill_id }}
-        {% if form.bill_id.errors %}<div class="text-danger small">{{ form.bill_id.errors|striptags }}</div>{% endif %}
-      </div>
+    {% comment %}
+      Steps and their fields are defined in the admin (RequestFormStep /
+      RequestFormField) so they can be added, reordered or hidden without a
+      code change. `data-when` carries the JSON condition the wizard JS
+      evaluates; a few keys need bespoke markup and are special-cased below.
+    {% endcomment %}
+    {% for step in steps %}
+    <fieldset class="wizard-step" data-step-label="{{ step.label }}" data-when="{{ step.condition|as_json }}"{% if not forloop.first %} hidden{% endif %}>
+      {% for f in step.fields.all %}
+        {% with bf=form|get_field:f.key %}
+        {% if bf %}
+          {% if f.key == 'province' %}
+            <div class="mb-3">
+              <label class="form-label">{{ f.label }}</label>
+              <select name="province" id="id_province" class="form-select" required>
+                <option value="">{% trans "انتخاب کنید" %}</option>
+                {% for p in provinces %}<option value="{{ p }}" {% if form.province.value == p %}selected{% endif %}>{{ p }}</option>{% endfor %}
+              </select>
+              {% if bf.errors %}<div class="text-danger small">{{ bf.errors|striptags }}</div>{% endif %}
+            </div>
+          {% elif f.key == 'city' %}
+            <div class="mb-3">
+              <label class="form-label">{{ f.label }}</label>
+              <select name="city" id="id_city" class="form-select" data-selected="{{ form.city.value|default:'' }}"></select>
+              {% if bf.errors %}<div class="text-danger small">{{ bf.errors|striptags }}</div>{% endif %}
+            </div>
+          {% elif f.key == 'latitude' %}
+            <div class="mb-3">
+              <label class="form-label d-block">{{ f.label }}</label>
+              <p class="footer-note mb-2">{% trans "روی نقشه کلیک کنید تا محل دقیق پروژه مشخص شود. می‌توانید نشانگر را جابه‌جا کنید." %}</p>
+              <div id="locationMap" style="height:300px;border-radius:14px;overflow:hidden;border:1px solid var(--border,#ccc)"></div>
+              <div class="d-flex gap-2 mt-2 align-items-center flex-wrap">
+                <button type="button" class="btn secondary btn-sm" id="useMyLocation">{% trans "موقعیت فعلی من" %}</button>
+                <span class="footer-note" id="mapCoords">{% trans "موقعیتی انتخاب نشده است." %}</span>
+              </div>
+              {{ bf }}
+            </div>
+          {% elif f.key == 'longitude' %}
+            {{ bf }}
+          {% elif f.key == 'accepted_terms' %}
+            <hr>
+            <div class="form-check mb-3">
+              {{ bf }}
+              <label class="form-check-label" for="{{ bf.id_for_label }}">{{ f.label }}</label>
+              {% if bf.errors %}<div class="text-danger small">{{ bf.errors|striptags }}</div>{% endif %}
+            </div>
+            <p class="footer-note">{% trans "پس از ارسال، کد تأیید به شمارهٔ موبایل شما ارسال می‌شود." %}</p>
+          {% elif bf.is_hidden %}
+            {{ bf }}
+          {% else %}
+            <div class="mb-3"{% if f.condition %} data-when="{{ f.condition|as_json }}"{% endif %}>
+              <label class="form-label d-block">{{ f.label }}</label>
+              {{ bf }}
+              {% if f.help_text %}<div class="footer-note">{{ f.help_text }}</div>{% endif %}
+              {% if bf.errors %}<div class="text-danger small">{{ bf.errors|striptags }}</div>{% endif %}
+            </div>
+          {% endif %}
+        {% endif %}
+        {% endwith %}
+      {% endfor %}
     </fieldset>
+    {% endfor %}
 
-    <fieldset class="wizard-step" data-step-label="{% trans 'مرحلهٔ ۳ از ۳ — احراز هویت و تأیید' %}" hidden>
-      <h2 class="h6 mb-2">{% trans "احراز هویت" %}</h2>
-      <p class="footer-note mb-3">{% trans "شماره موبایل و کد ملی باید متعلق به یک نفر باشند؛ به‌صورت خودکار با سامانهٔ شاهکار بررسی می‌شود." %}</p>
-      <div class="mb-3">
-        <label class="form-label">{{ form.mobile.label }}</label>
-        {{ form.mobile }}
-        {% if form.mobile.errors %}<div class="text-danger small">{{ form.mobile.errors|striptags }}</div>{% endif %}
-      </div>
-      <div class="mb-3">
-        <label class="form-label">{{ form.national_id.label }}</label>
-        {{ form.national_id }}
-        {% if form.national_id.errors %}<div class="text-danger small">{{ form.national_id.errors|striptags }}</div>{% endif %}
-      </div>
-      <div class="form-check mb-3">
-        {{ form.accepted_terms }}
-        <label class="form-check-label" for="{{ form.accepted_terms.id_for_label }}">{% trans "قوانین و مقررات را مطالعه کرده و می‌پذیرم." %}</label>
-        {% if form.accepted_terms.errors %}<div class="text-danger small">{{ form.accepted_terms.errors|striptags }}</div>{% endif %}
-      </div>
-      <p class="footer-note">{% trans "پس از ارسال، کد تأیید به شمارهٔ موبایل شما ارسال می‌شود." %}</p>
-    </fieldset>
-
-    <div class="d-flex gap-2 mt-3">
+    <div class="eval-nav">
       <button type="button" class="btn secondary" id="wizardPrev" hidden>{% trans "قبلی" %}</button>
       <button type="button" class="btn" id="wizardNext">{% trans "بعدی" %}</button>
       <button type="submit" class="btn" id="wizardSubmit" hidden>{% trans "ارسال" %}</button>

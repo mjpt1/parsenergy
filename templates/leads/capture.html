@@ -1,0 +1,133 @@
+{% extends 'base_portal.html' %}
+{% load i18n static %}
+{% comment %}
+  Stage 1, built to be finished standing up at a stand in under a minute:
+  two required fields, everything else a tap. `portal_bare` drops the site nav
+  so there is nothing to wander off into.
+{% endcomment %}
+{% block content %}
+<style>
+  .lead-form{max-width:560px;margin:0 auto}
+  .lead-form .card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px 18px}
+  .lead-form h1{font-size:1.25rem;margin:0 0 4px}
+  .lead-form .sub{color:var(--muted);font-size:.88rem;margin:0 0 18px}
+  .lead-field{margin-bottom:16px}
+  .lead-field > label{display:block;font-weight:600;font-size:.9rem;margin-bottom:6px}
+  .lead-field input[type=text],.lead-field input[type=tel],.lead-field select{
+    width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:10px;
+    font-size:1rem;font-family:inherit}
+  .lead-field input:focus,.lead-field select:focus{outline:2px solid var(--green);outline-offset:1px}
+  .opt-grid{display:grid;gap:8px}
+  .opt{display:flex;align-items:center;gap:10px;padding:11px 13px;border:1px solid var(--line);
+    border-radius:10px;cursor:pointer;font-size:.93rem;background:#fff}
+  .opt:has(input:checked){border-color:var(--green);background:#f1f8f1;font-weight:600}
+  .opt input{width:18px;height:18px;accent-color:var(--green);flex:none;margin:0}
+  .opt ul{display:none}
+  .lead-submit{width:100%;padding:14px;border:0;border-radius:12px;background:var(--green);
+    color:#fff;font-size:1.05rem;font-weight:700;font-family:inherit;cursor:pointer}
+  .req{color:#dc2626}
+  .errorlist{color:#dc2626;font-size:.84rem;margin:6px 0 0;padding:0;list-style:none}
+  @media (min-width:520px){.opt-grid.two{grid-template-columns:1fr 1fr}}
+</style>
+
+<div class="lead-form">
+  <div class="card">
+    <h1>{% trans "ثبت اطلاعات" %}</h1>
+    {% comment %}The QR's own title is internal (it names the marketer or the
+    stand), so the visitor never sees it.{% endcomment %}
+    <p class="sub">
+      {% trans "کمتر از یک دقیقه وقت می‌گیرد. همکاران ما با شما تماس می‌گیرند." %}
+    </p>
+
+    {% if form.non_field_errors %}
+      <ul class="errorlist">{% for e in form.non_field_errors %}<li>{{ e }}</li>{% endfor %}</ul>
+    {% endif %}
+
+    <form method="post" novalidate data-location-form>{% csrf_token %}
+      <div class="lead-field">
+        <label for="{{ form.full_name.id_for_label }}">{{ form.full_name.label }} <span class="req">*</span></label>
+        {{ form.full_name }}
+        {{ form.full_name.errors }}
+      </div>
+      <div class="lead-field">
+        <label for="{{ form.mobile.id_for_label }}">{{ form.mobile.label }} <span class="req">*</span></label>
+        {{ form.mobile }}
+        {{ form.mobile.errors }}
+      </div>
+      <div class="lead-field">
+        <label for="{{ form.company.id_for_label }}">{{ form.company.label }} <span class="req">*</span></label>
+        {{ form.company }}
+        {{ form.company.errors }}
+      </div>
+      <div class="lead-field">
+        <label for="{{ form.job_title.id_for_label }}">{{ form.job_title.label }}</label>
+        {{ form.job_title }}
+      </div>
+      <div class="lead-field">
+        <label for="{{ form.business_field.id_for_label }}">{{ form.business_field.label }}</label>
+        {{ form.business_field }}
+      </div>
+      <div class="lead-field">
+        <label for="id_country">{{ form.country.label }} <span class="req">*</span></label>
+        <select name="country" id="id_country" data-loc="country">
+          {% for value, label in form.country.field.choices %}
+          <option value="{{ value }}" {% if form.country.value == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="lead-field" data-loc-iran>
+        <label for="id_province">{{ form.province.label }} <span class="req">*</span></label>
+        <select name="province" id="id_province" data-loc="province">
+          {% for value, label in form.province.field.choices %}
+          <option value="{{ value }}" {% if form.province.value == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+        {{ form.province.errors }}
+      </div>
+      <div class="lead-field">
+        <label for="id_city">{{ form.city.label }} <span class="req">*</span></label>
+        <div data-loc-iran>
+          <select name="city" id="id_city" data-loc="city" data-selected="{{ form.city.value|default:'' }}">
+            <option value="">{% trans "ابتدا استان را انتخاب کنید" %}</option>
+          </select>
+        </div>
+        <div data-loc-abroad hidden>
+          <input type="text" name="city" id="id_city_text" data-loc="city-text" maxlength="64"
+                 value="{{ form.city.value|default:'' }}" placeholder="{% trans 'نام شهر' %}" disabled>
+        </div>
+        {{ form.city.errors }}
+      </div>
+
+      <div class="lead-field">
+        <label>{{ form.goals.label }}</label>
+        <div class="opt-grid">
+          {% for choice in form.goals %}
+          <label class="opt">{{ choice.tag }} <span>{{ choice.choice_label }}</span></label>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="lead-field">
+        <label>{{ form.timeline.label }}</label>
+        <div class="opt-grid two">
+          {% for choice in form.timeline %}
+          <label class="opt">{{ choice.tag }} <span>{{ choice.choice_label }}</span></label>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="lead-field">
+        <label>{{ form.contact_method.label }}</label>
+        <div class="opt-grid two">
+          {% for choice in form.contact_method %}
+          <label class="opt">{{ choice.tag }} <span>{{ choice.choice_label }}</span></label>
+          {% endfor %}
+        </div>
+      </div>
+
+      <button class="lead-submit" type="submit">{% trans "ثبت" %}</button>
+    </form>
+  </div>
+</div>
+{{ cities|json_script:"cities-data" }}
+{% endblock %}

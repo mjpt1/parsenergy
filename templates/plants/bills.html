@@ -1,0 +1,95 @@
+{% extends base_template %}
+{% load i18n %}
+{% block content %}
+<style>
+.bill-head{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+.bill-head div{padding:10px 12px;border:1px solid rgba(127,127,127,.25);border-radius:10px;min-width:0}
+.bill-head span{display:block;font-size:.82rem;opacity:.75}
+.bill-chart{display:grid;gap:14px;margin:14px 0}
+.bill-row b{display:block;margin-bottom:5px;font-weight:600}
+.bill-bar{display:flex;align-items:center;gap:8px;margin-bottom:4px;font-size:.85rem}
+.bill-bar i{display:block;height:20px;min-width:2px;border-radius:4px}
+.bill-bar.actual i{background:#1aa9e8}.bill-bar.bench i{background:#8fd65a}
+.bill-track{flex:1 1 auto;min-width:0}
+.bill-bar small{flex:0 0 118px;text-align:left;direction:ltr}
+.bill-legend{display:flex;gap:16px;font-size:.85rem}.bill-legend i{display:inline-block;width:11px;height:11px;border-radius:50%;margin-inline-end:5px}
+</style>
+<div class="panel mb-3">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <h1 class="h4 mb-0">{% trans "صورتحساب و عملکرد نیروگاه" %}</h1>
+    {% if plants|length > 1 %}
+    <form method="get"><select name="plant" class="form-select" aria-label="{% trans 'نیروگاه' %}" onchange="this.form.submit()">
+      {% for item in plants %}<option value="{{ item.pk }}" {% if item.pk == plant.pk %}selected{% endif %}>{{ item.name }}</option>{% endfor %}
+    </select></form>
+    {% elif plant %}<strong>{{ plant.name }}</strong>{% endif %}
+  </div>
+  {% if not plant %}
+  <p class="footer-note mb-0">{% trans "نیروگاهی برای نمایش وجود ندارد." %}</p>
+  {% else %}
+  {% include 'plants/_plant_tabs.html' %}
+  <form method="get" class="row g-2 align-items-end mb-3">
+    <input type="hidden" name="plant" value="{{ plant.pk }}">
+    <div class="col-12 col-md-3"><label class="form-label" for="billMode">{% trans "دورهٔ نمودار" %}</label>
+      <select id="billMode" name="mode" class="form-select">
+        <option value="bill" {% if mode == 'bill' %}selected{% endif %}>{% trans "هر صورتحساب" %}</option>
+        <option value="month" {% if mode == 'month' %}selected{% endif %}>{% trans "ماهانه" %}</option>
+        <option value="year" {% if mode == 'year' %}selected{% endif %}>{% trans "سالانه" %}</option>
+      </select></div>
+    <div class="col-6 col-md-3"><label class="form-label" for="billFrom">{% trans "تاریخ شروع" %}</label>
+      <input id="billFrom" class="form-control" name="from" dir="ltr" inputmode="numeric" placeholder="۱۴۰۵/۰۱/۰۱" value="{{ range_from }}"></div>
+    <div class="col-6 col-md-3"><label class="form-label" for="billTo">{% trans "تاریخ پایان" %}</label>
+      <input id="billTo" class="form-control" name="to" dir="ltr" inputmode="numeric" placeholder="{{ today_text }}" value="{{ range_to }}"></div>
+    <div class="col-12 col-md-3"><button class="btn">{% trans "مشاهدهٔ نمودار" %}</button></div>
+  </form>
+  {% if range_error %}<div class="alert alert-danger">{{ range_error }}</div>{% endif %}
+  {% if latest %}
+  <div class="bill-head">
+    <div><span>{% trans "نام مشتری" %}</span>{{ latest.customer_name|default:"—" }}</div>
+    <div><span>{% trans "شماره پرونده" %}</span>{{ latest.file_number|default:"—" }}</div>
+    <div><span>{% trans "قدرت نیروگاه" %}</span>{{ plant.capacity_kw|floatformat:"-2" }} {% trans "کیلووات" %}</div>
+  </div>
+  {% endif %}
+  {% if groups %}
+  <div class="bill-legend"><span><i style="background:#1aa9e8"></i>{% trans "عملکرد" %}</span><span><i style="background:#8fd65a"></i>{% trans "معیار" %}</span></div>
+  <div class="bill-chart">
+    {% for group in groups %}
+    <div class="bill-row">
+      <b>{{ group.label }}{% if group.ratio_text %} <span class="footer-note">· {{ group.ratio_text }}٪ {% trans "از معیار" %}</span>{% endif %}</b>
+      <div class="bill-bar actual"><div class="bill-track"><i style="width:{{ group.energy_width }}%"></i></div><small>{{ group.energy_text }} kWh</small></div>
+      {% if group.benchmark_text %}<div class="bill-bar bench"><div class="bill-track"><i style="width:{{ group.benchmark_width }}%"></i></div><small>{{ group.benchmark_text }} kWh</small></div>{% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  <div class="table-responsive"><table class="table mb-0">
+    <thead><tr><th>{% trans "از تاریخ" %}</th><th>{% trans "تا تاریخ" %}</th><th>{% trans "انرژی تولیدشده (kWh)" %}</th><th>{% trans "درآمد تولید (ریال)" %}</th><th>{% trans "بدهکاری / بستانکاری (ریال)" %}</th><th>{% trans "خالص پرداختی (ریال)" %}</th>{% if can_manage %}<th></th>{% endif %}</tr></thead>
+    <tbody>{% for bill in bills %}
+      <tr><td>{{ bill.from_text }}</td><td>{{ bill.to_text }}</td><td>{{ bill.energy_text }}</td><td>{{ bill.income_text }}</td><td>{{ bill.balance_text }}</td><td><strong>{{ bill.net_text }}</strong></td>
+      {% if can_manage %}<td><form method="post" action="{% url 'plants:bill-delete' bill.obj.pk %}">{% csrf_token %}<button class="btn secondary btn-sm">{% trans "حذف" %}</button></form></td>{% endif %}</tr>
+    {% endfor %}</tbody>
+  </table></div>
+  {% else %}
+  <p class="footer-note mb-0">{% trans "صورتحسابی برای این بازه ثبت نشده است." %}</p>
+  {% endif %}
+  {% endif %}
+</div>
+
+{% if plant and can_manage %}
+<div class="panel mb-3">
+  <h2 class="h6">{% trans "ثبت صورتحساب از مهرسان" %}</h2>
+  <p class="footer-note">{% trans "ثبت دوباره با همان «تا تاریخ»، همان صورتحساب را اصلاح می‌کند." %}</p>
+  <form method="post" action="{% url 'plants:bill-save' plant.pk %}" class="row g-2 align-items-end">
+    {% csrf_token %}
+    <div class="col-6 col-md-3"><label class="form-label">{% trans "از تاریخ" %}<input class="form-control" name="period_start" dir="ltr" placeholder="۱۴۰۵/۰۶/۰۱" required></label></div>
+    <div class="col-6 col-md-3"><label class="form-label">{% trans "تا تاریخ" %}<input class="form-control" name="period_end" dir="ltr" placeholder="۱۴۰۵/۰۷/۰۱" required></label></div>
+    <div class="col-6 col-md-3"><label class="form-label">{% trans "انرژی تولیدشده (kWh)" %}<input class="form-control" name="energy_kwh" dir="ltr" inputmode="decimal" required></label></div>
+    <div class="col-6 col-md-3"><label class="form-label">{% trans "معیار (kWh)" %}<input class="form-control" name="benchmark_kwh" dir="ltr" inputmode="decimal"></label></div>
+    <div class="col-6 col-md-3"><label class="form-label">{% trans "درآمد تولید (ریال)" %}<input class="form-control" name="income_rial" dir="ltr" inputmode="numeric" required></label></div>
+    <div class="col-6 col-md-3"><label class="form-label">{% trans "بدهکاری / بستانکاری (ریال)" %}<input class="form-control" name="balance_rial" dir="ltr" inputmode="numeric" value="0"></label></div>
+    <div class="col-6 col-md-3"><label class="form-label">{% trans "خالص پرداختی (ریال)" %}<input class="form-control" name="net_rial" dir="ltr" inputmode="numeric" required></label></div>
+    <div class="col-6 col-md-3"><label class="form-label">{% trans "شماره پرونده" %}<input class="form-control" name="file_number" dir="ltr" value="{{ latest.file_number|default:'' }}"></label></div>
+    <div class="col-12 col-md-6"><label class="form-label">{% trans "نام مشتری در قبض" %}<input class="form-control" name="customer_name" value="{{ latest.customer_name|default:'' }}"></label></div>
+    <div class="col-12 col-md-3"><button class="btn">{% trans "ثبت صورتحساب" %}</button></div>
+  </form>
+</div>
+{% endif %}
+{% endblock %}

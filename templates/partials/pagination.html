@@ -1,0 +1,14 @@
+{% load i18n pagination_tags %}
+{% if page_obj and page_obj.paginator.num_pages > 1 %}
+<nav class="d-flex gap-2 align-items-center justify-content-center mt-3" aria-label="{% trans 'صفحه‌ها' %}">
+  {% if page_obj.has_previous %}
+    <a class="btn secondary" href="{% page_url 1 %}">{% trans "اولین" %}</a>
+    <a class="btn secondary" href="{% page_url page_obj.previous_page_number %}">{% trans "قبلی" %}</a>
+  {% endif %}
+  <span class="footer-note">{% blocktrans with n=page_obj.number total=page_obj.paginator.num_pages c=page_obj.paginator.count %}صفحهٔ {{ n }} از {{ total }} — {{ c }} مورد{% endblocktrans %}</span>
+  {% if page_obj.has_next %}
+    <a class="btn secondary" href="{% page_url page_obj.next_page_number %}">{% trans "بعدی" %}</a>
+    <a class="btn secondary" href="{% page_url page_obj.paginator.num_pages %}">{% trans "آخرین" %}</a>
+  {% endif %}
+</nav>
+{% endif %}

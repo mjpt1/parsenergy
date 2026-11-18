@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% load i18n %}
 {% block content %}
+{% include 'partials/settings_tabs.html' with active='ai' %}
 <div class="panel">
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h1 class="h4 mb-0">{% trans "تنظیمات هوش مصنوعی" %}</h1>
@@ -48,6 +49,73 @@
           {{ form.system_prompt }}
           <div class="form-text">{% trans "اختیاری: راهنمای کلی برای مدل." %}</div>
         </div>
+      </div>
+      <hr class="my-4">
+      <h2 class="h6">{% trans "سرویس‌های ایرانی (برای قطعی اینترنت)" %}</h2>
+      <p class="form-text">{% trans "اگر سرویس اول جواب ندهد، سامانه خودکار سراغ بعدی می‌رود. فقط کلید را وارد کنید؛ آدرس سرویس‌ها از قبل تنظیم شده است." %}</p>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">GapGPT — API Key</label>
+          {{ form.gapgpt_key }}
+          <div class="form-text ltr">https://api.gapgpt.app/v1</div>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">GapGPT — Model</label>
+          {{ form.gapgpt_model }}
+        </div>
+        <div class="col-md-3">
+          <label class="form-label d-block">&nbsp;</label>
+          <div class="form-check">{{ form.gapgpt_enabled }}<label class="form-check-label" for="{{ form.gapgpt_enabled.id_for_label }}">{% trans "فعال" %}</label></div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">AvalAI — API Key</label>
+          {{ form.avalai_key }}
+          <div class="form-text ltr">https://api.avalai.ir/v1</div>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">AvalAI — Model</label>
+          {{ form.avalai_model }}
+        </div>
+        <div class="col-md-3">
+          <label class="form-label d-block">&nbsp;</label>
+          <div class="form-check">{{ form.avalai_enabled }}<label class="form-check-label" for="{{ form.avalai_enabled.id_for_label }}">{% trans "فعال" %}</label></div>
+        </div>
+        <div class="col-md-8">
+          <label class="form-label">{% trans "ترتیب استفاده" %}</label>
+          {{ form.order }}
+        </div>
+        <div class="col-12">
+          <span class="text-muted">{% trans "سرویس‌های فعال به ترتیب:" %}</span>
+          {% for name in active_providers %}<span class="badge" style="margin-inline-start:6px">{{ forloop.counter }}. {{ name }}</span>{% empty %}<span class="badge warning">{% trans "هیچ سرویسی فعال نیست" %}</span>{% endfor %}
+        </div>
+      </div>
+      <hr class="my-4">
+      <h2 class="h6">{% trans "محدودیت‌ها برای هر بخش" %}</h2>
+      <p class="form-text">{% trans "برای هر قابلیت مشخص کنید روشن باشد، کدام نقش‌ها از آن استفاده کنند و هر نفر در روز چند بار. سقف ۰ یعنی بدون محدودیت. مدیریت سامانه همیشه نقش «مدیریت» حساب می‌شود." %}</p>
+      <div class="table-responsive">
+        <table class="table">
+          <thead><tr><th>{% trans "قابلیت" %}</th><th>{% trans "روشن" %}</th><th>{% trans "نقش‌های مجاز" %}</th><th style="width:130px">{% trans "سقف روزانهٔ هر نفر" %}</th></tr></thead>
+          <tbody>
+            {% for row in feature_rows %}
+            <tr>
+              <td><strong>{{ row.label }}</strong></td>
+              <td><div class="form-check">{{ row.enabled }}</div></td>
+              <td><div class="d-flex flex-wrap gap-2 ai-roles">{% for cb in row.roles %}<label class="form-check-label" style="white-space:nowrap">{{ cb.tag }} {{ cb.choice_label }}</label>{% endfor %}</div></td>
+              <td>{{ row.daily }}</td>
+            </tr>
+            {% endfor %}
+            <tr>
+              <td><strong>{% trans "دستیار گفتگو برای مشتری" %}</strong></td>
+              <td><div class="form-check">{{ form.chat_enabled }}</div></td>
+              <td>
+                <label class="form-label">{% trans "پیام در ساعت برای هر بازدیدکننده" %}</label>{{ form.chat_per_visitor }}
+              </td>
+              <td>
+                <label class="form-label">{% trans "کل پیام‌ها در ساعت" %}</label>{{ form.chat_total }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
       <div class="d-flex gap-2 mt-3">
         <button type="submit" class="btn">{% trans "ذخیره" %}</button>

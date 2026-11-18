@@ -1,14 +1,15 @@
-{% extends 'base.html' %}
-{% load i18n %}
+{% extends 'base_portal.html' %}
+{% load i18n form_extras %}
 {% block content %}
 <div class="panel" style="max-width:640px;margin:0 auto">
   <h1 class="h4 mb-3">{% trans "تکمیل پروفایل" %}</h1>
   {% if messages %}{% for message in messages %}
     <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %}">{{ message }}</div>
   {% endfor %}{% endif %}
-  <form method="post">{% csrf_token %}
+  <form method="post" data-location-form>{% csrf_token %}
     {{ form.as_p }}
     <button type="submit" class="btn w-100">{% trans "ذخیره اطلاعات" %}</button>
   </form>
 </div>
+{% location_select %}
 {% endblock %}

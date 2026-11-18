@@ -7,7 +7,7 @@
   </div>
   <div class="table-responsive">
     <table class="table">
-      <thead><tr><th>Host</th><th>CPU</th><th>Memory</th><th>Disk</th><th>Queue</th><th>Checked</th></tr></thead>
+      <thead><tr><th>{% trans "سرور" %}</th><th>{% trans "پردازنده" %}</th><th>{% trans "حافظه" %}</th><th>{% trans "دیسک" %}</th><th>{% trans "کارهای در صف" %}</th><th>{% trans "زمان بررسی" %}</th></tr></thead>
       <tbody>
         {% for metric in object_list %}
         <tr>

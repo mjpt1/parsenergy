@@ -1,0 +1,41 @@
+{% load i18n %}<!doctype html>
+{% comment %}
+  Django's own CSRF failure page is bare English and tells the visitor nothing
+  they can act on — and the usual cause here is innocent: a form left open long
+  enough for its token to expire, or the app process restarting underneath it.
+  So this page says what happened in Persian and gives the one button that
+  actually fixes it.
+{% endcomment %}
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% trans "صفحه منقضی شده است" %}</title>
+  <link rel="stylesheet" href="/static/css/fonts.css">
+  <style>
+    body{font-family:'IRANSansX',Tahoma,sans-serif;background:#f4f7fb;color:#0f172a;
+      margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+    .card{background:#fff;border:1px solid #d8e2ef;border-radius:16px;padding:32px 26px;
+      max-width:460px;width:100%;text-align:center}
+    .icon{width:62px;height:62px;border-radius:50%;background:#fef3c7;color:#b45309;
+      display:flex;align-items:center;justify-content:center;font-size:1.9rem;margin:0 auto 16px}
+    h1{font-size:1.2rem;margin:0 0 10px}
+    p{color:#4b5563;font-size:.94rem;line-height:1.9;margin:0 0 20px}
+    .btn{display:inline-block;padding:12px 22px;border-radius:10px;background:#15803d;
+      color:#fff;text-decoration:none;font-weight:700;font-size:.95rem;border:0;cursor:pointer;
+      font-family:inherit}
+    .btn.secondary{background:#fff;border:1px solid #d8e2ef;color:#0f172a;margin-inline-start:8px}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon">⏱</div>
+    <h1>{% trans "این صفحه منقضی شده است" %}</h1>
+    <p>
+      {% trans "فرم مدت زیادی باز مانده و اعتبارش تمام شده است. اطلاعات شما از بین نرفته — کافی است صفحه را دوباره باز کنید و یک‌بار دیگر ثبت کنید." %}
+    </p>
+    <button class="btn" type="button" onclick="history.back()">{% trans "بازگشت به فرم" %}</button>
+    <a class="btn secondary" href="/">{% trans "صفحهٔ اصلی" %}</a>
+  </div>
+</body>
+</html>
